@@ -41,8 +41,14 @@ public sealed class NmseExportAdapter : IExportAdapter
         _ => new Unsupported($"Unknown entity kind {kind}."),
     };
 
+    /// <summary>
+    /// Nothing. The vault format is NMSE's format plus metadata, so an NMSE export is a
+    /// projection with no lossy step - which is exactly why it was chosen as the base.
+    /// </summary>
+    public IReadOnlyList<string> LossesFor(VaultItem item) => [];
+
     /// <inheritdoc />
-    public ExportResult Export(VaultItem item)
+    public ExportResult Export(VaultItem item, ExportOptions options = default)
     {
         var extension = Extension(item.Kind);
         if (!extension.HasValue)

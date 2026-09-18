@@ -16,6 +16,17 @@ public enum EditorId
     NomNom,
 }
 
+/// <summary>
+/// Extra input an adapter may use. Currently just the gallery's own images, supplied as
+/// bytes because <see cref="VaultMetadata.Images"/> holds paths and only the caller knows
+/// how to resolve them - over HTTP in the browser, off disk in the ingest tool.
+/// </summary>
+/// <param name="Images">
+/// Image bytes, best first. NMS Companion takes up to six, NomNom up to six; adapters that
+/// have nowhere to put them ignore this.
+/// </param>
+public readonly record struct ExportOptions(IReadOnlyList<byte[]>? Images = null);
+
 /// <summary>A file produced for one editor.</summary>
 /// <param name="FileName">Suggested download name, including extension.</param>
 /// <param name="Content">The file bytes.</param>
@@ -59,11 +70,18 @@ public interface IExportAdapter
     /// </summary>
     OneOf<string, Unsupported> Extension(EntityKind kind);
 
+    /// <summary>
+    /// What this format cannot carry for the given item, as user-facing sentences. Empty
+    /// when nothing is lost. The gallery shows these before the download rather than
+    /// letting someone find out in-game. See <c>docs/format-coverage.md</c>.
+    /// </summary>
+    IReadOnlyList<string> LossesFor(VaultItem item);
+
     /// <summary>Produces the export file.</summary>
     /// <exception cref="NotSupportedException">
     /// If <see cref="Extension"/> reported the kind unsupported.
     /// </exception>
-    ExportResult Export(VaultItem item);
+    ExportResult Export(VaultItem item, ExportOptions options = default);
 }
 
 /// <summary>
