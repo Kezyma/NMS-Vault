@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsTrimmable>true</IsTrimmable>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+  </PropertyGroup>
+
+  <!--
+    The MBINCompiler-derived key mapping table (60 KB). Embedded rather than served as a
+    static asset so JsonNameMapper.LoadEmbedded() is synchronous - a WebAssembly caller
+    would otherwise have to await an HTTP fetch before it could parse anything.
+    The resource name is "NmsVault.Json.mapping.json"; JsonNameMapper.LoadEmbedded()
+    depends on that exact string.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="mapping.json" />
+  </ItemGroup>
+
+</Project>

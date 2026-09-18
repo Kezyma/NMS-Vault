@@ -1,0 +1,17 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Keep build output out of the source tree, matching NMSE's layout. -->
+    <BaseOutputPath>$(MSBuildThisFileDirectory)Build\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)Build\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <!-- No culture-sensitive formatting anywhere; this also drops the ICU payload in WASM. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+</Project>

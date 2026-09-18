@@ -1,0 +1,69 @@
+{
+  "$comment": [
+    "Provenance for the fixture corpus. Formats drift between editor and game releases;",
+    "without this, a test failing six months from now is unattributable.",
+    "Everything here was scanned for owner/identity fields before committing - these are",
+    "plain ship and multitool objects with no Owner block, so no scrubbing was needed."
+  ],
+  "sets": [
+    {
+      "id": "nmse-starships",
+      "path": "nmse/starships",
+      "count": 17,
+      "producer": "NMSE (No Man's Save Editor)",
+      "producerVersion": "1.3.16+legacy-colours-fix",
+      "gameVersion": "7.03 Cosmos",
+      "captured": "2026-09-18",
+      "extension": ".nmsship",
+      "shape": "{ Ship, CharacterCustomisationData, UsesLegacyColours }",
+      "encoding": "ASCII only - see openQuestions.encoding",
+      "notes": [
+        "Every file carries UsesLegacyColours, so all were exported by a build that",
+        "includes the 2026-09-18 fix. A pre-fix export (key absent) must be synthesised",
+        "by deleting the key; that case is what the absent-flag rule exists for.",
+        "5 files are legacy=true, 12 are legacy=false.",
+        "Horizon Omega (Original/New) and Alpha Vector (Original/New) are matched pairs:",
+        "same model and class, differing only in UsesLegacyColours. They are the sharpest",
+        "regression test available for the flag surviving a conversion.",
+        "The Wraith exercises NMSE's AlienShip owner-type mapping; Vintage Interceptor",
+        "exercises RobotShip. Starborn Phoenix is a DLC model.",
+        "No corvettes, so no fixture exercises the Base sidecar yet."
+      ]
+    },
+    {
+      "id": "nmse-multitools",
+      "path": "nmse/multitools",
+      "count": 6,
+      "producer": "NMSE (No Man's Save Editor)",
+      "producerVersion": "1.3.16+legacy-colours-fix",
+      "gameVersion": "7.03 Cosmos",
+      "captured": "2026-09-18",
+      "extension": ".nmstool",
+      "shape": "bare multitool object",
+      "encoding": "ASCII only",
+      "notes": [
+        "Multitools carry UseLegacyColours (no trailing s) inline on the object itself,",
+        "which is why multitool export never lost it the way ship export did.",
+        "Keys: Layout, Store, ScreenData, Seed, CustomisationData, Name, IsLarge,",
+        "PrimaryMode, SecondaryMode, UseLegacyColours, Resource."
+      ]
+    }
+  ],
+  "stillNeeded": [
+    "goatfungus .sh0 / .wp0 / .pet",
+    "NMS Companion (Kaii) .shp / .mlt / .cmp / .flt, with and without thumbnails",
+    "NomNom .shp / .mlt / .cmp / .flt",
+    "NMSE .nmspet and .nmsfrig",
+    "An NMSE corvette .nmsship, to exercise the Base sidecar",
+    "An export with a non-ASCII name, to settle openQuestions.encoding",
+    "An NMS Model IO Tool .nmsship ZIP, to validate PK-magic disambiguation"
+  ],
+  "openQuestions": {
+    "encoding": [
+      "NMSE writes exports with File.WriteAllText (UTF-8) over a string that already holds",
+      "UTF-8 bytes in Latin-1 chars, so non-ASCII is double-encoded on disk. Every fixture",
+      "here is pure ASCII, where both readings agree, so the corpus cannot settle whether",
+      "NMS-Vault should emit bug-compatible or standards-correct bytes."
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/NmsVault.Json/NmsVault.Json.csproj" />
+  <Project Path="src/NmsVault.Core/NmsVault.Core.csproj" />
+  <Project Path="tests/NmsVault.Json.Tests/NmsVault.Json.Tests.csproj" />
+  <Project Path="tests/NmsVault.Core.Tests/NmsVault.Core.Tests.csproj" />
+</Solution>

@@ -1,0 +1,358 @@
+{
+	"Layout": {
+		"Slots": 10,
+		"Seed": [
+			true,
+			"0x1"
+		],
+		"Level": 1
+	},
+	"Store": {
+		"Slots": [
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^LASER",
+				"Amount": 200,
+				"MaxAmount": 200,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 0,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^SCANBINOC1",
+				"Amount": 100,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 1,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^SCAN1",
+				"Amount": 100,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 2,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^STRONGLASER",
+				"Amount": 100,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 3,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^UT_MINER",
+				"Amount": 100,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 4,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^TERRAINEDITOR",
+				"Amount": 600,
+				"MaxAmount": 600,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 5,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^RAILGUN",
+				"Amount": 50,
+				"MaxAmount": 50,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 6,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^UT_RAIL",
+				"Amount": 100,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 7,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^UP_RAIL4#35271",
+				"Amount": -1,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 0,
+					"Y": 1
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^UP_RAIL4#41088",
+				"Amount": -1,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 1,
+					"Y": 1
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^UT_RAIL_STUN",
+				"Amount": 20,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 2,
+					"Y": 1
+				}
+			}
+		],
+		"ValidSlotIndices": [
+			{
+				"X": 0,
+				"Y": 0
+			},
+			{
+				"X": 1,
+				"Y": 0
+			},
+			{
+				"X": 2,
+				"Y": 0
+			},
+			{
+				"X": 3,
+				"Y": 0
+			},
+			{
+				"X": 4,
+				"Y": 0
+			},
+			{
+				"X": 5,
+				"Y": 0
+			},
+			{
+				"X": 6,
+				"Y": 0
+			},
+			{
+				"X": 7,
+				"Y": 0
+			},
+			{
+				"X": 0,
+				"Y": 1
+			},
+			{
+				"X": 1,
+				"Y": 1
+			},
+			{
+				"X": 2,
+				"Y": 1
+			},
+			{
+				"X": 3,
+				"Y": 1
+			},
+			{
+				"X": 4,
+				"Y": 1
+			},
+			{
+				"X": 5,
+				"Y": 1
+			},
+			{
+				"X": 6,
+				"Y": 1
+			},
+			{
+				"X": 7,
+				"Y": 1
+			},
+			{
+				"X": 4,
+				"Y": 2
+			},
+			{
+				"X": 5,
+				"Y": 2
+			},
+			{
+				"X": 6,
+				"Y": 2
+			},
+			{
+				"X": 7,
+				"Y": 2
+			}
+		],
+		"Class": {
+			"InventoryClass": "A"
+		},
+		"StackSizeGroup": {
+			"InventoryStackSizeGroup": "Default"
+		},
+		"BaseStatValues": [
+			{
+				"BaseStatID": "^WEAPON_DAMAGE",
+				"Value": 11.766889572143555
+			},
+			{
+				"BaseStatID": "^WEAPON_MINING",
+				"Value": 0.0
+			},
+			{
+				"BaseStatID": "^WEAPON_SCAN",
+				"Value": 12.127756118774414
+			}
+		],
+		"SpecialSlots": [
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 2,
+					"Y": 2
+				}
+			},
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 2,
+					"Y": 1
+				}
+			},
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 4,
+					"Y": 0
+				}
+			}
+		],
+		"Width": 8,
+		"Height": 3,
+		"IsCool": false,
+		"Name": "",
+		"Version": 1,
+		"NumSlotsFromTech": 0
+	},
+	"ScreenData": {
+		"ScreenScale": 0.029999999329447748,
+		"ScreenOffset": [
+			0.019999999552965165,
+			0.11999999731779099,
+			-0.10000000149011612
+		],
+		"ScreenRotation": [
+			0.0,
+			1.0,
+			0.0,
+			1.9198620319366456
+		]
+	},
+	"Seed": [
+		true,
+		"0x0"
+	],
+	"CustomisationData": {
+		"DescriptorGroups": [],
+		"PaletteID": "^",
+		"Colours": [],
+		"TextureOptions": [],
+		"BoneScales": [],
+		"Scale": 1.0
+	},
+	"Name": "Pillar of Titan",
+	"IsLarge": true,
+	"PrimaryMode": 5,
+	"SecondaryMode": 9,
+	"UseLegacyColours": false,
+	"Resource": {
+		"Filename": "MODELS/COMMON/WEAPONS/MULTITOOL/STAFFMULTITOOLRUIN.SCENE.MBIN",
+		"Seed": [
+			false,
+			"0x0"
+		],
+		"ProceduralTexture": {
+			"Samplers": []
+		},
+		"AltId": ""
+	}
+}
