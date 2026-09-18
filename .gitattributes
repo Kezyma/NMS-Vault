@@ -1,0 +1,9 @@
+# Normalise text to LF in the repository. Working-copy endings still follow the
+# platform, so this only keeps the stored form consistent across contributors.
+* text=auto
+
+# Test fixtures are byte-exact captures from real save editors. Tests assert their
+# exact bytes - including CRLF counts, since NMSE writes CRLF on Windows and this
+# project deliberately emits LF. Line-ending normalisation would silently rewrite
+# them and break those tests on any platform whose checkout differs from Windows.
+tests/fixtures/** -text
