@@ -183,7 +183,7 @@
 	"IsLarge": false,
 	"PrimaryMode": 3,
 	"SecondaryMode": 9,
-	"UseLegacyColours": true,
+	"UseLegacyColours": false,
 	"Resource": {
 		"Filename": "MODELS/COMMON/WEAPONS/MULTITOOL/MULTITOOL.SCENE.MBIN",
 		"Seed": [

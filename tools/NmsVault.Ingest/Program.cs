@@ -32,6 +32,7 @@ public static class Program
             InspectCommand(),
             ValidateCommand(gallery),
             UpdateCommand(gallery),
+            ReimportCommand(gallery),
             ReindexCommand(gallery),
             ExtractTechCommand(gallery),
         };
@@ -109,6 +110,7 @@ public static class Program
             Author = author,
             DateAdded = DateTimeOffset.UtcNow,
             GameVersion = gameVersion,
+            Source = source.Name,
             Images = [],
         };
 
@@ -201,6 +203,159 @@ public static class Program
         Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
         return 0;
     }
+
+    // --- reimport -----------------------------------------------------
+
+    private static Command ReimportCommand(Option<DirectoryInfo> gallery)
+    {
+        var file = new Option<FileInfo?>("--file") { Description = "One corrected export to read again." };
+        var id = new Option<string?>("--id") { Description = "The item it belongs to. Defaults to the one recording this file as its source." };
+        var from = new Option<DirectoryInfo?>("--from") { Description = "A folder of exports: every item whose source is in it is read again." };
+
+        var command = new Command("reimport",
+            "Read an export again into an item that already exists, keeping its gallery metadata.")
+        { file, id, from, gallery };
+
+        command.SetAction(result => Reimport(
+            new GalleryStore(result.GetValue(gallery)!.FullName),
+            result.GetValue(file),
+            result.GetValue(id),
+            result.GetValue(from)));
+
+        return command;
+    }
+
+    /// <summary>
+    /// Replaces stored payloads from their source exports, leaving the gallery metadata alone.
+    /// </summary>
+    /// <remarks>
+    /// The verb exists because the two halves of an item have different lifetimes. The payload
+    /// comes from a backup and gets corrected when the backup does; the display name, summary,
+    /// tags and pictures are work done here and must survive that. Adding the file again with
+    /// --force would replace both.
+    /// </remarks>
+    private static int Reimport(GalleryStore store, FileInfo? file, string? id, DirectoryInfo? from)
+    {
+        if (file is null && from is null)
+        {
+            Console.Error.WriteLine("error: pass --file for one export, or --from for a folder of them.");
+            return 1;
+        }
+
+        var mapper = JsonNameMapper.LoadEmbedded();
+        var stored = store.ReadAll().ToList();
+
+        var jobs = new List<(string Id, FileInfo File)>();
+
+        if (file is not null)
+        {
+            string? target = id ?? stored.FirstOrDefault(s => IsSource(s.Item, file.Name)).Item?.Meta.Id;
+
+            if (target is null)
+            {
+                Console.Error.WriteLine($"error: no item records '{file.Name}' as its source. Pass --id to say which one.");
+                return 1;
+            }
+
+            jobs.Add((target, file));
+        }
+
+        if (from is not null)
+        {
+            // Matched on the recorded source rather than on the file name as a slug: two
+            // exports can slug to the same id - there are two ships called Rasamama S36 -
+            // and only the stored item knows which of them it was read from.
+            var byName = from.EnumerateFiles("*", SearchOption.AllDirectories)
+                .ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (_, item) in stored)
+            {
+                if (item.Meta.Source is not { } source)
+                {
+                    Console.WriteLine($"  skipped {item.Meta.Id}: records no source file");
+                    continue;
+                }
+
+                if (byName.TryGetValue(source, out var found)) jobs.Add((item.Meta.Id, found));
+                else Console.WriteLine($"  skipped {item.Meta.Id}: '{source}' is not in that folder");
+            }
+        }
+
+        int changed = 0, failed = 0;
+
+        foreach (var (target, export) in jobs)
+        {
+            if (!store.Exists(target))
+            {
+                Console.Error.WriteLine($"  {target}: no such item");
+                failed++;
+                continue;
+            }
+
+            var before = VaultItem.FromBytes(File.ReadAllBytes(store.PathFor(target)), target);
+            byte[] bytes = File.ReadAllBytes(export.FullName);
+
+            VaultItem after;
+            try
+            {
+                after = new VaultImporter(mapper).Import(
+                    bytes, before.Meta with { Source = export.Name }, export.Name);
+            }
+            catch (Exception ex) when (ex is ImportException or InvalidDataException)
+            {
+                Console.Error.WriteLine($"  {target}: {ex.Message}");
+                failed++;
+                continue;
+            }
+
+            // A corrected backup is still the same thing. A different kind means the wrong
+            // file, and writing it would quietly move the item to another page.
+            if (after.Kind != before.Kind)
+            {
+                Console.Error.WriteLine($"  {target}: '{export.Name}' is a {after.Kind}, not a {before.Kind}");
+                failed++;
+                continue;
+            }
+
+            byte[] wrote = after.ToBytes();
+            bool differs = !before.ToBytes().AsSpan().SequenceEqual(wrote);
+
+            if (differs)
+            {
+                store.Write(after);
+                changed++;
+                Console.WriteLine($"  {target}: updated from {export.Name}{Describe(before, after)}");
+            }
+        }
+
+        Console.WriteLine($"  {jobs.Count} read, {changed} changed, {failed} failed");
+        if (changed > 0) Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
+
+        return failed > 0 ? 1 : 0;
+    }
+
+    private static bool IsSource(VaultItem item, string fileName)
+        => string.Equals(item.Meta.Source, fileName, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Names the differences worth reading in a one-line report.</summary>
+    private static string Describe(VaultItem before, VaultItem after)
+    {
+        var notes = new List<string>();
+
+        if (before.UsesLegacyColours != after.UsesLegacyColours)
+            notes.Add($"legacy colours {Say(before.UsesLegacyColours)} -> {Say(after.UsesLegacyColours)}");
+
+        if (DescribeCustomisation(before) != DescribeCustomisation(after))
+            notes.Add($"customisation {DescribeCustomisation(before)} -> {DescribeCustomisation(after)}");
+
+        var wasTech = ItemFacts.For(before).InstalledTech.Count;
+        var nowTech = ItemFacts.For(after).InstalledTech.Count;
+        if (wasTech != nowTech) notes.Add($"technology {wasTech} -> {nowTech}");
+
+        return notes.Count == 0 ? "" : " (" + string.Join("; ", notes) + ")";
+    }
+
+    private static string Say(bool? value) => value is null ? "not stated" : value.Value ? "true" : "false";
 
     // --- inspect ------------------------------------------------------
 

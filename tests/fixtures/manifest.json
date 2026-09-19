@@ -13,7 +13,7 @@
       "producer": "NMSE (No Man's Save Editor)",
       "producerVersion": "1.3.16+legacy-colours-fix",
       "gameVersion": "7.03 Cosmos",
-      "captured": "2026-09-18",
+      "captured": "2026-09-18, refreshed 2026-09-19",
       "extension": ".nmsship",
       "shape": "{ Ship, CharacterCustomisationData, UsesLegacyColours }",
       "encoding": "ASCII only - see openQuestions.encoding",
@@ -30,7 +30,10 @@
         "surviving a conversion.",
         "The Wraith exercises NMSE's AlienShip owner-type mapping; Vintage Interceptor",
         "exercises RobotShip. Starborn Phoenix is a DLC model.",
-        "No corvettes, so no fixture exercises the Base sidecar yet."
+        "No corvettes, so no fixture exercises the Base sidecar yet.",
+        "Refreshed 2026-09-19 after corrections upstream: both Alpha Vectors had a custom",
+        "paint job that should not have been there, and their CustomData.Colours is now",
+        "empty. Six of seventeen still carry a texture option, so that path stays covered."
       ]
     },
     {
@@ -40,7 +43,7 @@
       "producer": "NMSE (No Man's Save Editor)",
       "producerVersion": "1.3.16+legacy-colours-fix",
       "gameVersion": "7.03 Cosmos",
-      "captured": "2026-09-18, extended 2026-09-19",
+      "captured": "2026-09-18, extended and refreshed 2026-09-19",
       "extension": ".nmstool",
       "shape": "bare multitool object",
       "encoding": "ASCII only",
@@ -57,7 +60,9 @@
         "Vetric-LX) have real rolls of 1.5 to 4.9 damage. All five carry IsLarge=false,",
         "so the body flag and the stat ranges disagree about every one of them.",
         "The two Starbound v0.27 files are byte-identical apart from PrimaryMode and",
-        "SecondaryMode, which is which weapon mode was selected when each was exported."
+        "SecondaryMode, which is which weapon mode was selected when each was exported.",
+        "Refreshed 2026-09-19: Rezosu Z65 had UseLegacyColours true and should have been",
+        "false. Two of twelve are true."
       ]
     },
     {

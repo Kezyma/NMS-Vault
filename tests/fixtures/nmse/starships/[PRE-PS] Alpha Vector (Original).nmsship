@@ -380,47 +380,7 @@
 		"CustomData": {
 			"DescriptorGroups": [],
 			"PaletteID": "^",
-			"Colours": [
-				{
-					"Palette": {
-						"Palette": "Paint",
-						"ColourAlt": "Primary",
-						"Index": -1
-					},
-					"Colour": [
-						0.5600000023841858,
-						0.3330000042915344,
-						0.42399999499320986,
-						1.0
-					]
-				},
-				{
-					"Palette": {
-						"Palette": "Paint",
-						"ColourAlt": "Alternative3",
-						"Index": -1
-					},
-					"Colour": [
-						1.0,
-						1.0,
-						1.0,
-						1.0
-					]
-				},
-				{
-					"Palette": {
-						"Palette": "Undercoat",
-						"ColourAlt": "Primary",
-						"Index": -1
-					},
-					"Colour": [
-						0.753000020980835,
-						0.6159999966621399,
-						0.4410000145435333,
-						1.0
-					]
-				}
-			],
+			"Colours": [],
 			"TextureOptions": [],
 			"BoneScales": [],
 			"Scale": 1.0

@@ -146,6 +146,77 @@ public class NmseRoundTripTests
     }
 
     [Fact]
+    public void EveryMetadataFieldSurvivesBeingStoredAndReadBack()
+    {
+        // One field being forgotten in ToJson is a silent loss - nothing fails, the value is
+        // simply gone next time the item is read. Source went in that way: the property and
+        // the reader were both added and the writer was not, and it took a re-import of the
+        // whole gallery to notice.
+        var meta = new VaultMetadata
+        {
+            Id = "rezosu-z65",
+            DisplayName = "Rezosu Z65",
+            AlternativeNames = ["PS4 tool"],
+            Summary = "The PlayStation pre-order multi-tool.",
+            Description = "Two lines.\nThe second one.",
+            Images = ["img/rezosu-z65.webp"],
+            Tags = ["pre-order", "pistol"],
+            Source = "[PRE-PS] Rezosu Z65.nmstool",
+            Author = "Someone",
+            DateAdded = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero),
+            GameVersion = "7.03",
+        };
+
+        var written = meta.ToJson();
+        var read = VaultMetadata.FromJson(written);
+
+        // Every property, found by reflection rather than listed here, so a field added later
+        // is covered the day it is added rather than the day someone remembers this test.
+        var names = written.Names().ToHashSet(StringComparer.Ordinal);
+
+        foreach (var property in typeof(VaultMetadata).GetProperties())
+            Assert.Contains(property.Name, names);
+
+        Assert.Equal(meta.Id, read.Id);
+        Assert.Equal(meta.DisplayName, read.DisplayName);
+        Assert.Equal(meta.AlternativeNames, read.AlternativeNames);
+        Assert.Equal(meta.Summary, read.Summary);
+        Assert.Equal(meta.Description, read.Description);
+        Assert.Equal(meta.Images, read.Images);
+        Assert.Equal(meta.Tags, read.Tags);
+        Assert.Equal(meta.Source, read.Source);
+        Assert.Equal(meta.Author, read.Author);
+        Assert.Equal(meta.DateAdded, read.DateAdded);
+        Assert.Equal(meta.GameVersion, read.GameVersion);
+        Assert.Equal(meta.SchemaVersion, read.SchemaVersion);
+    }
+
+    [Fact]
+    public void TheSourceFileIsRememberedSoAnItemCanBeReadAgain()
+    {
+        // What makes `reimport --from` possible. Two exports can slug to the same id - there
+        // are two ships called Rasamama S36 - so the stored item has to say which file it came
+        // from rather than the name being worked out again.
+        var meta = new VaultMetadata
+        {
+            Id = "rasamama-s36-start",
+            DisplayName = "Rasamama S36",
+            Source = "[START] Rasamama S36.nmsship",
+        };
+
+        var stored = VaultItem.FromBytes(
+            NmseImporter.Read(Read("starships", "[START] Rasamama S36.nmsship"), meta, ".nmsship").ToBytes());
+
+        string source = Assert.IsType<string>(stored.Meta.Source);
+        Assert.Equal("[START] Rasamama S36.nmsship", source);
+
+        // The name only. Where the file sat is nobody else's business and would be wrong by
+        // the next day anyway.
+        Assert.DoesNotContain(Path.DirectorySeparatorChar, source);
+        Assert.DoesNotContain('/', source);
+    }
+
+    [Fact]
     public void StoredVaultItem_StillRoundTripsToTheOriginalBytes()
     {
         // Metadata must be additive: attaching it and storing the item must not perturb

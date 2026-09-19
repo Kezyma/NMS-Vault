@@ -55,6 +55,17 @@ public sealed record VaultMetadata
     /// <summary>Filter tags. Gallery search only; no editor format carries these.</summary>
     public IReadOnlyList<string> Tags { get; init; } = [];
 
+    /// <summary>
+    /// The name of the export this item was read from, e.g. <c>[PRE-PS] Rezosu Z65.nmstool</c>.
+    /// </summary>
+    /// <remarks>
+    /// The name only, never a path: where the file sat on the machine that ingested it is
+    /// nobody else's business, and it would be wrong by the next day anyway. What it is for is
+    /// re-importing - when a backup is corrected and has to be read again, this is what says
+    /// which stored item it belongs to.
+    /// </remarks>
+    public string? Source { get; init; }
+
     /// <summary>Who contributed the item, if they want the credit.</summary>
     public string? Author { get; init; }
 
@@ -79,6 +90,7 @@ public sealed record VaultMetadata
         Description = vault.GetString("Description") ?? "",
         Images = ReadStrings(vault.GetArray("Images")),
         Tags = ReadStrings(vault.GetArray("Tags")),
+        Source = vault.GetString("Source"),
         Author = vault.GetString("Author"),
         DateAdded = DateTimeOffset.TryParse(vault.GetString("DateAdded"), out var d) ? d : null,
         GameVersion = vault.GetString("GameVersion"),
@@ -96,6 +108,7 @@ public sealed record VaultMetadata
         if (Description.Length > 0) obj.Set("Description", Description);
         if (Images.Count > 0) obj.Set("Images", WriteStrings(Images));
         if (Tags.Count > 0) obj.Set("Tags", WriteStrings(Tags));
+        if (Source is not null) obj.Set("Source", Source);
         if (Author is not null) obj.Set("Author", Author);
         if (DateAdded is not null) obj.Set("DateAdded", DateAdded.Value.ToString("O"));
         if (GameVersion is not null) obj.Set("GameVersion", GameVersion);
