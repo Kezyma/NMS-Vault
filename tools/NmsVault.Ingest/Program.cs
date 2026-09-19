@@ -1,119 +1,148 @@
+using System.CommandLine;
 using NmsVault.Core;
 using NmsVault.Core.Adapters;
+using NmsVault.Core.Derived;
 using NmsVault.Core.Detection;
 using NmsVault.Json;
 
 namespace NmsVault.Ingest;
 
 /// <summary>
-/// Command-line tool for adding items to the gallery and checking what is already there.
+/// Command-line tool for building the gallery: adding items, checking what is already there,
+/// and extracting the technology lookup from NMSE's resources.
 /// </summary>
-/// <remarks>
-/// Hand-rolled argument parsing rather than a library, to keep the no-dependencies property
-/// that makes the WebAssembly payload small. There are four verbs; a parser library would
-/// outweigh them.
-/// </remarks>
 public static class Program
 {
     private const string DefaultGalleryRoot = "src/NmsVault.Web/wwwroot/gallery";
 
     /// <summary>Entry point.</summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <returns>Zero on success.</returns>
     public static int Main(string[] args)
     {
-        try
+        var gallery = new Option<DirectoryInfo>("--gallery")
         {
-            return (args.FirstOrDefault() ?? "help") switch
-            {
-                "add" => Add(Args.Parse(args.Skip(1))),
-                "inspect" => Inspect(Args.Parse(args.Skip(1))),
-                "validate" => Validate(Args.Parse(args.Skip(1))),
-                "reindex" => Reindex(Args.Parse(args.Skip(1))),
-                _ => Help(),
-            };
-        }
-        catch (Exception ex) when (ex is ImportException or InvalidDataException or ArgumentException)
+            Description = "The gallery folder to work in.",
+            DefaultValueFactory = _ => new DirectoryInfo(DefaultGalleryRoot),
+        };
+
+        var root = new RootCommand("Builds and checks the NMS-Vault gallery.")
         {
-            // Expected failure modes get a clean message; anything else keeps its stack trace.
-            Console.Error.WriteLine($"error: {ex.Message}");
-            return 1;
-        }
+            AddCommand(gallery),
+            InspectCommand(),
+            ValidateCommand(gallery),
+            ReindexCommand(gallery),
+            ExtractTechCommand(gallery),
+        };
+
+        return root.Parse(args).Invoke();
     }
 
     // --- add ----------------------------------------------------------
 
-    private static int Add(Args args)
+    private static Command AddCommand(Option<DirectoryInfo> gallery)
     {
-        string source = args.Require("file");
-        var store = new GalleryStore(args.Get("gallery") ?? DefaultGalleryRoot);
+        var file = new Option<FileInfo>("--file") { Description = "The editor export to add.", Required = true };
+        var name = new Option<string?>("--name") { Description = "Display name. Defaults to the file name." };
+        var id = new Option<string?>("--id") { Description = "Permalink slug. Defaults to a slug of the name." };
+        var description = new Option<string?>("--description") { Description = "Free text shown on the item." };
+        var tags = new Option<string?>("--tags") { Description = "Comma-separated filter tags." };
+        var altNames = new Option<string?>("--alt-names") { Description = "Comma-separated alternative names, for search." };
+        var images = new Option<string?>("--images") { Description = "Comma-separated image paths, best first." };
+        var author = new Option<string?>("--author") { Description = "Contributor credit." };
+        var gameVersion = new Option<string?>("--game-version") { Description = "Game version captured from, e.g. 7.03." };
+        var force = new Option<bool>("--force") { Description = "Replace an item that already exists." };
+
+        var command = new Command("add", "Detect, convert to the vault format, store, and rebuild the index.")
+        { file, name, id, description, tags, altNames, images, author, gameVersion, force, gallery };
+
+        command.SetAction(result => Add(
+            result.GetValue(file)!,
+            new GalleryStore(result.GetValue(gallery)!.FullName),
+            result.GetValue(name),
+            result.GetValue(id),
+            result.GetValue(description),
+            Split(result.GetValue(tags)),
+            Split(result.GetValue(altNames)),
+            Split(result.GetValue(images)),
+            result.GetValue(author),
+            result.GetValue(gameVersion),
+            result.GetValue(force)));
+
+        return command;
+    }
+
+    private static int Add(
+        FileInfo source, GalleryStore store, string? name, string? id, string? description,
+        IReadOnlyList<string> tags, IReadOnlyList<string> altNames, IReadOnlyList<string> images,
+        string? author, string? gameVersion, bool force)
+    {
         var mapper = JsonNameMapper.LoadEmbedded();
+        byte[] bytes = File.ReadAllBytes(source.FullName);
 
-        byte[] bytes = File.ReadAllBytes(source);
-
-        // Report what was detected before doing anything, so a wrong guess is visible rather
-        // than silently baked into a stored item.
-        var detected = FormatDetector.Detect(bytes, mapper, source);
+        // Reported before anything is stored, so a wrong detection is visible rather than
+        // baked into an item nobody looks at again.
+        var detected = FormatDetector.Detect(bytes, mapper, source.Name);
         Console.WriteLine($"  detected: {detected.Format} / {detected.Kind} / {detected.Keys} keys ({detected.Certainty})");
         Console.WriteLine($"    reason: {detected.Reason}");
 
-        string displayName = args.Get("name") ?? Path.GetFileNameWithoutExtension(source);
-        string id = args.Get("id") ?? Slug.From(displayName);
+        string displayName = name ?? Path.GetFileNameWithoutExtension(source.Name);
+        string slug = id ?? Slug.From(displayName);
 
-        if (store.Exists(id) && !args.Has("force"))
-            throw new ArgumentException($"'{id}' already exists. Pass --force to replace it, or --id to store alongside.");
+        if (store.Exists(slug) && !force)
+        {
+            Console.Error.WriteLine($"error: '{slug}' already exists. Pass --force to replace it, or --id to store alongside.");
+            return 1;
+        }
 
-        var images = args.GetList("images");
         var meta = new VaultMetadata
         {
-            Id = id,
+            Id = slug,
             DisplayName = displayName,
-            Description = args.Get("description") ?? "",
-            AlternativeNames = args.GetList("alt-names"),
-            Tags = args.GetList("tags"),
-            Author = args.Get("author"),
+            Description = description ?? "",
+            AlternativeNames = altNames,
+            Tags = tags,
+            Author = author,
             DateAdded = DateTimeOffset.UtcNow,
-            GameVersion = args.Get("game-version"),
-            // Placeholder: replaced below once the files are copied and their final
-            // gallery-relative paths are known.
+            GameVersion = gameVersion,
             Images = [],
         };
 
-        var item = new VaultImporter(mapper).Import(bytes, meta, source);
+        var item = new VaultImporter(mapper).Import(bytes, meta, source.Name);
 
         if (images.Count > 0)
         {
-            var paths = images.Select((path, i) => store.AddImage(path, id, i)).ToList();
-            item = VaultItem.FromJson(item.ToJson(), id);
-            item = Rebuild(item, meta with { Images = paths });
+            var paths = images.Select((path, i) => store.AddImage(path, slug, i)).ToList();
+            item = VaultItem.Create(item.Kind, item.Payload, meta with { Images = paths },
+                item.CharacterCustomisationData, item.UsesLegacyColours,
+                item.ShipBase, item.AccessorySlots);
         }
 
         store.Write(item);
-        int total = store.RebuildIndex();
-
-        Console.WriteLine($"  stored: {store.PathFor(id)}");
+        Console.WriteLine($"  stored: {store.PathFor(slug)}");
         ReportLosses(item, mapper);
-        Console.WriteLine($"  index rebuilt: {total} item(s)");
+        Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
         return 0;
     }
 
-    /// <summary>
-    /// Rebuilds an item with different metadata. Needed because images are copied after the
-    /// item is imported - only then are their final paths known.
-    /// </summary>
-    private static VaultItem Rebuild(VaultItem item, VaultMetadata meta)
-        => VaultItem.Create(item.Kind, item.Payload, meta,
-            item.CharacterCustomisationData, item.UsesLegacyColours,
-            item.ShipBase, item.AccessorySlots);
-
     // --- inspect ------------------------------------------------------
 
-    private static int Inspect(Args args)
+    private static Command InspectCommand()
     {
-        string source = args.Require("file");
-        var mapper = JsonNameMapper.LoadEmbedded();
-        byte[] bytes = File.ReadAllBytes(source);
+        var file = new Option<FileInfo>("--file") { Description = "The file to identify.", Required = true };
+        var command = new Command("inspect", "Report what a file is and what each editor would lose. Changes nothing.") { file };
 
-        var detected = FormatDetector.Detect(bytes, mapper, source);
-        Console.WriteLine($"{Path.GetFileName(source)}");
+        command.SetAction(result => Inspect(result.GetValue(file)!));
+        return command;
+    }
+
+    private static int Inspect(FileInfo source)
+    {
+        var mapper = JsonNameMapper.LoadEmbedded();
+        byte[] bytes = File.ReadAllBytes(source.FullName);
+
+        var detected = FormatDetector.Detect(bytes, mapper, source.Name);
+        Console.WriteLine(source.Name);
         Console.WriteLine($"  format    {detected.Format}");
         Console.WriteLine($"  kind      {detected.Kind}");
         Console.WriteLine($"  keys      {detected.Keys}");
@@ -123,31 +152,42 @@ public static class Program
         if (detected.Format == SourceFormat.Unknown) return 1;
 
         var item = new VaultImporter(mapper).Import(bytes,
-            new VaultMetadata { Id = "inspect", DisplayName = "inspect" }, source);
+            new VaultMetadata { Id = "inspect", DisplayName = "inspect" }, source.Name);
 
-        Console.WriteLine($"  payload   {item.Payload.Length} keys");
+        var facts = ItemFacts.For(item);
+        Console.WriteLine($"  type      {facts.Type}{(facts.IsModifiedResource ? " (modified)" : "")}");
+        Console.WriteLine($"  class     {facts.Class ?? "none"}");
         Console.WriteLine($"  legacy    {DescribeLegacyColours(item)}");
         Console.WriteLine($"  custom    {DescribeCustomisation(item)}");
         Console.WriteLine($"  base      {(item.ShipBase is null ? "none" : "present")}");
+        foreach (var stat in facts.Stats) Console.WriteLine($"  {stat.Label,-16}{stat.Value:0.##}");
+        Console.WriteLine($"  tech      {facts.InstalledTech.Count} installed");
+
         ReportLosses(item, mapper);
         return 0;
     }
 
     // --- validate -----------------------------------------------------
 
-    private static int Validate(Args args)
+    private static Command ValidateCommand(Option<DirectoryInfo> gallery)
     {
-        var store = new GalleryStore(args.Get("gallery") ?? DefaultGalleryRoot);
+        var command = new Command("validate", "Check every stored item, and that every adapter can export it.") { gallery };
+        command.SetAction(result => Validate(new GalleryStore(result.GetValue(gallery)!.FullName)));
+        return command;
+    }
+
+    private static int Validate(GalleryStore store)
+    {
         var mapper = JsonNameMapper.LoadEmbedded();
         var adapters = Adapters(mapper);
+        var tech = LoadTechIndex(store);
 
-        int checked_ = 0, failed = 0;
+        int checkedCount = 0, failed = 0;
         var seenIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var (path, item) in store.ReadAll())
         {
-            checked_++;
-            string name = Path.GetFileName(path);
+            checkedCount++;
             var problems = new List<string>();
 
             if (item.Meta.Id.Length == 0) problems.Add("no Id");
@@ -158,19 +198,29 @@ public static class Program
             if (item.Meta.DisplayName.Length == 0) problems.Add("no DisplayName");
             if (!item.Kind.IsAvailable()) problems.Add($"{item.Kind} is not offered yet");
 
-            // A stale mapping table would leave keys unmappable, which silently produces
+            // A stale mapping table leaves keys unmappable, which silently produces
             // half-obfuscated output for NMS Companion and NomNom.
             int unmapped = KeyObfuscator.CountUnmapped(item.Payload, mapper);
             if (unmapped > 0) problems.Add($"{unmapped} payload key(s) missing from the mapping table");
 
-            // Every adapter that claims to support this kind must actually produce a file.
+            var facts = ItemFacts.For(item);
+            if (facts.Type is "Unknown") problems.Add("type did not resolve");
+
+            // Every installed technology must be nameable, or the info panel shows raw ids.
+            if (tech.Count > 0)
+            {
+                var unknown = facts.InstalledTech.Where(id => tech.Find(id) is null).ToList();
+                if (unknown.Count > 0)
+                    problems.Add($"{unknown.Count} technology id(s) not in tech.json: {string.Join(", ", unknown.Take(4))}");
+            }
+
             foreach (var adapter in adapters)
             {
                 if (!adapter.Extension(item.Kind).HasValue) continue;
                 try
                 {
-                    var result = adapter.Export(item);
-                    if (result.Content.Length == 0) problems.Add($"{adapter.Editor} produced an empty file");
+                    if (adapter.Export(item).Content.Length == 0)
+                        problems.Add($"{adapter.Editor} produced an empty file");
                 }
                 catch (Exception ex)
                 {
@@ -181,25 +231,71 @@ public static class Program
             if (problems.Count > 0)
             {
                 failed++;
-                Console.Error.WriteLine($"FAIL {name}");
-                foreach (var p in problems) Console.Error.WriteLine($"       {p}");
+                Console.Error.WriteLine($"FAIL {Path.GetFileName(path)}");
+                foreach (var problem in problems) Console.Error.WriteLine($"       {problem}");
             }
         }
 
-        Console.WriteLine($"{checked_ - failed}/{checked_} item(s) valid");
+        if (tech.Count == 0)
+            Console.WriteLine("  note: no tech.json, so installed technology was not checked. Run extract-tech.");
+
+        Console.WriteLine($"{checkedCount - failed}/{checkedCount} item(s) valid");
         return failed == 0 ? 0 : 1;
     }
 
     // --- reindex ------------------------------------------------------
 
-    private static int Reindex(Args args)
+    private static Command ReindexCommand(Option<DirectoryInfo> gallery)
     {
-        var store = new GalleryStore(args.Get("gallery") ?? DefaultGalleryRoot);
-        Console.WriteLine($"index rebuilt: {store.RebuildIndex()} item(s)");
-        return 0;
+        var command = new Command("reindex", "Rebuild index.json from the item files.") { gallery };
+        command.SetAction(result =>
+        {
+            var store = new GalleryStore(result.GetValue(gallery)!.FullName);
+            Console.WriteLine($"index rebuilt: {store.RebuildIndex()} item(s)");
+            return 0;
+        });
+        return command;
+    }
+
+    // --- extract-tech -------------------------------------------------
+
+    private static Command ExtractTechCommand(Option<DirectoryInfo> gallery)
+    {
+        var nmse = new Option<DirectoryInfo>("--nmse")
+        {
+            Description = "Path to NMSE's Resources folder.",
+            Required = true,
+        };
+
+        var command = new Command("extract-tech",
+            "Build the technology lookup and icons from NMSE's resources. Run when the game updates.")
+        { nmse, gallery };
+
+        command.SetAction(result =>
+        {
+            var target = result.GetValue(gallery)!.FullName;
+            Console.WriteLine($"extracting technology into {target}");
+
+            var outcome = TechExtractor.Extract(
+                result.GetValue(nmse)!.FullName, target, line => Console.WriteLine(line));
+
+            Console.WriteLine($"  {outcome.Technologies} technologies, {outcome.IconsWritten} icons " +
+                              $"({outcome.Bytes / 1024.0 / 1024.0:0.0} MB)");
+            if (outcome.IconsMissing > 0)
+                Console.WriteLine($"  {outcome.IconsMissing} icon(s) named but not found in the source");
+            return 0;
+        });
+
+        return command;
     }
 
     // --- shared -------------------------------------------------------
+
+    private static TechIndex LoadTechIndex(GalleryStore store)
+    {
+        string path = Path.Combine(Path.GetDirectoryName(store.IndexPath)!, "tech.json");
+        return File.Exists(path) ? TechIndex.FromBytes(File.ReadAllBytes(path)) : TechIndex.Empty;
+    }
 
     private static IReadOnlyList<IExportAdapter> Adapters(JsonNameMapper mapper) =>
     [
@@ -208,33 +304,6 @@ public static class Program
         new CompanionExportAdapter(mapper),
         new NomNomExportAdapter(mapper),
     ];
-
-    /// <summary>
-    /// Ships keep the legacy-colour flag in a parallel array outside the entity, so it is a
-    /// vault sidecar. Multitools keep theirs inline on the object as <c>UseLegacyColours</c>
-    /// - note the missing s - so reporting only the sidecar would wrongly say "not stated"
-    /// for a multitool that has one.
-    /// </summary>
-    private static string DescribeLegacyColours(VaultItem item)
-    {
-        if (item.UsesLegacyColours is { } sidecar) return $"{sidecar} (sidecar)";
-        if (item.Payload.Get("UseLegacyColours") is bool inline) return $"{inline} (inline)";
-        return "not stated";
-    }
-
-    /// <summary>
-    /// Same split: a ship's customisation is a sidecar entry, a multitool's is inline.
-    /// </summary>
-    private static string DescribeCustomisation(VaultItem item)
-    {
-        if (item.CharacterCustomisationData is { } ccd)
-            return CustomisationHelpers.IsDefault(ccd) ? "present but default (sidecar)" : "present (sidecar)";
-
-        if (item.Payload.GetObject("CustomisationData") is { } inline)
-            return CustomisationHelpers.IsDefault(inline) ? "present but default (inline)" : "present (inline)";
-
-        return "none";
-    }
 
     private static void ReportLosses(VaultItem item, JsonNameMapper mapper)
     {
@@ -257,27 +326,29 @@ public static class Program
         }
     }
 
-    private static int Help()
+    /// <summary>
+    /// Ships keep the legacy-colour flag in a parallel array outside the entity, so it is a
+    /// vault sidecar. Multitools keep theirs inline as <c>UseLegacyColours</c> - note the
+    /// missing s - so reporting only the sidecar would wrongly say "not stated" for one.
+    /// </summary>
+    private static string DescribeLegacyColours(VaultItem item)
     {
-        Console.WriteLine("""
-            NMS-Vault ingest
-
-              add       --file <path> [--name <s>] [--id <s>] [--description <s>]
-                        [--tags a,b] [--alt-names a,b] [--images a.png,b.png]
-                        [--author <s>] [--game-version <s>] [--force] [--gallery <dir>]
-                        Detect, convert to the vault format, store, rebuild the index.
-
-              inspect   --file <path>
-                        Report what a file is and what each editor would lose. Changes nothing.
-
-              validate  [--gallery <dir>]
-                        Check every stored item and that every adapter can export it.
-
-              reindex   [--gallery <dir>]
-                        Rebuild index.json from the item files.
-
-            Gallery defaults to src/NmsVault.Web/wwwroot/gallery.
-            """);
-        return 0;
+        if (item.UsesLegacyColours is { } sidecar) return $"{sidecar} (sidecar)";
+        if (item.Payload.Get("UseLegacyColours") is bool inline) return $"{inline} (inline)";
+        return "not stated";
     }
+
+    private static string DescribeCustomisation(VaultItem item)
+    {
+        if (item.CharacterCustomisationData is { } ccd)
+            return CustomisationHelpers.IsDefault(ccd) ? "present but default (sidecar)" : "present (sidecar)";
+
+        if (item.Payload.GetObject("CustomisationData") is { } inline)
+            return CustomisationHelpers.IsDefault(inline) ? "present but default (inline)" : "present (inline)";
+
+        return "none";
+    }
+
+    private static IReadOnlyList<string> Split(string? value)
+        => value is null ? [] : value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 }

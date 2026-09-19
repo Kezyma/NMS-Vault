@@ -6,6 +6,13 @@ obj/
 .idea/
 *.swp
 
-# Ingested gallery content is regenerated from the fixtures during development.
-# When real items exist they will be committed; this keeps the WIP corpus out.
-src/NmsVault.Web/wwwroot/gallery/
+# Gallery items are the real content and will be committed once they exist. What is
+# here now is ingested from the test fixtures during development, so it is ignored.
+src/NmsVault.Web/wwwroot/gallery/items/
+src/NmsVault.Web/wwwroot/gallery/index.json
+src/NmsVault.Web/wwwroot/gallery/img/*
+!src/NmsVault.Web/wwwroot/gallery/img/tech/
+
+# tech.json and img/tech are extraction output and ARE committed: extraction needs an
+# NMSE checkout, the Pages runner has none, and re-running it against the same game
+# version is byte-for-byte identical, so it adds nothing to history unless the game moves.

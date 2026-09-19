@@ -10,6 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <!-- Image work uses SkiaSharp, not System.Drawing: same reason the shared projects avoid
+         it, and the extractor should not need a different answer from the browser. -->
+    <PackageReference Include="SkiaSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\NmsVault.Core\NmsVault.Core.csproj" />
   </ItemGroup>
 
