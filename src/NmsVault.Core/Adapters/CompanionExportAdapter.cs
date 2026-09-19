@@ -68,18 +68,23 @@ public sealed class CompanionExportAdapter : IExportAdapter
             // JSONPath, which terminates at .Colours. Parts and textures have nowhere to go.
             var custom = ccd.GetObject("CustomData");
             if (custom?.GetArray("DescriptorGroups") is { Length: > 0 })
-                losses.Add("the ship's custom parts, so it will arrive as the base model in the right colours");
+                losses.Add("This format does not store custom parts, so the ship will arrive as the "
+                    + "base model in the right colours.");
             if (custom?.GetArray("TextureOptions") is { Length: > 0 })
-                losses.Add("the texture option");
+                losses.Add("This format does not store the chosen texture, so the ship's finish will "
+                    + "differ in-game.");
             if (custom?.GetString("PaletteID") is { } p && p is not ("^" or ""))
-                losses.Add($"the colour palette ({p})");
+                losses.Add($"This format does not store the colour palette ({p}), so the ship may "
+                    + "appear in different colours.");
         }
 
         if (item.Kind == EntityKind.Starship && item.ShipBase is not null)
-            losses.Add("the corvette's base parts, which this format does not store");
+            losses.Add("This format does not store the parts a corvette is built from, so the ship "
+                + "will arrive as an empty hull.");
 
         if (item.Kind == EntityKind.Freighter)
-            losses.Add("the freighter's cargo inventory and colours, which this format drops");
+            losses.Add("This format does not store a freighter's cargo inventory or its colours, so "
+                + "both will be lost.");
 
         return losses;
     }

@@ -77,11 +77,14 @@ public sealed class NomNomExportAdapter : IExportAdapter
         {
             var custom = ccd.GetObject("CustomData");
             if (custom?.GetArray("DescriptorGroups") is { Length: > 0 })
-                losses.Add("the ship's custom parts, so it will arrive as the base model in the right colours");
+                losses.Add("This format does not store custom parts, so the ship will arrive as the "
+                    + "base model in the right colours.");
             if (custom?.GetArray("TextureOptions") is { Length: > 0 })
-                losses.Add("the texture option");
+                losses.Add("This format does not store the chosen texture, so the ship's finish will "
+                    + "differ in-game.");
             if (custom?.GetString("PaletteID") is { } p && p is not ("^" or ""))
-                losses.Add($"the colour palette ({p})");
+                losses.Add($"This format does not store the colour palette ({p}), so the ship may "
+                    + "appear in different colours.");
         }
 
         return losses;

@@ -41,14 +41,36 @@ public sealed record GalleryRow
     /// <summary>Installed technology ids, with procedural suffixes already stripped.</summary>
     public IReadOnlyList<string> Tech { get; init; } = [];
 
+    /// <summary>
+    /// The subset of <see cref="Tech"/> that are procedurally rolled upgrade modules.
+    /// </summary>
+    public IReadOnlyList<string> Rolled { get; init; } = [];
+
+    /// <summary>
+    /// The technologies worth offering as a filter: everything installed except the rolled
+    /// upgrade modules, whose names either repeat the technology they boost or say nothing
+    /// beyond their class, and which nearly every ship carries some of.
+    /// </summary>
+    /// <remarks>
+    /// Worked out on each read rather than stored, so a row built any way at all - read from
+    /// the index, or constructed directly in a test - gives the same answer. The common case
+    /// costs nothing: a row with no rolled modules hands back the list it already has.
+    /// </remarks>
+    public IReadOnlyList<string> NamedTech =>
+        Rolled.Count == 0 ? Tech : [.. Tech.Except(Rolled, StringComparer.Ordinal)];
+
     /// <summary>Gallery tags.</summary>
     public IReadOnlyList<string> Tags { get; init; } = [];
 
     /// <summary>Other names this is searchable under.</summary>
     public IReadOnlyList<string> AlternativeNames { get; init; } = [];
 
-    /// <summary>Free text.</summary>
-    public string Description { get; init; } = "";
+    /// <summary>
+    /// One line, shown on the card. The full description is deliberately not here: the only
+    /// place it is shown is the item's own view, which fetches the whole document anyway, and
+    /// putting paragraphs of prose in the manifest would make every page load carry them.
+    /// </summary>
+    public string Summary { get; init; } = "";
 
     /// <summary>Gallery-relative path to the card image, if there is one.</summary>
     public string? Image { get; init; }
@@ -76,20 +98,21 @@ public sealed record GalleryRow
             Seeds = ReadMap(entry.GetObject("Seeds")),
             Stats = ReadStats(entry.GetObject("Stats")),
             Tech = ReadList(entry.GetArray("Tech")),
+            Rolled = ReadList(entry.GetArray("Rolled")),
             Tags = ReadList(entry.GetArray("Tags")),
             AlternativeNames = ReadList(entry.GetArray("AlternativeNames")),
-            Description = entry.GetString("Description") ?? "",
+            Summary = entry.GetString("Summary") ?? "",
             Image = entry.GetString("Image"),
             Author = entry.GetString("Author"),
             GameVersion = entry.GetString("GameVersion"),
         };
 
-        // Built once here rather than per keystroke. Alternative names are included so
-        // someone searching a community nickname finds the item under its real name.
+        // Built once here rather than per keystroke. Alternative names are searched so
+        // someone typing a community nickname finds the item under its real name.
         return row with
         {
             SearchText = string.Join(' ',
-                new[] { row.DisplayName, row.Type }
+                new[] { row.DisplayName, row.Type, row.Summary }
                     .Concat(row.AlternativeNames)
                     .Concat(row.Tags)),
         };

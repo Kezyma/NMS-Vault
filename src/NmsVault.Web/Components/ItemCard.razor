@@ -28,6 +28,12 @@
             }
         </p>
 
+        @if (Row.Summary is { Length: > 0 } summary)
+        {
+            @* One line by design - the full text is in the item's own view, not squeezed here. *@
+            <p class="card-summary">@summary</p>
+        }
+
         @foreach (var seed in Row.Seeds)
         {
             <p class="card-seed"><span class="dim">@seed.Key</span> <code>@seed.Value</code></p>

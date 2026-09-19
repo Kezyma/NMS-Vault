@@ -41,6 +41,13 @@ public readonly record struct TechSlot(
     /// </summary>
     public string? BaseItemId => ItemId is null ? null : StripVariant(ItemId);
 
+    /// <summary>
+    /// Whether this slot holds a procedurally rolled upgrade module rather than a named
+    /// technology. The suffix is what says so: the game writes one only for a rolled item,
+    /// so <c>^UP_PULSE4#35271</c> is a roll and <c>^UT_PULSEFUEL</c> is not.
+    /// </summary>
+    public bool IsProceduralRoll => ItemId is not null && !string.Equals(ItemId, BaseItemId, StringComparison.Ordinal);
+
     /// <summary>Removes a trailing <c>#NNNNN</c> procedural variant suffix.</summary>
     public static string StripVariant(string id)
     {
@@ -75,10 +82,28 @@ public sealed record TechGrid(
 
     /// <summary>Distinct base item ids installed, for icon preloading and tech filters.</summary>
     public IReadOnlyList<string> InstalledBaseIds =>
-        [.. Slots.Where(s => s.State == SlotState.Filled)
-                 .Select(s => s.BaseItemId!)
-                 .Distinct(StringComparer.Ordinal)
-                 .Order(StringComparer.Ordinal)];
+        [.. Filled.Select(s => s.BaseItemId!)
+                  .Distinct(StringComparer.Ordinal)
+                  .Order(StringComparer.Ordinal)];
+
+    /// <summary>
+    /// The subset of <see cref="InstalledBaseIds"/> that are procedurally rolled upgrade
+    /// modules.
+    /// </summary>
+    /// <remarks>
+    /// Worth separating because they make a poor filter. Their names either repeat the
+    /// technology they boost - a <c>^UA_PULSE4</c> is also called "Pulsing Heart", so the
+    /// heading offers that twice - or say nothing beyond their class, as "Pulse Engine
+    /// S-Class Upgrade" does. Either way every ship worth looking at has a handful, so
+    /// filtering on one narrows nothing.
+    /// </remarks>
+    public IReadOnlyList<string> RolledBaseIds =>
+        [.. Filled.Where(s => s.IsProceduralRoll)
+                  .Select(s => s.BaseItemId!)
+                  .Distinct(StringComparer.Ordinal)
+                  .Order(StringComparer.Ordinal)];
+
+    private IEnumerable<TechSlot> Filled => Slots.Where(s => s.State == SlotState.Filled);
 }
 
 /// <summary>

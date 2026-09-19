@@ -29,15 +29,22 @@ else
                          Ticked="_filter.Ticked(facet.Key)" OnChanged="FilterChanged" @key="facet.Key" />
         }
 
-        <div class="sort-by">
-            <label for="@($"{Page.ToLowerInvariant()}-sort")">Sort by</label>
-            <select id="@($"{Page.ToLowerInvariant()}-sort")" @onchange="SortChanged">
-                @foreach (var sort in _sorts)
-                {
-                    <option value="@sort.Key" selected="@(sort.Key == _sort.Key)">@sort.Label</option>
-                }
-            </select>
-        </div>
+        @*
+            Only over the cards. The table sorts by its own headings, and a dropdown above it
+            would be a second way to say the same thing with one place for the two to disagree.
+        *@
+        @if (!_asTable)
+        {
+            <div class="sort-by">
+                <label for="@($"{Page.ToLowerInvariant()}-sort")">Sort by</label>
+                <select id="@($"{Page.ToLowerInvariant()}-sort")" @onchange="SortChanged">
+                    @foreach (var sort in _sorts)
+                    {
+                        <option value="@sort.Key" selected="@(sort.Key == _sort.Key)">@sort.Label</option>
+                    }
+                </select>
+            </div>
+        }
 
         <div class="bar-end">
             @if (_filter.Any)
@@ -60,7 +67,7 @@ else
     }
     else if (_asTable)
     {
-        <ItemTable Rows="Shown" />
+        <ItemTable Rows="Shown" Sorts="_sorts" Sort="_sort" SortChanged="SortPicked" />
     }
     else
     {
@@ -125,6 +132,16 @@ else
     {
         string key = e.Value?.ToString() ?? "";
         _sort = _sorts.FirstOrDefault(s => s.Key == key, _sorts[0]);
+        _shown = null;
+    }
+
+    /// <summary>
+    /// Takes the order a table heading asked for, direction and all - the table is what knows
+    /// whether the press was a new column or the same one turned around.
+    /// </summary>
+    private void SortPicked(SortOption sort)
+    {
+        _sort = sort;
         _shown = null;
     }
 

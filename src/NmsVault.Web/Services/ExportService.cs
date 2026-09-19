@@ -33,15 +33,19 @@ public sealed record DownloadOption
     /// <summary>What this format would drop, as sentences. Empty when nothing is lost.</summary>
     public IReadOnlyList<string> Losses { get; init; } = [];
 
-    /// <summary>Whether output has been confirmed against the real editor.</summary>
+    /// <summary>
+    /// Whether output has been confirmed against the real editor. Carried but not currently
+    /// drawn: the menu shows the formats and what each one would lose, and a standing caveat
+    /// about the editors under every list is noise in front of the thing being chosen.
+    /// </summary>
     public bool IsVerified { get; init; }
 
     /// <summary>Whether the entry can be chosen.</summary>
     public bool IsAvailable => Unsupported is null;
 
     /// <summary>
-    /// Whether choosing this should stop and ask first. Loss only: an untested format is
-    /// marked on the entry itself, which is a warning the reader sees without clicking.
+    /// Whether choosing this should stop and ask first. Only loss stops anyone: it is about
+    /// this item, it is specific, and it is not visible any other way.
     /// </summary>
     public bool NeedsConfirming => IsAvailable && Losses.Count > 0;
 }

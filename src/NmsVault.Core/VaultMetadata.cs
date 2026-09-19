@@ -32,7 +32,17 @@ public sealed record VaultMetadata
     /// </summary>
     public IReadOnlyList<string> AlternativeNames { get; init; } = [];
 
-    /// <summary>Free text shown on the item page, and carried into formats that have a description field.</summary>
+    /// <summary>
+    /// One line, shown on the card. Kept apart from <see cref="Description"/> because a card
+    /// has room for a line and a modal has room for paragraphs, and truncating the long one
+    /// to fit the card gives a sentence that stops mid-thought.
+    /// </summary>
+    public string Summary { get; init; } = "";
+
+    /// <summary>
+    /// The full text, shown in the item modal and carried into formats that have a
+    /// description field. May run to several paragraphs.
+    /// </summary>
     public string Description { get; init; } = "";
 
     /// <summary>
@@ -65,6 +75,7 @@ public sealed record VaultMetadata
         Id = vault.GetString("Id") ?? "",
         DisplayName = vault.GetString("DisplayName") ?? "",
         AlternativeNames = ReadStrings(vault.GetArray("AlternativeNames")),
+        Summary = vault.GetString("Summary") ?? "",
         Description = vault.GetString("Description") ?? "",
         Images = ReadStrings(vault.GetArray("Images")),
         Tags = ReadStrings(vault.GetArray("Tags")),
@@ -81,6 +92,7 @@ public sealed record VaultMetadata
         obj.Set("Id", Id);
         obj.Set("DisplayName", DisplayName);
         if (AlternativeNames.Count > 0) obj.Set("AlternativeNames", WriteStrings(AlternativeNames));
+        if (Summary.Length > 0) obj.Set("Summary", Summary);
         if (Description.Length > 0) obj.Set("Description", Description);
         if (Images.Count > 0) obj.Set("Images", WriteStrings(Images));
         if (Tags.Count > 0) obj.Set("Tags", WriteStrings(Tags));

@@ -72,8 +72,12 @@ public class AdapterTests
     {
         var losses = new GoatfungusExportAdapter().LossesFor(LoadShip(CustomisedShip));
 
-        Assert.Contains(losses, l => l.Contains("colour setting"));
-        Assert.Contains(losses, l => l.Contains("customisation"));
+        Assert.Contains(losses, l => l.Contains("legacy colours"));
+        Assert.Contains(losses, l => l.Contains("no customisation at all"));
+
+        // Whole sentences saying what will happen in-game, not field names. A warning reading
+        // "DescriptorGroups" tells nobody anything.
+        Assert.All(losses, l => Assert.EndsWith(".", l, StringComparison.Ordinal));
     }
 
     [Fact]

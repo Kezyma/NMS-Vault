@@ -23,6 +23,36 @@ marked *inferred* is weaker still.
 
 ---
 
+## File extensions
+
+The extensions collide and the formats do not. NMS Companion and NomNom write the same five
+extensions, so an extension alone never says which format a file is in:
+
+| Kind | NMSE | goatfungus | Kaii | NomNom |
+|---|---|---|---|---|
+| Starship | `.nmsship` | `.sh0` | `.shp` | `.shp` |
+| Multitool | `.nmstool` | `.wp0` | `.mlt` | `.mlt` |
+| Companion | `.nmspet` | `.pet` | `.cmp` | `.cmp` |
+| Frigate | `.nmsfrig` | — | `.flt` | `.flt` |
+| Freighter | — | — | `.frt` | `.frt` |
+
+The contents differ in every respect that matters:
+
+| | Kaii | NomNom |
+|---|---|---|
+| Root | entity key at the root | everything under `Data` |
+| `FileVersion` | 1 | 2 |
+| Ship nesting | `Ship: { "@Cs": ship, "4hl": legacyColours }` | `Data.Ship`, `Data.UseLegacyColours` |
+| Multitool key | `MultiTool` | `Multitool` |
+| Images | `Thumbnail`, `Thumbnail2`–`Thumbnail6` | `Preview`, `Preview2`–`Preview6` |
+| Also carries | — | `DateCreated`, `Starred`, `Type`, `PersistentPlayerBases` |
+
+This is why `FormatDetector` reads content first and treats the extension only as a
+tiebreaker, and why NomNom's own export menu offers three separate formats — *Goatfungus*,
+*Kaii (NMS Companion)* and *Standard*, its own — rather than one file that all three read.
+
+---
+
 ## Key space
 
 Not a field, but it governs everything else.

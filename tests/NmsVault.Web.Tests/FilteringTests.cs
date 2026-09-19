@@ -194,16 +194,19 @@ public class FilteringTests
     // --- Sorting ------------------------------------------------------
 
     [Fact]
-    public void SortsOfferNameAndEveryStatThePageHas()
+    public void SortsOfferEveryColumnWorthOrderingBy()
     {
-        Assert.Equal(["Name", "Damage", "Shield", "Hyperdrive", "Manoeuvrability"],
+        // One list serves the dropdown over the cards and the headings on the table, so it
+        // covers the columns as well as the stats.
+        Assert.Equal(["Name", "Type", "Class", "Damage", "Shield", "Hyperdrive", "Manoeuvrability", "Tech"],
             GalleryFacets.SortsFor("Shipyard").Select(s => s.Label));
 
-        Assert.Equal(["Name", "Damage", "Mining", "Scan"],
+        Assert.Equal(["Name", "Type", "Class", "Damage", "Mining", "Scan", "Tech"],
             GalleryFacets.SortsFor("Armoury").Select(s => s.Label));
 
-        // Companions have no base stats, so name is the only order available.
-        Assert.Equal(["Name"], GalleryFacets.SortsFor("Stable").Select(s => s.Label));
+        // Companions have no class, no base stats and no technology, so there is nothing to
+        // order them by but their name and their type.
+        Assert.Equal(["Name", "Type"], GalleryFacets.SortsFor("Stable").Select(s => s.Label));
     }
 
     [Fact]

@@ -2,8 +2,13 @@
     The same items as a table: everything the card shows, with a smaller image, so a long
     list can be read down rather than scrolled through.
 
+    The headings do the sorting here, which is why the bar above drops its dropdown in this
+    view - a table with sortable columns and a sort control over it gives two ways to say the
+    same thing and one place for them to disagree.
+
     Stat columns are taken from the first row rather than written out per page, so the table
-    cannot offer a column the items do not carry.
+    cannot offer a column the items do not carry. Which columns can be sorted is not decided
+    here either: a heading is sortable exactly when the page offers a sort of the same name.
 *@
 
 <div class="table-wrap">
@@ -11,16 +16,31 @@
         <thead>
             <tr>
                 <th scope="col" class="col-art"><span class="visually-hidden">Image</span></th>
-                <th scope="col">Name</th>
-                <th scope="col">Type</th>
-                <th scope="col" class="col-class">Class</th>
-                <th scope="col">Seed</th>
-                @foreach (var stat in StatColumns)
+
+                @foreach (var column in Columns)
                 {
-                    <th scope="col" class="col-stat">@stat</th>
+                    var sort = SortFor(column.Label);
+                    var active = sort is { } s && s.Key == Sort.Key;
+
+                    <th scope="col" class="@column.Css" @key="column.Label"
+                        aria-sort="@(active ? (Sort.Descending ? "descending" : "ascending") : null)">
+                        @if (sort is { } option)
+                        {
+                            <button type="button" class="sorter @(active ? "active" : null)"
+                                    title="@Hint(option, active)" @onclick="() => Pick(option)">
+                                <span>@column.Label</span>
+                                @* Marked only on the column in use; an arrow on every heading is
+                                   four arrows saying nothing. *@
+                                <span class="arrow" aria-hidden="true">@(active ? (Sort.Descending ? "▾" : "▴") : "")</span>
+                            </button>
+                        }
+                        else
+                        {
+                            @column.Label
+                        }
+                    </th>
                 }
-                <th scope="col">Tags</th>
-                <th scope="col" class="col-num">Tech</th>
+
                 <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
             </tr>
         </thead>
@@ -77,12 +97,64 @@
 </div>
 
 @code {
+    /// <summary>One column between the image and the buttons.</summary>
+    /// <param name="Label">Its heading, which also names the sort it offers.</param>
+    /// <param name="Css">Its class, where it needs one.</param>
+    private sealed record Column(string Label, string? Css = null);
+
     /// <summary>The items to draw.</summary>
     [Parameter, EditorRequired]
     public required IReadOnlyList<GalleryRow> Rows { get; set; }
 
+    /// <summary>Every order the page offers, which decides which headings are pressable.</summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<SortOption> Sorts { get; set; }
+
+    /// <summary>The order the rows are in.</summary>
+    [Parameter, EditorRequired]
+    public required SortOption Sort { get; set; }
+
+    /// <summary>Raised when a heading is pressed.</summary>
+    [Parameter]
+    public EventCallback<SortOption> SortChanged { get; set; }
+
     private IReadOnlyList<string> StatColumns =>
         Rows.Count == 0 ? [] : [.. Rows[0].Stats.Select(s => s.Key)];
+
+    private IReadOnlyList<Column> Columns =>
+    [
+        new("Name", "col-name"),
+        new("Type"),
+        new("Class", "col-class"),
+        new("Seed"),
+        .. StatColumns.Select(stat => new Column(stat, "col-stat")),
+        new("Tags"),
+        new("Tech", "col-num"),
+    ];
+
+    /// <summary>
+    /// The sort a heading offers, or null where the page offers none of that name. Seed and
+    /// Tags fall through here, which is the intended answer rather than an oversight: neither
+    /// has an order a reader would be looking for.
+    /// </summary>
+    private SortOption? SortFor(string label)
+    {
+        foreach (var sort in Sorts)
+            if (string.Equals(sort.Label, label, StringComparison.Ordinal)) return sort;
+        return null;
+    }
+
+    private static string Hint(SortOption sort, bool active) =>
+        active ? $"Sort by {sort.Label} the other way round" : $"Sort by {sort.Label}";
+
+    /// <summary>
+    /// Pressing the column already in use turns it around; pressing another starts it in the
+    /// direction that column is usually wanted in - names from A, stats from the best down.
+    /// </summary>
+    private Task Pick(SortOption sort)
+        => SortChanged.InvokeAsync(sort.Key == Sort.Key
+            ? Sort with { Descending = !Sort.Descending }
+            : sort);
 
     private static string Value(GalleryRow row, string label)
     {

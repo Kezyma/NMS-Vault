@@ -81,7 +81,9 @@ public sealed class GalleryStore(string root)
             // of them would otherwise mean fetching every item document first.
             ItemFacts.For(item).WriteTo(entry);
 
-            if (item.Meta.Description.Length > 0) entry.Set("Description", item.Meta.Description);
+            // The card line goes in the manifest; the full text does not, because the only
+            // place it is shown is the item's own view, and that fetches the document anyway.
+            if (item.Meta.Summary.Length > 0) entry.Set("Summary", item.Meta.Summary);
             if (item.Meta.Images.Count > 0) entry.Set("Image", item.Meta.Images[0]);
             if (item.Meta.Tags.Count > 0) entry.Set("Tags", ToArray(item.Meta.Tags));
             if (item.Meta.AlternativeNames.Count > 0)

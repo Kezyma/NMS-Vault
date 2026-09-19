@@ -49,18 +49,22 @@ public sealed class GoatfungusExportAdapter : IExportAdapter
         if (item.Kind == EntityKind.Starship)
         {
             if (item.UsesLegacyColours is not null)
-                losses.Add("the old/new colour setting, which goatfungus does not store");
+                losses.Add("This format does not track the use of legacy colours, so the ship may appear "
+                    + "differently in-game if it is restored with this editor.");
 
             if (item.CharacterCustomisationData is not null
                 && !CustomisationHelpers.IsDefault(item.CharacterCustomisationData))
-                losses.Add("all customisation - colours, parts and textures");
+                losses.Add("This format stores no customisation at all, so the ship will arrive in its "
+                    + "default colours, with its default parts and textures.");
 
             if (item.ShipBase is not null)
-                losses.Add("the corvette's base parts, so the ship will arrive incomplete");
+                losses.Add("This format does not store the parts a corvette is built from, so the ship "
+                    + "will arrive as an empty hull.");
         }
 
         if (item.Kind == EntityKind.Companion && item.AccessorySlots is { Length: > 0 })
-            losses.Add("the companion's accessories");
+            losses.Add("This format does not store companion accessories, so anything the creature "
+                + "is wearing will be missing.");
 
         return losses;
     }

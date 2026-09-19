@@ -9,6 +9,10 @@
     so what each one can hold is known only once the item document has been fetched. The menu is
     therefore empty until it is opened, and says so while it fills.
 
+    The panel is the formats and nothing else. What a format cannot hold is worth stopping someone
+    for, and that is what the confirmation is; standing caveats about the editors are not, and a
+    paragraph of them under every list is noise in front of the thing being chosen.
+
     It wears .vault-combo so the one document-level listener that closes an open list on a press
     outside it finds this too.
 *@
@@ -59,24 +63,11 @@
                                     <span class="warn" aria-label="Loses information">&#9888;</span>
                                 }
 
-                                @if (option.IsAvailable && !option.IsVerified)
-                                {
-                                    <span class="tag" title="Never round-tripped through the real editor">untested</span>
-                                }
-
-                                <span class="ext dim">@(option.Extension ?? "—")</span>
+                                <span class="ext dim">@(option.Extension ?? "-")</span>
                             </button>
                         </li>
                     }
                 </ul>
-
-                @if (_options.Any(o => o.IsAvailable && !o.IsVerified))
-                {
-                    <p class="footnote dim">
-                        Only NMSE can load a 7.03 Cosmos save. The others are written from their
-                        documented formats and marked untested until one of them can.
-                    </p>
-                }
             }
         </div>
     }
@@ -85,7 +76,7 @@
 @if (_asking is { } asking)
 {
     <ConfirmDialog Title="@($"{asking.Label} cannot hold everything")"
-                   Message="@($"Downloading {Row.DisplayName} as {asking.Label} would drop:")"
+                   Message="@($"Some of what {Row.DisplayName} carries has nowhere to go in this format.")"
                    OnDismiss="Cancel">
         <Body>
             <ul class="losses">
@@ -94,13 +85,6 @@
                     <li>@loss</li>
                 }
             </ul>
-
-            @if (!asking.IsVerified)
-            {
-                <p class="dim">
-                    This format has also never been round-tripped through the real editor.
-                </p>
-            }
         </Body>
 
         <ChildContent>

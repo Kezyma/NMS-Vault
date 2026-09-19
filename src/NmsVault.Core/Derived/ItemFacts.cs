@@ -23,7 +23,12 @@ namespace NmsVault.Core.Derived;
 /// <param name="Class">Inventory class - S, A, B, C - or null where the kind has none.</param>
 /// <param name="Seeds">Seeds worth showing, labelled. Ships have one; companions have four.</param>
 /// <param name="Stats">Base stats, in the order the game presents them.</param>
-/// <param name="InstalledTech">Distinct base technology ids installed, for the tech filter.</param>
+/// <param name="InstalledTech">Distinct base technology ids installed.</param>
+/// <param name="RolledTech">
+/// The subset of <paramref name="InstalledTech"/> that are procedurally rolled upgrade
+/// modules. Recorded separately so the filter can leave them out while the count on the card
+/// still says how much is actually installed.
+/// </param>
 public sealed record ItemFacts(
     string Type,
     bool IsModifiedResource,
@@ -31,7 +36,8 @@ public sealed record ItemFacts(
     string? Class,
     IReadOnlyList<LabelledSeed> Seeds,
     IReadOnlyList<ItemStat> Stats,
-    IReadOnlyList<string> InstalledTech)
+    IReadOnlyList<string> InstalledTech,
+    IReadOnlyList<string> RolledTech)
 {
     /// <summary>Derives the facts for an item.</summary>
     public static ItemFacts For(VaultItem item) => item.Kind switch
@@ -54,7 +60,8 @@ public sealed record ItemFacts(
             inventory?.GetObject("Class")?.GetString("InventoryClass"),
             SeedReader.ForShip(ship),
             ItemStats.ForShip(ship),
-            tech?.InstalledBaseIds ?? []);
+            tech?.InstalledBaseIds ?? [],
+            tech?.RolledBaseIds ?? []);
     }
 
     private static ItemFacts ForMultitool(JsonObject multitool)
@@ -69,11 +76,12 @@ public sealed record ItemFacts(
             store?.GetObject("Class")?.GetString("InventoryClass"),
             SeedReader.ForMultitool(multitool),
             ItemStats.ForMultitool(multitool),
-            tech?.InstalledBaseIds ?? []);
+            tech?.InstalledBaseIds ?? [],
+            tech?.RolledBaseIds ?? []);
     }
 
     private static ItemFacts Minimal(EntityKind kind)
-        => new(kind.ToString(), false, kind.ToString(), null, [], [], []);
+        => new(kind.ToString(), false, kind.ToString(), null, [], [], [], []);
 
     /// <summary>Writes these facts into an index entry.</summary>
     public void WriteTo(JsonObject entry)
@@ -97,12 +105,15 @@ public sealed record ItemFacts(
             entry.Set("Stats", stats);
         }
 
-        if (InstalledTech.Count > 0)
-        {
-            var tech = new JsonArray();
-            foreach (var id in InstalledTech) tech.Add(id);
-            entry.Set("Tech", tech);
-        }
+        if (InstalledTech.Count > 0) entry.Set("Tech", ToArray(InstalledTech));
+        if (RolledTech.Count > 0) entry.Set("Rolled", ToArray(RolledTech));
+    }
+
+    private static JsonArray ToArray(IReadOnlyList<string> values)
+    {
+        var array = new JsonArray();
+        foreach (string value in values) array.Add(value);
+        return array;
     }
 }
 

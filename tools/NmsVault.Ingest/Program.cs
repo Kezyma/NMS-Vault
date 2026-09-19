@@ -31,6 +31,7 @@ public static class Program
             AddCommand(gallery),
             InspectCommand(),
             ValidateCommand(gallery),
+            UpdateCommand(gallery),
             ReindexCommand(gallery),
             ExtractTechCommand(gallery),
         };
@@ -45,7 +46,8 @@ public static class Program
         var file = new Option<FileInfo>("--file") { Description = "The editor export to add.", Required = true };
         var name = new Option<string?>("--name") { Description = "Display name. Defaults to the file name." };
         var id = new Option<string?>("--id") { Description = "Permalink slug. Defaults to a slug of the name." };
-        var description = new Option<string?>("--description") { Description = "Free text shown on the item." };
+        var summary = new Option<string?>("--summary") { Description = "One line, shown on the card." };
+        var description = new Option<string?>("--description") { Description = "Full text, shown when the item is opened." };
         var tags = new Option<string?>("--tags") { Description = "Comma-separated filter tags." };
         var altNames = new Option<string?>("--alt-names") { Description = "Comma-separated alternative names, for search." };
         var images = new Option<string?>("--images") { Description = "Comma-separated image paths, best first." };
@@ -54,13 +56,14 @@ public static class Program
         var force = new Option<bool>("--force") { Description = "Replace an item that already exists." };
 
         var command = new Command("add", "Detect, convert to the vault format, store, and rebuild the index.")
-        { file, name, id, description, tags, altNames, images, author, gameVersion, force, gallery };
+        { file, name, id, summary, description, tags, altNames, images, author, gameVersion, force, gallery };
 
         command.SetAction(result => Add(
             result.GetValue(file)!,
             new GalleryStore(result.GetValue(gallery)!.FullName),
             result.GetValue(name),
             result.GetValue(id),
+            result.GetValue(summary),
             result.GetValue(description),
             Split(result.GetValue(tags)),
             Split(result.GetValue(altNames)),
@@ -73,7 +76,7 @@ public static class Program
     }
 
     private static int Add(
-        FileInfo source, GalleryStore store, string? name, string? id, string? description,
+        FileInfo source, GalleryStore store, string? name, string? id, string? summary, string? description,
         IReadOnlyList<string> tags, IReadOnlyList<string> altNames, IReadOnlyList<string> images,
         string? author, string? gameVersion, bool force)
     {
@@ -99,6 +102,7 @@ public static class Program
         {
             Id = slug,
             DisplayName = displayName,
+            Summary = summary ?? "",
             Description = description ?? "",
             AlternativeNames = altNames,
             Tags = tags,
@@ -121,6 +125,79 @@ public static class Program
         store.Write(item);
         Console.WriteLine($"  stored: {store.PathFor(slug)}");
         ReportLosses(item, mapper);
+        Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
+        return 0;
+    }
+
+    // --- update -------------------------------------------------------
+
+    private static Command UpdateCommand(Option<DirectoryInfo> gallery)
+    {
+        var id = new Option<string>("--id") { Description = "The item to change.", Required = true };
+        var name = new Option<string?>("--name") { Description = "New display name." };
+        var summary = new Option<string?>("--summary") { Description = "One line, shown on the card." };
+        var description = new Option<string?>("--description") { Description = "Full text, shown when the item is opened." };
+        var tags = new Option<string?>("--tags") { Description = "Comma-separated filter tags, replacing the current ones." };
+        var altNames = new Option<string?>("--alt-names") { Description = "Comma-separated alternative names, replacing the current ones." };
+        var images = new Option<string?>("--images") { Description = "Comma-separated image paths, best first, replacing the current ones." };
+        var author = new Option<string?>("--author") { Description = "Contributor credit." };
+        var gameVersion = new Option<string?>("--game-version") { Description = "Game version captured from, e.g. 7.03." };
+
+        var command = new Command("update", "Change an existing item's metadata. The payload is left alone.")
+        { id, name, summary, description, tags, altNames, images, author, gameVersion, gallery };
+
+        command.SetAction(result => Update(
+            new GalleryStore(result.GetValue(gallery)!.FullName),
+            result.GetValue(id)!,
+            result.GetValue(name),
+            result.GetValue(summary),
+            result.GetValue(description),
+            result.GetValue(tags),
+            result.GetValue(altNames),
+            result.GetValue(images),
+            result.GetValue(author),
+            result.GetValue(gameVersion)));
+
+        return command;
+    }
+
+    /// <summary>
+    /// Rewrites one item's metadata in place.
+    /// </summary>
+    /// <remarks>
+    /// Only what is passed changes; everything else is left as it was. That is the whole
+    /// point of the verb - re-adding the export to change a caption would mean supplying
+    /// every other field again and getting a new DateAdded for the trouble.
+    /// </remarks>
+    private static int Update(
+        GalleryStore store, string id, string? name, string? summary, string? description,
+        string? tags, string? altNames, string? images, string? author, string? gameVersion)
+    {
+        if (!store.Exists(id))
+        {
+            Console.Error.WriteLine($"error: no item with id '{id}'.");
+            return 1;
+        }
+
+        var item = VaultItem.FromBytes(File.ReadAllBytes(store.PathFor(id)), id);
+        var meta = item.Meta;
+
+        if (name is not null) meta = meta with { DisplayName = name };
+        if (summary is not null) meta = meta with { Summary = summary };
+        if (description is not null) meta = meta with { Description = description };
+        if (tags is not null) meta = meta with { Tags = Split(tags) };
+        if (altNames is not null) meta = meta with { AlternativeNames = Split(altNames) };
+        if (author is not null) meta = meta with { Author = author };
+        if (gameVersion is not null) meta = meta with { GameVersion = gameVersion };
+
+        if (images is not null)
+            meta = meta with { Images = [.. Split(images).Select((path, i) => store.AddImage(path, id, i))] };
+
+        store.Write(VaultItem.Create(item.Kind, item.Payload, meta,
+            item.CharacterCustomisationData, item.UsesLegacyColours,
+            item.ShipBase, item.AccessorySlots));
+
+        Console.WriteLine($"  updated: {store.PathFor(id)}");
         Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
         return 0;
     }
