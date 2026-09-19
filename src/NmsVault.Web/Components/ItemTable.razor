@@ -1,0 +1,91 @@
+@*
+    The same items as a table: everything the card shows, with a smaller image, so a long
+    list can be read down rather than scrolled through.
+
+    Stat columns are taken from the first row rather than written out per page, so the table
+    cannot offer a column the items do not carry.
+*@
+
+<div class="table-wrap">
+    <table class="item-table">
+        <thead>
+            <tr>
+                <th scope="col" class="col-art"><span class="visually-hidden">Image</span></th>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col" class="col-class">Class</th>
+                <th scope="col">Seed</th>
+                @foreach (var stat in StatColumns)
+                {
+                    <th scope="col" class="col-stat">@stat</th>
+                }
+                <th scope="col">Tags</th>
+                <th scope="col" class="col-num">Tech</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var row in Rows)
+            {
+                <tr @key="row.Id">
+                    <td class="col-art">
+                        @if (row.Image is { } image)
+                        {
+                            <img src="@($"gallery/{image}")" alt="" loading="lazy" />
+                        }
+                    </td>
+
+                    <td class="col-name">@row.DisplayName</td>
+
+                    <td>
+                        @row.Type
+                        @if (row.IsModified)
+                        {
+                            <span class="badge warn" title="The model path did not match a known ship exactly">M</span>
+                        }
+                    </td>
+
+                    <td class="col-class"><ClassBadge Class="@row.Class" /></td>
+
+                    <td>
+                        @foreach (var seed in row.Seeds)
+                        {
+                            <code>@seed.Value</code>
+                        }
+                    </td>
+
+                    @foreach (var stat in StatColumns)
+                    {
+                        <td class="col-stat">@Value(row, stat)</td>
+                    }
+
+                    <td>
+                        @foreach (var tag in row.Tags)
+                        {
+                            <span class="chip">@tag</span>
+                        }
+                    </td>
+
+                    <td class="col-num">@(row.Tech.Count > 0 ? row.Tech.Count.ToString() : "")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    /// <summary>The items to draw.</summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<GalleryRow> Rows { get; set; }
+
+    private IReadOnlyList<string> StatColumns =>
+        Rows.Count == 0 ? [] : [.. Rows[0].Stats.Select(s => s.Key)];
+
+    private static string Value(GalleryRow row, string label)
+    {
+        foreach (var stat in row.Stats)
+            if (string.Equals(stat.Key, label, StringComparison.Ordinal))
+                return stat.Value.ToString("0.#");
+        return "";
+    }
+}

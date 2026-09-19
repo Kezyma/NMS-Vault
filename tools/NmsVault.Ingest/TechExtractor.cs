@@ -10,11 +10,13 @@ namespace NmsVault.Ingest;
 /// <param name="Technologies">How many entries were written.</param>
 /// <param name="IconsWritten">How many icons were re-encoded.</param>
 /// <param name="IconsMissing">Icons named by an entry but absent from the source.</param>
+/// <param name="ClassIcons">How many class badges were written.</param>
 /// <param name="Bytes">Total size of the written icons.</param>
 public readonly record struct TechExtractionResult(
     int Technologies,
     int IconsWritten,
     int IconsMissing,
+    int ClassIcons,
     long Bytes);
 
 /// <summary>
@@ -49,6 +51,14 @@ public static class TechExtractor
         "Constructed Technology.json",
     ];
 
+    /// <summary>
+    /// The game's own class badges. Already 64px, so they are re-encoded only to put them in
+    /// the same format as everything else rather than to shrink them.
+    /// </summary>
+    private static readonly string[] ClassIcons =
+        ["CLASSMINI.C.png", "CLASSMINI.B.png", "CLASSMINI.A.png", "CLASSMINI.S.png",
+         "CLASSMINI.X.png", "CLASSMINI.SENTINEL.png"];
+
     /// <summary>Icons are re-encoded to this size, which is ample for a slot in a grid.</summary>
     private const int IconSize = 64;
 
@@ -76,7 +86,9 @@ public static class TechExtractor
         WriteIndex(entries, galleryRoot);
 
         var (written, missing, bytes) = WriteIcons(entries, imageDir, galleryRoot, log);
-        return new TechExtractionResult(entries.Count, written, missing, bytes);
+        var (classIcons, classBytes) = WriteClassIcons(imageDir, galleryRoot, log);
+
+        return new TechExtractionResult(entries.Count, written, missing, classIcons, bytes + classBytes);
     }
 
     private static List<TechEntry> ReadEntries(string jsonDir, Action<string> log)
@@ -191,6 +203,38 @@ public static class TechExtractor
         }
 
         return (written, missing, bytes);
+    }
+
+    /// <summary>
+    /// Copies the game's class badges across. Showing the game's own S, A, B and C marks
+    /// rather than a coloured letter is the difference between a gallery that looks like it
+    /// belongs to the game and one that merely lists its contents.
+    /// </summary>
+    private static (int Written, long Bytes) WriteClassIcons(string imageDir, string galleryRoot, Action<string> log)
+    {
+        string outDir = Path.Combine(galleryRoot, "img", "class");
+        Directory.CreateDirectory(outDir);
+
+        int written = 0;
+        long bytes = 0;
+
+        foreach (string icon in ClassIcons)
+        {
+            string source = Path.Combine(imageDir, icon);
+            if (!File.Exists(source)) { log($"  class badge {icon} not found"); continue; }
+
+            // Named for the class alone - CLASSMINI.S.png becomes s.webp - so a lookup is
+            // just the class letter lowercased.
+            string name = icon.Replace("CLASSMINI.", "", StringComparison.Ordinal)
+                              .Replace(".png", "", StringComparison.Ordinal)
+                              .ToLowerInvariant();
+
+            bytes += Downscale(source, Path.Combine(outDir, name + ".webp"));
+            written++;
+        }
+
+        log($"  {written} class badge(s)");
+        return (written, bytes);
     }
 
     private static long Downscale(string source, string target)

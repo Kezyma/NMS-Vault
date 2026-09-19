@@ -310,3 +310,229 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
 }
+
+/* ---------------------------------------------------------------- filter bar */
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin: var(--space-lg) 0;
+    padding: var(--space-md);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.bar-end { display: flex; align-items: center; gap: var(--space-md); margin-left: auto; }
+
+input[type="search"], select {
+    height: var(--control-h);
+    padding: 0 var(--space-md);
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text);
+    background: var(--bg-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+
+input[type="search"]::placeholder { color: var(--text-faint); }
+input[type="search"]:focus, select:focus { border-color: var(--accent-dim); }
+
+.search-box { position: relative; }
+.search-box input { width: 220px; padding-right: var(--space-2xl); }
+
+.search-box .clear {
+    position: absolute;
+    right: var(--space-xs);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    line-height: 1;
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+}
+
+.search-box .clear:hover { color: var(--text); }
+
+.sort-by { display: flex; align-items: center; gap: var(--space-sm); }
+.sort-by label { color: var(--text-dim); font-size: var(--text-sm); }
+
+button {
+    height: var(--control-h);
+    padding: 0 var(--space-lg);
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text);
+    background: var(--bg-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+button:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--accent-dim); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.clear-all { color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- multi-select */
+
+.multi-select { position: relative; }
+
+.multi-select .toggle { display: flex; align-items: center; gap: var(--space-sm); }
+
+/*
+   Marked at rest, not only while the panel is open. A heading with three things ticked is
+   narrowing the list whether or not anyone is looking at it, and that has to be visible
+   from the count above without opening every heading to find out which one did it.
+*/
+.multi-select .toggle.chosen { border-color: var(--accent); color: var(--accent); }
+
+.multi-select .count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+.multi-select .caret { color: var(--text-faint); font-size: var(--text-xs); }
+
+.multi-select .panel {
+    position: absolute;
+    top: calc(100% + var(--space-xs));
+    left: 0;
+    z-index: 20;
+    min-width: 230px;
+    max-width: 320px;
+    padding: var(--space-sm);
+    background: var(--bg-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-panel);
+}
+
+.multi-select .panel-search { width: 100%; margin-bottom: var(--space-sm); }
+
+.multi-select .options { max-height: 300px; overflow-y: auto; overscroll-behavior: contain; }
+
+.multi-select .option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    cursor: pointer;
+}
+
+.multi-select .option:hover { background: var(--bg-hover); }
+.multi-select .option-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.multi-select .option-count { color: var(--text-faint); font-size: var(--text-xs); }
+.multi-select .panel-clear { width: 100%; margin-top: var(--space-sm); }
+
+/* ---------------------------------------------------------------- view toggle */
+
+.view-toggle { display: flex; }
+.view-toggle button { border-radius: 0; }
+.view-toggle button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.view-toggle button:last-child { border-radius: 0 var(--radius) var(--radius) 0; margin-left: -1px; }
+
+.view-toggle button[aria-pressed="true"] {
+    background: rgba(245, 137, 46, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    z-index: 1;
+}
+
+/* ---------------------------------------------------------------- class badge */
+
+/*
+   The game's own mark rather than a coloured letter. Sits over the art so it reads the way
+   it does in game, where the class is stamped on the item rather than listed beside it.
+*/
+.class-badge { position: absolute; top: var(--space-sm); right: var(--space-sm); line-height: 0; }
+.class-badge img { width: 30px; height: 30px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8)); }
+
+.class-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1;
+}
+
+.class-letter.class-s { color: var(--gold); }
+.class-letter.class-a { color: #b07fd0; }
+.class-letter.class-b { color: #5f9fd8; }
+.class-letter.class-c { color: var(--text-dim); }
+
+.card-art { position: relative; }
+
+/* ---------------------------------------------------------------- table */
+
+.table-wrap {
+    overflow-x: auto;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.item-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+
+.item-table th {
+    position: sticky;
+    top: 0;
+    padding: var(--space-md) var(--space-lg);
+    text-align: left;
+    white-space: nowrap;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.item-table td { padding: var(--space-sm) var(--space-lg); border-bottom: 1px solid var(--border); vertical-align: middle; }
+.item-table tbody tr:hover { background: var(--bg-hover); }
+.item-table tbody tr:last-child td { border-bottom: none; }
+
+.item-table .col-art { width: 52px; padding-right: 0; }
+.item-table .col-art img { width: 44px; height: 32px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.item-table .col-name { font-weight: 600; white-space: nowrap; }
+.item-table .col-class { width: 44px; }
+.item-table .col-class .class-badge { position: static; }
+.item-table .col-class .class-badge img { width: 24px; height: 24px; }
+.item-table .col-stat, .item-table .col-num { text-align: right; font-family: var(--font-mono); }
+.item-table code { color: var(--tech); }
+
+.empty { padding: var(--space-3xl); text-align: center; color: var(--text-faint); }
+
+.visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}

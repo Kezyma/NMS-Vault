@@ -279,8 +279,8 @@ public static class Program
             var outcome = TechExtractor.Extract(
                 result.GetValue(nmse)!.FullName, target, line => Console.WriteLine(line));
 
-            Console.WriteLine($"  {outcome.Technologies} technologies, {outcome.IconsWritten} icons " +
-                              $"({outcome.Bytes / 1024.0 / 1024.0:0.0} MB)");
+            Console.WriteLine($"  {outcome.Technologies} technologies, {outcome.IconsWritten} icons, " +
+                              $"{outcome.ClassIcons} class badges ({outcome.Bytes / 1024.0 / 1024.0:0.0} MB)");
             if (outcome.IconsMissing > 0)
                 Console.WriteLine($"  {outcome.IconsMissing} icon(s) named but not found in the source");
             return 0;

@@ -1,96 +1,79 @@
 @inject GalleryData Data
 
 @*
-    One room of the gallery. The filter bar, the two views and the download menu land here
-    as they are built; for now it loads the manifest and draws what is in it, so the shape
-    of the data is visible while the rest is written.
+    One room of the gallery: a filter bar, then the items as cards or as a table.
+
+    The page owns one sifter and hands the same instance to the search box and to every
+    heading. They all write into it and all call back here, which recomputes the narrowed
+    list once rather than each of them keeping its own idea of what is shown.
 *@
 
 <h1>@Heading</h1>
 
-@if (_rows is null)
+@if (_all is null)
 {
     <p class="dim">Loading&hellip;</p>
 }
-else if (_rows.Count == 0)
-{
-    <p class="dim">Nothing here yet.</p>
-}
 else
 {
-    <p class="count">@_rows.Count item@(_rows.Count == 1 ? "" : "s")</p>
+    <div class="filter-bar">
+        <SearchBox TRow="GalleryRow" Filter="_filter" OnChanged="FilterChanged"
+                   Id="@($"{Page.ToLowerInvariant()}-search")"
+                   Label="@($"Search {Heading}")"
+                   Placeholder="@($"Search {Heading.ToLowerInvariant()}…")" />
 
-    <div class="card-grid">
-        @foreach (var row in _rows)
+        @foreach (var facet in _facets)
         {
-            <article class="item-card" @key="row.Id">
-                <div class="card-art">
-                    @if (row.Image is { } image)
-                    {
-                        <img src="@($"gallery/{image}")" alt="" loading="lazy" />
-                    }
-                    else
-                    {
-                        <span class="no-art" aria-hidden="true">@Initial(row.DisplayName)</span>
-                    }
-                </div>
-
-                <div class="card-body">
-                    <h2 class="card-name">@row.DisplayName</h2>
-
-                    <p class="card-type">
-                        @row.Type
-                        @if (row.IsModified)
-                        {
-                            <span class="badge warn" title="The model path did not match a known ship exactly">Modified</span>
-                        }
-                        @if (row.Class is { } cls)
-                        {
-                            <span class="badge class-@cls.ToLowerInvariant()">@cls</span>
-                        }
-                    </p>
-
-                    @foreach (var seed in row.Seeds)
-                    {
-                        <p class="card-seed"><span class="dim">@seed.Key</span> <code>@seed.Value</code></p>
-                    }
-
-                    @if (row.Stats.Count > 0)
-                    {
-                        <dl class="card-stats">
-                            @foreach (var stat in row.Stats)
-                            {
-                                <div>
-                                    <dt>@stat.Key</dt>
-                                    @* Raw values: the game exposes no maxima to scale against. *@
-                                    <dd>@stat.Value.ToString("0.#")</dd>
-                                </div>
-                            }
-                        </dl>
-                    }
-
-                    @if (row.Tags.Count > 0)
-                    {
-                        <p class="card-tags">
-                            @foreach (var tag in row.Tags)
-                            {
-                                <span class="chip">@tag</span>
-                            }
-                        </p>
-                    }
-
-                    @if (row.Tech.Count > 0)
-                    {
-                        <p class="card-tech dim">@row.Tech.Count installed</p>
-                    }
-                </div>
-            </article>
+            <MultiSelect TRow="GalleryRow" Facet="facet" Rows="_all"
+                         Ticked="_filter.Ticked(facet.Key)" OnChanged="FilterChanged" @key="facet.Key" />
         }
+
+        <div class="sort-by">
+            <label for="@($"{Page.ToLowerInvariant()}-sort")">Sort by</label>
+            <select id="@($"{Page.ToLowerInvariant()}-sort")" @onchange="SortChanged">
+                @foreach (var sort in _sorts)
+                {
+                    <option value="@sort.Key" selected="@(sort.Key == _sort.Key)">@sort.Label</option>
+                }
+            </select>
+        </div>
+
+        <div class="bar-end">
+            @if (_filter.Any)
+            {
+                <button type="button" class="clear-all" @onclick="ClearFilters">Clear filters</button>
+            }
+            <ViewToggle List="_asTable" ListChanged="ViewChanged" />
+        </div>
     </div>
+
+    <p class="count">
+        @Shown.Count of @_all.Count item@(_all.Count == 1 ? "" : "s")
+    </p>
+
+    @if (Shown.Count == 0)
+    {
+        <p class="empty">
+            @(_all.Count == 0 ? "Nothing here yet." : "Nothing matches those filters.")
+        </p>
+    }
+    else if (_asTable)
+    {
+        <ItemTable Rows="Shown" />
+    }
+    else
+    {
+        <div class="card-grid">
+            @foreach (var row in Shown)
+            {
+                <ItemCard Row="row" @key="row.Id" />
+            }
+        </div>
+    }
 }
 
 @code {
-    /// <summary>Which page's rows to show, as <c>EntityKinds.Page</c> names them.</summary>
+    /// <summary>Which page's rows to show.</summary>
     [Parameter, EditorRequired]
     public required string Page { get; set; }
 
@@ -98,14 +81,53 @@ else
     [Parameter, EditorRequired]
     public required string Heading { get; set; }
 
-    private IReadOnlyList<GalleryRow>? _rows;
+    private IReadOnlyList<GalleryRow>? _all;
+    private IReadOnlyList<Facet<GalleryRow>> _facets = [];
+    private IReadOnlyList<SortOption> _sorts = [];
+    private SortOption _sort;
+    private Sifter<GalleryRow>? _sifter;
+    private bool _asTable;
+
+    // Memoised against the list it was built from, so narrowing and ordering happen once
+    // per change rather than once per render.
+    private IReadOnlyList<GalleryRow>? _shown;
+
+    private Sifter<GalleryRow> _filter => _sifter!;
+
+    private IReadOnlyList<GalleryRow> Shown =>
+        _shown ??= GalleryFacets.Sort(
+            _filter.Any ? _all!.Where(_filter.Matches) : _all!, _sort);
 
     protected override async Task OnParametersSetAsync()
     {
-        _rows = null;
-        _rows = await Data.ForPageAsync(Page).ConfigureAwait(true);
+        _facets = GalleryFacets.For(Page);
+        _sorts = GalleryFacets.SortsFor(Page);
+        _sort = _sorts[0];
+        _sifter = new Sifter<GalleryRow>(_facets, r => r.SearchText);
+        _shown = null;
+        _all = null;
+
+        _all = await Data.ForPageAsync(Page).ConfigureAwait(true);
     }
 
-    private static string Initial(string name)
-        => name.Length > 0 ? name[..1].ToUpperInvariant() : "?";
+    private void FilterChanged()
+    {
+        _shown = null;
+        StateHasChanged();
+    }
+
+    private void SortChanged(ChangeEventArgs e)
+    {
+        string key = e.Value?.ToString() ?? "";
+        _sort = _sorts.FirstOrDefault(s => s.Key == key, _sorts[0]);
+        _shown = null;
+    }
+
+    private void ClearFilters()
+    {
+        _filter.Clear();
+        _shown = null;
+    }
+
+    private void ViewChanged(bool asTable) => _asTable = asTable;
 }

@@ -1,0 +1,112 @@
+@typeparam TRow
+
+@*
+    A filter heading: a button that says how many are ticked, and a panel of checkboxes.
+
+    Takes the ticked set itself rather than a copy, and mutates it in place. The sifter it
+    belongs to is read by the list and by the count above it, and giving each of them a
+    different set is how those three stop agreeing about what is shown.
+*@
+
+<div class="multi-select @(_open ? "open" : "")">
+    <button type="button"
+            class="toggle @(_ticked.Count > 0 ? "chosen" : "")"
+            aria-expanded="@_open.ToString().ToLowerInvariant()"
+            @onclick="() => _open = !_open">
+        <span class="label">@Facet.Label</span>
+        @if (_ticked.Count > 0)
+        {
+            <span class="count">@_ticked.Count</span>
+        }
+        <span class="caret" aria-hidden="true">@(_open ? "▴" : "▾")</span>
+    </button>
+
+    @if (_open)
+    {
+        <div class="panel" role="group" aria-label="@Facet.Label">
+            @if (_offered.Count > SearchThreshold)
+            {
+                <input type="search" class="panel-search" placeholder="Filter…"
+                       aria-label="Filter @Facet.Label options"
+                       value="@_search" @oninput="OnSearchInput" />
+            }
+
+            <div class="options">
+                @foreach (var (value, count) in Shown)
+                {
+                    <label class="option" @key="value.Key">
+                        <input type="checkbox"
+                               checked="@_ticked.Contains(value.Key)"
+                               @onchange="e => Tick(value.Key, e.Value is true)" />
+                        <span class="option-label">@value.Label</span>
+                        <span class="option-count">@count</span>
+                    </label>
+                }
+            </div>
+
+            @if (_ticked.Count > 0)
+            {
+                <button type="button" class="panel-clear" @onclick="ClearAll">Clear</button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Above this many options the panel gains its own filter box.</summary>
+    private const int SearchThreshold = 8;
+
+    /// <summary>The heading this offers.</summary>
+    [Parameter, EditorRequired]
+    public required Facet<TRow> Facet { get; set; }
+
+    /// <summary>The rows to count values across. Determines what is offered.</summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<TRow> Rows { get; set; }
+
+    /// <summary>The ticked set, mutated in place.</summary>
+    [Parameter, EditorRequired]
+    public required HashSet<string> Ticked { get; set; }
+
+    /// <summary>Raised after a tick changes.</summary>
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private bool _open;
+    private string _search = "";
+    private IReadOnlyList<(FacetValue Value, int Count)> _offered = [];
+    private HashSet<string> _ticked = new(StringComparer.Ordinal);
+    private IReadOnlyList<TRow>? _offeredFor;
+
+    private IEnumerable<(FacetValue Value, int Count)> Shown =>
+        _search.Length == 0
+            ? _offered
+            : _offered.Where(o => o.Value.Label.Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    protected override void OnParametersSet()
+    {
+        _ticked = Ticked;
+
+        // Recounted only when the row list is actually a different list. Rebuilding this on
+        // every keystroke elsewhere on the page is most of the cost of a filter bar.
+        if (!ReferenceEquals(_offeredFor, Rows))
+        {
+            _offeredFor = Rows;
+            _offered = Facet.Offer(Rows);
+        }
+    }
+
+    private void OnSearchInput(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
+
+    private async Task Tick(string key, bool on)
+    {
+        if (on) { _ticked.Add(key); } else { _ticked.Remove(key); }
+        await OnChanged.InvokeAsync().ConfigureAwait(true);
+    }
+
+    private async Task ClearAll()
+    {
+        _ticked.Clear();
+        await OnChanged.InvokeAsync().ConfigureAwait(true);
+    }
+}

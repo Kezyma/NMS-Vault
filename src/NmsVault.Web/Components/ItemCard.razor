@@ -1,0 +1,72 @@
+@*
+    One item as a card: the primary image, name, type, class, seed, tags and base stats.
+*@
+
+<article class="item-card">
+    <div class="card-art">
+        @if (Row.Image is { } image)
+        {
+            <img src="@($"gallery/{image}")" alt="" loading="lazy" />
+        }
+        else
+        {
+            <span class="no-art" aria-hidden="true">@Initial</span>
+        }
+
+        <ClassBadge Class="@Row.Class" />
+    </div>
+
+    <div class="card-body">
+        <h2 class="card-name">@Row.DisplayName</h2>
+
+        <p class="card-type">
+            <span>@Row.Type</span>
+            @if (Row.IsModified)
+            {
+                <span class="badge warn" title="The model path did not match a known ship exactly">Modified</span>
+            }
+        </p>
+
+        @foreach (var seed in Row.Seeds)
+        {
+            <p class="card-seed"><span class="dim">@seed.Key</span> <code>@seed.Value</code></p>
+        }
+
+        @if (Row.Stats.Count > 0)
+        {
+            <dl class="card-stats">
+                @foreach (var stat in Row.Stats)
+                {
+                    <div>
+                        <dt>@stat.Key</dt>
+                        @* Raw values: the game exposes no maxima to scale a bar against. *@
+                        <dd>@stat.Value.ToString("0.#")</dd>
+                    </div>
+                }
+            </dl>
+        }
+
+        @if (Row.Tags.Count > 0)
+        {
+            <p class="card-tags">
+                @foreach (var tag in Row.Tags)
+                {
+                    <span class="chip">@tag</span>
+                }
+            </p>
+        }
+
+        @if (Row.Tech.Count > 0)
+        {
+            <p class="card-tech dim">@Row.Tech.Count technolog@(Row.Tech.Count == 1 ? "y" : "ies") installed</p>
+        }
+    </div>
+</article>
+
+@code {
+    /// <summary>The item to draw.</summary>
+    [Parameter, EditorRequired]
+    public required GalleryRow Row { get; set; }
+
+    private string Initial => Row.DisplayName.Length > 0 ? Row.DisplayName[..1].ToUpperInvariant() : "?";
+}

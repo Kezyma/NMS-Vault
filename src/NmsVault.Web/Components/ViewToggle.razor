@@ -1,0 +1,31 @@
+@*
+    A choice between two ways of being shown one list.
+
+    Two buttons, each naming a view, with exactly one pressed - rather than one button that
+    flips. A single control has to decide whether its label names what you are looking at or
+    what pressing it would do, and no wording answers both.
+*@
+
+<div class="view-toggle" role="group" aria-label="View">
+    <button type="button" aria-pressed="@((!List).ToString().ToLowerInvariant())"
+            title="Show as cards" @onclick="() => Show(false)">Cards</button>
+
+    <button type="button" aria-pressed="@(List.ToString().ToLowerInvariant())"
+            title="Show as a table" @onclick="() => Show(true)">Table</button>
+</div>
+
+@code {
+    /// <summary>Whether the list is currently drawn as a table.</summary>
+    [Parameter] public bool List { get; set; }
+
+    /// <summary>Raised when the view changes.</summary>
+    [Parameter] public EventCallback<bool> ListChanged { get; set; }
+
+    private async Task Show(bool list)
+    {
+        if (list == List) { return; }
+
+        List = list;
+        await ListChanged.InvokeAsync(list).ConfigureAwait(true);
+    }
+}

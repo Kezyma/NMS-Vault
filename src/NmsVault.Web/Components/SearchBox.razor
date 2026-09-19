@@ -1,0 +1,53 @@
+@typeparam TRow
+
+@*
+    A search box that writes straight into the sifter it is given, rather than holding its
+    own copy. The same instance is read by the list and by the count beside it, and handing
+    each of them a different copy is how those stop agreeing.
+*@
+
+<div class="search-box">
+    <input type="search"
+           id="@Id"
+           value="@Filter.Search"
+           placeholder="@Placeholder"
+           aria-label="@Label"
+           @oninput="OnInput" />
+
+    @if (Filter.Search.Length > 0)
+    {
+        <button type="button" class="clear" title="Clear search" aria-label="Clear search"
+                @onclick="Clear">&times;</button>
+    }
+</div>
+
+@code {
+    /// <summary>The sifter this writes into.</summary>
+    [Parameter, EditorRequired]
+    public required Sifter<TRow> Filter { get; set; }
+
+    /// <summary>Raised after the text changes, so the page can narrow again.</summary>
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    /// <summary>Input id, for a label to point at.</summary>
+    [Parameter] public string Id { get; set; } = "search";
+
+    /// <summary>Accessible name.</summary>
+    [Parameter] public string Label { get; set; } = "Search";
+
+    /// <summary>Placeholder text.</summary>
+    [Parameter] public string Placeholder { get; set; } = "Search…";
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        Filter.Search = e.Value?.ToString() ?? "";
+        await OnChanged.InvokeAsync().ConfigureAwait(true);
+    }
+
+    private async Task Clear()
+    {
+        Filter.Search = "";
+        await OnChanged.InvokeAsync().ConfigureAwait(true);
+    }
+}

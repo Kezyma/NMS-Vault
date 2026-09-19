@@ -1,0 +1,25 @@
+@*
+    The game's own class mark, extracted from its files, rather than a coloured letter.
+    Falls back to the letter when the badge is missing, so a gallery published before
+    extract-tech has run still reads correctly.
+*@
+
+@if (Class is { Length: > 0 } cls)
+{
+    <span class="class-badge" title="Class @cls">
+        <img src="@($"gallery/img/class/{cls.ToLowerInvariant()}.webp")"
+             alt="Class @cls" loading="lazy" @onerror="() => _missing = true"
+             hidden="@_missing" />
+        @if (_missing)
+        {
+            <span class="class-letter class-@cls.ToLowerInvariant()">@cls</span>
+        }
+    </span>
+}
+
+@code {
+    /// <summary>The class letter - S, A, B, C - or null for none.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    private bool _missing;
+}

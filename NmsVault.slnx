@@ -5,4 +5,5 @@
   <Project Path="tools/NmsVault.Ingest/NmsVault.Ingest.csproj" />
   <Project Path="tests/NmsVault.Json.Tests/NmsVault.Json.Tests.csproj" />
   <Project Path="tests/NmsVault.Core.Tests/NmsVault.Core.Tests.csproj" />
+  <Project Path="tests/NmsVault.Web.Tests/NmsVault.Web.Tests.csproj" />
 </Solution>
