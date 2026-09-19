@@ -256,8 +256,8 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 
 .card-body {
     /*
-       Grows to fill a card that the grid has stretched to match a taller neighbour, so the
-       actions below it stay on the bottom edge instead of leaving a gap under themselves.
+       Takes the slack when the grid stretches a card to match a taller neighbour, so the
+       spare height ends up below the last line rather than as a band under the card.
     */
     flex: 1;
     min-width: 0;
@@ -266,10 +266,15 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
     flex-direction: column;
     gap: var(--space-sm);
 }
+.card-head { display: flex; align-items: flex-start; gap: var(--space-sm); }
+.card-head .actions { display: flex; gap: var(--space-xs); flex: none; margin-left: auto; }
+
 .card-name {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    flex: 1;
+    min-width: 0;
     margin: 0;
     font-size: var(--text-md);
 }
@@ -734,6 +739,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     padding: 0 var(--space-md);
 }
 
+.vault-download > .toggle.icon { gap: var(--space-2xs); padding: 0 var(--space-xs); }
+
 .vault-download > .toggle .glyph { color: var(--accent); font-size: 14px; line-height: 1; }
 .vault-download > .toggle .drop { color: var(--text-faint); font-size: 10px; }
 .vault-download.open > .toggle { border-color: var(--accent-dim); background: var(--bg-hover); }
@@ -785,24 +792,9 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .vault-download .options .ext { flex: none; font-family: var(--font-mono); font-size: var(--text-xs); }
 
-/* The card's own row for it, so the button sits on the card's edge rather than in the text. */
-.card-actions {
-    display: flex;
-    justify-content: flex-end;
-    padding: var(--space-md) var(--space-lg);
-    border-top: 1px solid var(--border);
-    background: rgba(0, 0, 0, 0.2);
-}
-
 .item-table .col-actions { width: 1%; white-space: nowrap; text-align: right; }
 .item-table .col-actions .actions { display: flex; gap: var(--space-xs); justify-content: flex-end; }
 
-/*
-   In a row the word is redundant - the column has a heading and there is only one button - so the
-   arrow carries it alone, and the rows stay narrow enough to read across.
-*/
-.item-table .col-actions .vault-download > .toggle .label { display: none; }
-.item-table .col-actions .vault-download > .toggle { height: 26px; }
 
 
 /* ---------------------------------------------------------------- modal */
@@ -1127,10 +1119,24 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 
 /* ---------------------------------------------------------------- info button */
 
-.card-actions { justify-content: space-between; }
+/*
+   Square, and no wider than the glyph in it. These sit beside a title and in a table row -
+   both places where the word would be the widest thing there and the column has no room for
+   it. The name a screen reader announces is on the button either way.
+*/
+button.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    width: auto;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 var(--space-xs);
+    line-height: 1;
+}
 
-button.info { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0 var(--space-md); }
-button.info .glyph { color: var(--tech); font-size: 14px; line-height: 1; }
+button.info .glyph { color: var(--tech); font-size: 15px; line-height: 1; }
 
 /*
    Pinned to the right edge. With the slot counts added the table is wider than most windows,
@@ -1146,4 +1152,4 @@ button.info .glyph { color: var(--tech); font-size: 14px; line-height: 1; }
 
 .item-table thead .col-actions { background: var(--bg-raised); }
 .item-table tbody tr:hover .col-actions { background: var(--bg-hover); }
-.item-table .col-actions button.info { height: 26px; padding: 0 var(--space-sm); }
+.item-table .col-actions button.icon { height: 26px; }

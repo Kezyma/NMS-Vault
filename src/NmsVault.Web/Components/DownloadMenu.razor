@@ -18,11 +18,16 @@
 *@
 
 <div class="vault-combo vault-download @(_open ? "open" : null)" @onkeydown="OnKey">
-    <button type="button" class="download toggle" aria-expanded="@(_open ? "true" : "false")"
-            aria-haspopup="menu" title="Download this in a save editor's format" @ref="_control"
+    <button type="button" class="download toggle @(Compact ? "icon" : null)"
+            aria-expanded="@(_open ? "true" : "false")" aria-haspopup="menu"
+            title="Download this in a save editor's format"
+            aria-label="Download this in a save editor's format" @ref="_control"
             @onclick="Flip" @onclick:stopPropagation="true">
         <span class="glyph" aria-hidden="true">&#8681;</span>
-        <span class="label">Download</span>
+        @if (!Compact)
+        {
+            <span class="label">Download</span>
+        }
         <span class="drop" aria-hidden="true">&#9662;</span>
     </button>
 
@@ -100,6 +105,17 @@
     /// <summary>The item to offer.</summary>
     [Parameter, EditorRequired]
     public required GalleryRow Row { get; set; }
+
+    /// <summary>
+    /// Whether to draw the control as an icon rather than a labelled button.
+    /// </summary>
+    /// <remarks>
+    /// For the places where it sits beside a title or in a table row, where the word would be
+    /// the widest thing in a column that has no room for it. The accessible name stays the
+    /// same either way, so what a screen reader hears does not depend on where it is drawn.
+    /// </remarks>
+    [Parameter]
+    public bool Compact { get; set; }
 
     private bool _open;
     private ElementReference _control;

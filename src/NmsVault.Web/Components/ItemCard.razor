@@ -15,10 +15,27 @@
     </div>
 
     <div class="card-body">
-        <h2 class="card-name">
-            <ClassBadge Class="@Row.Class" />
-            <span class="name-text">@Row.DisplayName</span>
-        </h2>
+        @*
+            The two buttons live on the title row rather than in a bar of their own. A footer
+            is a whole extra band of card for two icons, and it pushed everything below the
+            picture down by its own height on every card on the page.
+        *@
+        <div class="card-head">
+            <h2 class="card-name">
+                <ClassBadge Class="@Row.Class" />
+                <span class="name-text">@Row.DisplayName</span>
+            </h2>
+
+            <div class="actions">
+                <button type="button" class="info icon" title="@($"More about {Row.DisplayName}")"
+                        aria-label="@($"More about {Row.DisplayName}")"
+                        @onclick="() => OnInfo.InvokeAsync(Row)">
+                    <span class="glyph" aria-hidden="true">&#9432;</span>
+                </button>
+
+                <DownloadMenu Row="Row" Compact="true" />
+            </div>
+        </div>
 
         <p class="card-type">
             <span>@Row.Type</span>
@@ -62,16 +79,6 @@
                 }
             </p>
         }
-    </div>
-
-    <div class="card-actions">
-        <button type="button" class="info" title="@($"More about {Row.DisplayName}")"
-                @onclick="() => OnInfo.InvokeAsync(Row)">
-            <span class="glyph" aria-hidden="true">&#9432;</span>
-            <span class="label">Info</span>
-        </button>
-
-        <DownloadMenu Row="Row" />
     </div>
 </article>
 

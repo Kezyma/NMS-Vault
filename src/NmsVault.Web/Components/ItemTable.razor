@@ -92,13 +92,13 @@
                        itself the way the column needs. *@
                     <td class="col-actions">
                         <div class="actions">
-                            <button type="button" class="info" title="@($"More about {row.DisplayName}")"
+                            <button type="button" class="info icon" title="@($"More about {row.DisplayName}")"
                                     aria-label="@($"More about {row.DisplayName}")"
                                     @onclick="() => OnInfo.InvokeAsync(row)">
                                 <span class="glyph" aria-hidden="true">&#9432;</span>
                             </button>
 
-                            <DownloadMenu Row="row" />
+                            <DownloadMenu Row="row" Compact="true" />
                         </div>
                     </td>
                 </tr>
