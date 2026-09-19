@@ -40,12 +40,14 @@ public class AdapterTests
     // --- Every adapter declares its verification status ----------------
 
     [Fact]
-    public void OnlyNmseClaimsToBeVerified()
+    public void OnlyTheFormatsWithRealFilesBehindThemClaimToBeVerified()
     {
-        // The others cannot be verified against a real editor yet, and the UI depends on
-        // this flag to say so honestly.
+        // NMSE from 23 real exports, goatfungus from five - see GoatfungusFidelityTests,
+        // which round-trips each of them byte for byte. The other two have no real file to
+        // check against at all: they are written from libNOM's writers and nothing more.
         Assert.True(new NmseExportAdapter().IsVerified);
-        Assert.False(new GoatfungusExportAdapter().IsVerified);
+        Assert.True(new GoatfungusExportAdapter().IsVerified);
+
         Assert.False(new CompanionExportAdapter(Mapper).IsVerified);
         Assert.False(new NomNomExportAdapter(Mapper).IsVerified);
     }

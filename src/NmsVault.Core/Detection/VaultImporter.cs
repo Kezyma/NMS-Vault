@@ -67,10 +67,17 @@ public sealed class VaultImporter(JsonNameMapper mapper)
     /// identical, so one path handles both. NMSE's extra sidecars are picked up when present
     /// and simply absent otherwise.
     /// </summary>
+    /// <remarks>
+    /// The detected kind is handed on rather than left to be worked out again. The detector
+    /// has read the whole file; the reader would have only the extension and the shape, and
+    /// for a goatfungus starship - a bare object under an extension NMSE never writes - that
+    /// was too little to go on.
+    /// </remarks>
     private static VaultItem ImportReadable(
         ReadOnlySpan<byte> bytes, VaultMetadata meta, DetectionResult detected, string? fileName)
         => NmseImporter.Read(bytes, meta,
-            fileName is null ? null : Path.GetExtension(fileName));
+            fileName is null ? null : Path.GetExtension(fileName),
+            detected.Kind);
 
     private VaultItem ImportCompanionFormat(
         ReadOnlySpan<byte> bytes, VaultMetadata meta, DetectionResult detected)

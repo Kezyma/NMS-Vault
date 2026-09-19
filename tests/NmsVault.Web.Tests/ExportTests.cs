@@ -78,16 +78,18 @@ public class ExportTests
     }
 
     [Fact]
-    public async Task NmseIsTheOnlyVerifiedFormat()
+    public async Task TheMenuCarriesEachFormatsVerificationStatus()
     {
-        // Not a preference for NMSE: it is the only one whose output has been round-tripped
-        // through the real editor, because the others cannot load a 7.03 save to try.
+        // Not shown anywhere at the moment, but it is what the adapter says and the service
+        // must not quietly flatten it. NMSE and goatfungus have real files behind them; the
+        // other two are written from libNOM's writers and nothing more.
         var (service, _) = ServiceFor("starships", Ship, ".nmsship");
 
         var options = await service.OptionsAsync("item");
 
-        Assert.True(options.Single(o => o.Editor == EditorId.Nmse).IsVerified);
-        Assert.All(options.Where(o => o.Editor != EditorId.Nmse), o => Assert.False(o.IsVerified));
+        Assert.Equal(
+            [EditorId.Nmse, EditorId.Goatfungus],
+            options.Where(o => o.IsVerified).Select(o => o.Editor).Order());
     }
 
     [Fact]

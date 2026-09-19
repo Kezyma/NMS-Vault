@@ -23,10 +23,20 @@ public sealed class GoatfungusExportAdapter : IExportAdapter
     public string HomepageUrl => "https://github.com/goatfungus/NMSSaveEditor";
 
     /// <summary>
-    /// False. goatfungus has not been updated for 7.03 Cosmos and cannot load a current
-    /// save, so this output has never been confirmed by importing it.
+    /// True, on the evidence of five files the real editor wrote.
     /// </summary>
-    public bool IsVerified => false;
+    /// <remarks>
+    /// <c>tests/fixtures/goatfungus</c> holds genuine NMSSaveEditor exports - three ships and
+    /// two multitools. Each one is read by this project and written back out byte for byte,
+    /// which pins the key order, the number formatting and the absence of whitespace to what
+    /// the editor itself produces.
+    /// <para>
+    /// What that does not show is the editor accepting a file, since it cannot open a 7.03
+    /// save to be given one. It shows that a file this adapter writes is indistinguishable
+    /// from one the editor wrote, which is as far as the evidence goes.
+    /// </para>
+    /// </remarks>
+    public bool IsVerified => true;
 
     /// <inheritdoc />
     public OneOf<string, Unsupported> Extension(EntityKind kind) => kind switch
@@ -76,14 +86,17 @@ public sealed class GoatfungusExportAdapter : IExportAdapter
         if (!extension.HasValue)
             throw new NotSupportedException(extension.Alternative.Reason);
 
-        // The whole format: the bare entity object, deobfuscated. libNOM's implementation
-        // is literally `return Data["Ship"].Serialize().GetBytes()`.
+        // The whole format: the bare entity object, deobfuscated, on one line. libNOM's
+        // implementation is literally `return Data["Ship"].Serialize().GetBytes()`, and
+        // Newtonsoft's Serialize() defaults to Formatting.None - which is what the real
+        // exports in tests/fixtures/goatfungus look like. NMSE indents its own files; this
+        // editor does not, and matching it is the point.
         //
         // Deliberately serialised through this project's writer rather than a general JSON
         // library, because goatfungus's Java parser only accepts \u escapes <= 255 - so
         // non-ASCII has to go out as raw UTF-8 bytes, which is exactly what NMSE's
         // serialiser does and why it was written that way.
-        byte[] content = Encoding.Latin1.GetBytes(item.Payload.ToExportString());
+        byte[] content = Encoding.Latin1.GetBytes(item.Payload.ToCompactString());
 
         string fileName = NmseExportAdapter.SanitiseFileName(item.Meta.DisplayName) + extension.Value;
         return new ExportResult(fileName, content);

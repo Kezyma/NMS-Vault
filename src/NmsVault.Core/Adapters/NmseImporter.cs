@@ -22,22 +22,29 @@ public static class NmseImporter
     /// The source file's extension (e.g. <c>.nmstool</c>), used to disambiguate bare
     /// objects. Optional, but without it a bare export has only its shape to go on.
     /// </param>
-    public static VaultItem Read(ReadOnlySpan<byte> bytes, VaultMetadata meta, string? extensionHint = null)
-        => Read(JsonObject.FromBytes(bytes), meta, extensionHint);
+    /// <param name="kind">
+    /// What the document holds, where the caller already knows. The detector works this out
+    /// from the whole file and is better informed than an extension, so when it has an
+    /// answer that answer is used and nothing is inferred.
+    /// </param>
+    public static VaultItem Read(
+        ReadOnlySpan<byte> bytes, VaultMetadata meta, string? extensionHint = null, EntityKind? kind = null)
+        => Read(JsonObject.FromBytes(bytes), meta, extensionHint, kind);
 
-    /// <inheritdoc cref="Read(ReadOnlySpan{byte}, VaultMetadata, string?)"/>
-    public static VaultItem Read(JsonObject document, VaultMetadata meta, string? extensionHint = null)
+    /// <inheritdoc cref="Read(ReadOnlySpan{byte}, VaultMetadata, string?, EntityKind?)"/>
+    public static VaultItem Read(
+        JsonObject document, VaultMetadata meta, string? extensionHint = null, EntityKind? kind = null)
     {
         // A starship export is the only wrapped NMSE format, and it is self-identifying.
         if (document.Contains("Ship"))
             return ReadStarship(document, meta);
 
-        EntityKind kind = InferBareKind(document, extensionHint);
+        EntityKind resolved = kind ?? InferBareKind(document, extensionHint);
 
-        return kind switch
+        return resolved switch
         {
             EntityKind.Companion => ReadCompanion(document, meta),
-            _ => VaultItem.Create(kind, StripKnownSidecars(document, kind), meta),
+            _ => VaultItem.Create(resolved, StripKnownSidecars(document, resolved), meta),
         };
     }
 
@@ -86,16 +93,22 @@ public static class NmseImporter
     }
 
     /// <summary>
-    /// Works out what a bare NMSE export is. Extension first, because NMSE's own extensions
-    /// are unambiguous; shape as a fallback for renamed or extensionless input.
+    /// Works out what a bare export is, from an extension or failing that from its shape.
     /// </summary>
+    /// <remarks>
+    /// Both editors that write readable keys come through here, so both sets of extensions
+    /// are listed. goatfungus writes a bare object for every kind including starships, which
+    /// is why a starship has a shape rule as well - NMSE's own starship export is wrapped
+    /// and never reaches this method.
+    /// </remarks>
     internal static EntityKind InferBareKind(JsonObject document, string? extensionHint)
     {
         switch (extensionHint?.ToLowerInvariant())
         {
-            case ".nmstool": return EntityKind.Multitool;
-            case ".nmspet": return EntityKind.Companion;
+            case ".nmstool" or ".wp0": return EntityKind.Multitool;
+            case ".nmspet" or ".pet": return EntityKind.Companion;
             case ".nmsfrig": return EntityKind.Frigate;
+            case ".sh0": return EntityKind.Starship;
         }
 
         // Shape fallback. These discriminators come from the real fixtures:
@@ -109,8 +122,12 @@ public static class NmseImporter
         if (document.Contains("TraitIDs") || document.Contains("FrigateClass"))
             return EntityKind.Frigate;
 
+        // A ship is the only thing carrying a technology-only inventory beside a resource.
+        if (document.Contains("Resource") && document.Contains("Inventory_TechOnly"))
+            return EntityKind.Starship;
+
         throw new InvalidOperationException(
-            "Could not determine what this NMSE export contains. Pass the original file " +
-            "extension as a hint, or check the file is an NMSE export at all.");
+            "Could not determine what this export contains. Pass the original file " +
+            "extension as a hint, or check the file is an entity export at all.");
     }
 }

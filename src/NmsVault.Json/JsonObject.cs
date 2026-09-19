@@ -537,6 +537,18 @@ public partial class JsonObject
     public string ToExportString() => JsonParser.Serialize(this, true, skipReverseMapping: true);
 
     /// <summary>
+    /// The same text with no indentation, newlines or spaces after a colon, which is what
+    /// goatfungus's NMSSaveEditor writes: its export is a plain Newtonsoft
+    /// <c>Serialize()</c>, and that defaults to <c>Formatting.None</c>.
+    /// </summary>
+    /// <remarks>
+    /// The same Latin-1 caveat as <see cref="ToExportString"/> applies, and applies harder
+    /// here: goatfungus is the editor whose parser refuses a <c>\u</c> escape above 255.
+    /// </remarks>
+    /// <returns>The minified JSON text, in the Latin-1 byte-transparent form.</returns>
+    public string ToCompactString() => JsonParser.Serialize(this, false, skipReverseMapping: true);
+
+    /// <summary>
     /// Parses JSON from raw bytes. Bytes are decoded as Latin-1 so that every byte maps
     /// to exactly one char: the parser then validates UTF-8 runs itself and reconstitutes
     /// real text, while genuine binary survives as <see cref="BinaryData"/>. Decoding as

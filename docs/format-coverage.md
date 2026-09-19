@@ -15,11 +15,17 @@ before a download.
 | — | Kind not supported by that editor at all |
 
 **Confidence.** The NMSE columns are verified against 23 real exports in
-`tests/fixtures/nmse`. The goatfungus, NMS Companion (Kaii) and NomNom columns are read
-from [libNOM.collect](https://github.com/zencq/libNOM.collect)'s writers — a good proxy for
-NomNom (same author) and a reasonable one for Kaii, but **not confirmed against the editors
-themselves**, because as of 7.03 Cosmos none of the three can load a current save. Anything
-marked *inferred* is weaker still.
+`tests/fixtures/nmse`. The goatfungus column is verified against five real exports in
+`tests/fixtures/goatfungus`: each is read and written back byte for byte, so the file shape,
+the key order, the number formatting and the minified whitespace all match what the editor
+itself produces. That is not the same as the editor accepting one of our files — it cannot
+open a 7.03 save to be given one — but a file we write is indistinguishable from one it
+wrote.
+
+The NMS Companion (Kaii) and NomNom columns are read from
+[libNOM.collect](https://github.com/zencq/libNOM.collect)'s writers — a good proxy for NomNom
+(same author) and a reasonable one for Kaii, but **not confirmed against any real file**.
+Anything marked *inferred* is weaker still.
 
 ---
 
