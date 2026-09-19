@@ -55,13 +55,13 @@ else
         </div>
     </div>
 
-    <p class="count">
+    <p class="tally">
         @Shown.Count of @_all.Count item@(_all.Count == 1 ? "" : "s")
     </p>
 
     @if (Shown.Count == 0)
     {
-        <p class="empty">
+        <p class="nothing">
             @(_all.Count == 0 ? "Nothing here yet." : "Nothing matches those filters.")
         </p>
     }
