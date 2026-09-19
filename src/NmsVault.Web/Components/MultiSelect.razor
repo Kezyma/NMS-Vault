@@ -1,60 +1,103 @@
 @typeparam TRow
+@inject IJSRuntime Js
+@implements IAsyncDisposable
 
 @*
-    A filter heading: a button that says how many are ticked, and a panel of checkboxes.
+    Any number of one list, chosen from a panel that opens under a control.
 
-    Takes the ticked set itself rather than a copy, and mutates it in place. The sifter it
-    belongs to is read by the list and by the count above it, and giving each of them a
-    different set is how those three stop agreeing about what is shown.
+    Not a native <select multiple>, which is a scrolling box that takes as much room as it is given
+    and asks the reader to hold ctrl to pick a second thing. And not a count - "3 selected" is a
+    number you have to open the panel to read, and this sits in a bar whose whole job is saying
+    what is being asked for.
+
+    It wears .vault-combo so the one document-level listener that closes a list on a press outside
+    it finds this too; that script looks for .vault-combo.open and presses the .toggle inside.
 *@
 
-<div class="multi-select @(_open ? "open" : "")">
-    <button type="button"
-            class="toggle @(_ticked.Count > 0 ? "chosen" : "")"
-            aria-expanded="@_open.ToString().ToLowerInvariant()"
-            @onclick="() => _open = !_open">
-        <span class="label">@Facet.Label</span>
-        @if (_ticked.Count > 0)
+<div class="vault-combo vault-multi @(_open ? "open" : null)" @onkeydown="Dismiss">
+    @*
+        The control is a row rather than one button, because what is in it is pressable: a chip
+        naming something chosen is the obvious place to press to stop asking for it, and a button
+        cannot hold buttons. So the parts that do something are buttons, and the space between
+        them opens the list.
+    *@
+    <div class="control" @onclick="Show">
+        @if (_ticked.Count == 0)
         {
-            <span class="count">@_ticked.Count</span>
+            <span class="face empty">@Facet.Label</span>
         }
-        <span class="caret" aria-hidden="true">@(_open ? "▴" : "▾")</span>
-    </button>
+        else
+        {
+            <span class="face">
+                @foreach (var (value, _) in _offered.Where(o => _ticked.Contains(o.Value.Key)))
+                {
+                    <button type="button" class="pick" @key="value.Key"
+                            title="@($"Stop asking for {value.Label}")"
+                            aria-label="@($"Stop asking for {value.Label}")"
+                            @onclick="() => Toggle(value.Key)" @onclick:stopPropagation="true">
+                        <span>@value.Label</span>
+                        <span class="drop" aria-hidden="true">&times;</span>
+                    </button>
+                }
+            </span>
+        }
+
+        <button type="button" class="toggle" aria-expanded="@(_open ? "true" : "false")"
+                title="@(_open ? "Close the list" : "Show every option")"
+                aria-label="@(_open ? "Close the list" : "Show every option")"
+                @onclick="Flip" @onclick:stopPropagation="true">&#9662;</button>
+    </div>
 
     @if (_open)
     {
-        <div class="panel" role="group" aria-label="@Facet.Label">
-            @if (_offered.Count > SearchThreshold)
+        <div class="panel">
+            @if (_offered.Count > Searchable)
             {
-                <input type="search" class="panel-search" placeholder="Filter…"
-                       aria-label="Filter @Facet.Label options"
-                       value="@_search" @oninput="OnSearchInput" />
+                <div class="search">
+                    <input type="text" placeholder="Find" value="@_search" @ref="_box"
+                           aria-label="@($"Find in {Facet.Label}")"
+                           @oninput="OnSearchInput" @onclick:stopPropagation="true" />
+                </div>
             }
 
-            <div class="options">
+            <ul class="options">
+                @if (Shown.Count == 0)
+                {
+                    <li class="none">@(_offered.Count == 0 ? "Nothing to choose from." : "Nothing matches.")</li>
+                }
+
                 @foreach (var (value, count) in Shown)
                 {
-                    <label class="option" @key="value.Key">
-                        <input type="checkbox"
-                               checked="@_ticked.Contains(value.Key)"
-                               @onchange="e => Tick(value.Key, e.Value is true)" />
-                        <span class="option-label">@value.Label</span>
-                        <span class="option-count">@count</span>
-                    </label>
-                }
-            </div>
+                    var held = _ticked.Contains(value.Key);
 
-            @if (_ticked.Count > 0)
-            {
-                <button type="button" class="panel-clear" @onclick="ClearAll">Clear</button>
-            }
+                    <li @key="value.Key">
+                        @*
+                            Suppressing the mousedown keeps the press from moving focus out of the
+                            panel before the click lands, which would otherwise close it under the
+                            pointer.
+                        *@
+                        <button type="button" class="@(held ? "selected" : null)"
+                                role="menuitemcheckbox" aria-checked="@(held ? "true" : "false")"
+                                @onmousedown:preventDefault="true"
+                                @onclick="() => Toggle(value.Key)">
+                            <span class="tick" aria-hidden="true">@(held ? "✓" : "")</span>
+                            <span class="name">@value.Label</span>
+                            <span class="count">@count</span>
+                        </button>
+                    </li>
+                }
+            </ul>
         </div>
     }
 </div>
 
 @code {
-    /// <summary>Above this many options the panel gains its own filter box.</summary>
-    private const int SearchThreshold = 8;
+    /// <summary>
+    /// Above this many options the panel offers a way to search them. Low, because the box is only
+    /// worth leaving out where scrolling is plainly faster than typing - four classes, three types.
+    /// Someone who has learned that typing narrows one of these should not have to learn which.
+    /// </summary>
+    private const int Searchable = 6;
 
     /// <summary>The heading this offers.</summary>
     [Parameter, EditorRequired]
@@ -64,31 +107,46 @@
     [Parameter, EditorRequired]
     public required IReadOnlyList<TRow> Rows { get; set; }
 
-    /// <summary>The ticked set, mutated in place.</summary>
+    /// <summary>
+    /// What is ticked, which this edits in place.
+    /// </summary>
+    /// <remarks>
+    /// The set itself rather than a copy, because the sifter it belongs to is read by the list and
+    /// by the count above it, and handing each of them a different copy is how those stop agreeing.
+    /// </remarks>
     [Parameter, EditorRequired]
     public required HashSet<string> Ticked { get; set; }
 
-    /// <summary>Raised after a tick changes.</summary>
+    /// <summary>Raised after every change, so whoever owns the filter can redraw.</summary>
     [Parameter]
     public EventCallback OnChanged { get; set; }
 
     private bool _open;
     private string _search = "";
+    private ElementReference _box;
+    private bool _focusBox;
+    private IJSObjectReference? _module;
+
     private IReadOnlyList<(FacetValue Value, int Count)> _offered = [];
     private HashSet<string> _ticked = new(StringComparer.Ordinal);
     private IReadOnlyList<TRow>? _offeredFor;
 
-    private IEnumerable<(FacetValue Value, int Count)> Shown =>
+    /// <summary>
+    /// What the panel is showing, which is everything until something is typed. Matched anywhere in
+    /// the name rather than at the start: a reader looking for "vulture" should not have to know
+    /// the ship is called Iron Vulture first.
+    /// </summary>
+    private IReadOnlyList<(FacetValue Value, int Count)> Shown =>
         _search.Length == 0
             ? _offered
-            : _offered.Where(o => o.Value.Label.Contains(_search, StringComparison.OrdinalIgnoreCase));
+            : [.. _offered.Where(o => o.Value.Label.Contains(_search, StringComparison.OrdinalIgnoreCase))];
 
     protected override void OnParametersSet()
     {
         _ticked = Ticked;
 
-        // Recounted only when the row list is actually a different list. Rebuilding this on
-        // every keystroke elsewhere on the page is most of the cost of a filter bar.
+        // Recounted only when the row list is actually a different list. Rebuilding this on every
+        // keystroke elsewhere on the page is most of the cost of a filter bar.
         if (!ReferenceEquals(_offeredFor, Rows))
         {
             _offeredFor = Rows;
@@ -98,15 +156,68 @@
 
     private void OnSearchInput(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
 
-    private async Task Tick(string key, bool on)
+    private async Task Toggle(string key)
     {
-        if (on) { _ticked.Add(key); } else { _ticked.Remove(key); }
+        if (!_ticked.Remove(key)) { _ticked.Add(key); }
         await OnChanged.InvokeAsync().ConfigureAwait(true);
     }
 
-    private async Task ClearAll()
+    private void Dismiss(KeyboardEventArgs e)
     {
-        _ticked.Clear();
-        await OnChanged.InvokeAsync().ConfigureAwait(true);
+        if (e.Key != "Escape") { return; }
+
+        // The typing goes first: someone who has narrowed the list and changed their mind means
+        // the narrowing rather than the panel.
+        if (_search.Length > 0) { _search = ""; return; }
+
+        _open = false;
+    }
+
+    private void Show()
+    {
+        if (!_open) { Flip(); }
+    }
+
+    /// <summary>
+    /// Opens or closes the panel, forgetting what was typed either way. A panel that reopened
+    /// still narrowed to the last search would look like a list with most of its options missing.
+    /// </summary>
+    private void Flip()
+    {
+        _open = !_open;
+        _search = "";
+        _focusBox = _open && _offered.Count > Searchable;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Given the keyboard from here rather than with the autofocus attribute, which a browser
+        // only honours for an element that was in the document when the page loaded.
+        if (_focusBox)
+        {
+            _focusBox = false;
+            await _box.FocusAsync().ConfigureAwait(true);
+        }
+
+        if (!firstRender) { return; }
+
+        _module = await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+        await _module.InvokeVoidAsync("closeListsOnOutsidePress").ConfigureAwait(true);
+    }
+
+    /// <summary>Releases the imported module.</summary>
+    /// <returns>A task that completes when it is released.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null) { return; }
+
+        try
+        {
+            await _module.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page went away first; there is nothing left to release.
+        }
     }
 }

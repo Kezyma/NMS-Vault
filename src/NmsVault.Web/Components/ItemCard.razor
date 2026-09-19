@@ -12,12 +12,13 @@
         {
             <span class="no-art" aria-hidden="true">@Initial</span>
         }
-
-        <ClassBadge Class="@Row.Class" />
     </div>
 
     <div class="card-body">
-        <h2 class="card-name">@Row.DisplayName</h2>
+        <h2 class="card-name">
+            <ClassBadge Class="@Row.Class" />
+            <span class="name-text">@Row.DisplayName</span>
+        </h2>
 
         <p class="card-type">
             <span>@Row.Type</span>
@@ -34,7 +35,7 @@
 
         @if (Row.Stats.Count > 0)
         {
-            <dl class="card-stats">
+            <dl class="card-stats" data-count="@Row.Stats.Count">
                 @foreach (var stat in Row.Stats)
                 {
                     <div>
