@@ -15,6 +15,11 @@
     <ProjectReference Include="..\..\src\NmsVault.Web\NmsVault.Web.csproj" />
   </ItemGroup>
 
+  <!-- Real editor exports, copied next to the test assembly so tests can read them. -->
+  <ItemGroup>
+    <Content Include="..\fixtures\**\*" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>

@@ -1,0 +1,244 @@
+@inject ExportService Exports
+@inject IJSRuntime Js
+@implements IAsyncDisposable
+
+@*
+    The download button and the list of formats behind it.
+
+    Four editors, and the file is built here in the browser rather than pre-rendered at ingest,
+    so what each one can hold is known only once the item document has been fetched. The menu is
+    therefore empty until it is opened, and says so while it fills.
+
+    It wears .vault-combo so the one document-level listener that closes an open list on a press
+    outside it finds this too.
+*@
+
+<div class="vault-combo vault-download @(_open ? "open" : null)" @onkeydown="OnKey">
+    <button type="button" class="download toggle" aria-expanded="@(_open ? "true" : "false")"
+            aria-haspopup="menu" title="Download this in a save editor's format" @ref="_control"
+            @onclick="Flip" @onclick:stopPropagation="true">
+        <span class="glyph" aria-hidden="true">&#8681;</span>
+        <span class="label">Download</span>
+        <span class="drop" aria-hidden="true">&#9662;</span>
+    </button>
+
+    @if (_open)
+    {
+        @* Placed by script, in viewport coordinates - see anchorPanel in vault.js. *@
+        <div class="panel" role="menu" @ref="_panel">
+            @if (_options is null)
+            {
+                <p class="loading dim">Reading the item&hellip;</p>
+            }
+            else if (_failed is { Length: > 0 })
+            {
+                <p class="failed">@_failed</p>
+            }
+            else
+            {
+                <ul class="options">
+                    @foreach (var option in _options)
+                    {
+                        <li @key="option.Editor">
+                            @*
+                                A format that cannot take this kind at all is shown and disabled
+                                rather than left out. An entry that is missing raises the question
+                                of whether the gallery forgot it; one that is greyed out with a
+                                reason answers it.
+                            *@
+                            <button type="button" role="menuitem"
+                                    class="@(option.NeedsConfirming ? "lossy" : null)"
+                                    disabled="@(!option.IsAvailable)"
+                                    title="@Tooltip(option)"
+                                    @onmousedown:preventDefault="true"
+                                    @onclick="() => Choose(option)">
+                                <span class="name">@option.Label</span>
+
+                                @if (option.NeedsConfirming)
+                                {
+                                    <span class="warn" aria-label="Loses information">&#9888;</span>
+                                }
+
+                                @if (option.IsAvailable && !option.IsVerified)
+                                {
+                                    <span class="tag" title="Never round-tripped through the real editor">untested</span>
+                                }
+
+                                <span class="ext dim">@(option.Extension ?? "—")</span>
+                            </button>
+                        </li>
+                    }
+                </ul>
+
+                @if (_options.Any(o => o.IsAvailable && !o.IsVerified))
+                {
+                    <p class="footnote dim">
+                        Only NMSE can load a 7.03 Cosmos save. The others are written from their
+                        documented formats and marked untested until one of them can.
+                    </p>
+                }
+            }
+        </div>
+    }
+</div>
+
+@if (_asking is { } asking)
+{
+    <ConfirmDialog Title="@($"{asking.Label} cannot hold everything")"
+                   Message="@($"Downloading {Row.DisplayName} as {asking.Label} would drop:")"
+                   OnDismiss="Cancel">
+        <Body>
+            <ul class="losses">
+                @foreach (string loss in asking.Losses)
+                {
+                    <li>@loss</li>
+                }
+            </ul>
+
+            @if (!asking.IsVerified)
+            {
+                <p class="dim">
+                    This format has also never been round-tripped through the real editor.
+                </p>
+            }
+        </Body>
+
+        <ChildContent>
+            <button type="button" class="ghost" @onclick="Cancel">Cancel</button>
+            <button type="button" class="danger" @onclick="() => Save(asking)">
+                Download anyway
+            </button>
+        </ChildContent>
+    </ConfirmDialog>
+}
+
+@code {
+    /// <summary>The item to offer.</summary>
+    [Parameter, EditorRequired]
+    public required GalleryRow Row { get; set; }
+
+    private bool _open;
+    private ElementReference _control;
+    private ElementReference _panel;
+    private IReadOnlyList<DownloadOption>? _options;
+    private DownloadOption? _asking;
+    private string? _failed;
+    private IJSObjectReference? _module;
+
+    private static string Tooltip(DownloadOption option) => option switch
+    {
+        { Unsupported: { } why } => why,
+        { Losses.Count: > 0 } => $"Loses {option.Losses.Count} thing{(option.Losses.Count == 1 ? "" : "s")} - you will be asked first",
+        _ => $"Download for {option.Label}",
+    };
+
+    private async Task Flip()
+    {
+        _open = !_open;
+        if (!_open) { return; }
+
+        // Fetched on opening rather than with the card: a page of twenty ships would otherwise
+        // pull twenty whole ship documents to draw twenty buttons nobody has pressed.
+        if (_options is not null) { return; }
+
+        try
+        {
+            _options = await Exports.OptionsAsync(Row.Id).ConfigureAwait(true);
+        }
+        catch (HttpRequestException)
+        {
+            _failed = "That item could not be read. It may not have finished publishing.";
+        }
+    }
+
+    private async Task Choose(DownloadOption option)
+    {
+        if (!option.IsAvailable) { return; }
+
+        if (option.NeedsConfirming)
+        {
+            _asking = option;
+            _open = false;
+            return;
+        }
+
+        await Save(option).ConfigureAwait(true);
+    }
+
+    private async Task Save(DownloadOption option)
+    {
+        _asking = null;
+        _open = false;
+
+        try
+        {
+            var file = await Exports.ExportAsync(Row.Id, option.Editor).ConfigureAwait(true);
+
+            _module ??= await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+            await _module.InvokeVoidAsync(
+                "saveFile", file.FileName, Convert.ToBase64String(file.Content), "application/json")
+                .ConfigureAwait(true);
+        }
+        catch (Exception e) when (e is HttpRequestException or NotSupportedException)
+        {
+            _failed = $"That file could not be built: {e.Message}";
+            _open = true;
+        }
+    }
+
+    private void Cancel() => _asking = null;
+
+    /// <summary>
+    /// Registers the two listeners that close this menu, and places the panel once it exists.
+    /// </summary>
+    /// <remarks>
+    /// The outside-press listener is the same one the filter bar's lists use; it is registered
+    /// here as well rather than relying on a filter bar being on the page, since the listener
+    /// guards against being added twice and a card is not entitled to assume what was rendered
+    /// beside it.
+    /// <para>
+    /// Placing happens after the render that drew the panel, because the panel has to be in the
+    /// document before its height can be measured and it can decide whether to open downwards.
+    /// It is placed again after the options arrive, since that is when it reaches full height.
+    /// </para>
+    /// </remarks>
+    /// <param name="firstRender">Whether this is the first render.</param>
+    /// <returns>A task that completes once the listeners are in place and the panel is placed.</returns>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var module = _module ??= await Js
+            .InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+
+        if (firstRender)
+        {
+            await module.InvokeVoidAsync("closeListsOnOutsidePress").ConfigureAwait(true);
+            await module.InvokeVoidAsync("closeMenusOnScroll").ConfigureAwait(true);
+        }
+
+        if (_open)
+        {
+            await module.InvokeVoidAsync("anchorPanel", _panel, _control).ConfigureAwait(true);
+        }
+    }
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") { _open = false; }
+    }
+
+    /// <summary>Releases the imported module.</summary>
+    /// <returns>A task that completes when it is released.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null) { return; }
+
+        try
+        {
+            await _module.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page went away first; there is nothing left to release.
+        }
+    }
+}

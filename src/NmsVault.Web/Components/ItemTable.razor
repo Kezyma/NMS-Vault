@@ -21,6 +21,7 @@
                 }
                 <th scope="col">Tags</th>
                 <th scope="col" class="col-num">Tech</th>
+                <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
             </tr>
         </thead>
 
@@ -67,6 +68,8 @@
                     </td>
 
                     <td class="col-num">@(row.Tech.Count > 0 ? row.Tech.Count.ToString() : "")</td>
+
+                    <td class="col-actions"><DownloadMenu Row="row" /></td>
                 </tr>
             }
         </tbody>

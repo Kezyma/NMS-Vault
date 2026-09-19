@@ -14,5 +14,6 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.H
 
 builder.Services.AddScoped<GalleryData>();
 builder.Services.AddScoped<TechData>();
+builder.Services.AddScoped<ExportService>();
 
 await builder.Build().RunAsync();

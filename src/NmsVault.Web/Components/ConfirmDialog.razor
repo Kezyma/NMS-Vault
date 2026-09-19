@@ -1,0 +1,76 @@
+@*
+    A question that has to be answered before anything else happens.
+
+    One thing in the gallery is worth stopping someone for: downloading a file in a format that
+    cannot hold everything the item has. It is not destructive, but it is silent - the loss only
+    shows up later, in game, as a ship that came back the wrong colour.
+
+    The buttons are the caller's rather than a fixed yes and no, because "Download anyway" says
+    what the answer does and "OK" does not.
+*@
+
+@* Presses are stopped at the backdrop too, so a press on a button inside cannot also read as a
+   press on the page behind and close whatever is under this. *@
+<div class="vault-modal" @onclick="Dismiss" @onclick:stopPropagation="true">
+    <div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="@_titleId"
+         tabindex="-1" @ref="_sheet" @onkeydown="OnKey" @onkeydown:stopPropagation="true"
+         @onclick:stopPropagation="true">
+        <h2 id="@_titleId">@Title</h2>
+
+        @if (Message is { Length: > 0 })
+        {
+            <p>@Message</p>
+        }
+
+        @Body
+
+        <div class="choices">
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    private ElementReference _sheet;
+
+    /// <summary>Ties the sheet to its heading for a screen reader, uniquely on a page.</summary>
+    private readonly string _titleId = $"confirm-{Guid.NewGuid():N}";
+
+    /// <summary>The question, as a heading.</summary>
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    /// <summary>What the answer will mean, where that is not obvious from the question.</summary>
+    [Parameter]
+    public string? Message { get; set; }
+
+    /// <summary>Detail between the question and the answers - here, what would be lost.</summary>
+    [Parameter]
+    public RenderFragment? Body { get; set; }
+
+    /// <summary>The answers, which the caller supplies as buttons.</summary>
+    [Parameter, EditorRequired]
+    public required RenderFragment ChildContent { get; set; }
+
+    /// <summary>Called when the dialog is dismissed rather than answered.</summary>
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    /// <summary>
+    /// Takes the keyboard when the dialog appears, so Escape reaches it and Tab stays among the
+    /// answers rather than wandering the page behind.
+    /// </summary>
+    /// <param name="firstRender">Whether this is the first render.</param>
+    /// <returns>A task that completes once focus has moved.</returns>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await _sheet.FocusAsync().ConfigureAwait(true);
+        }
+    }
+
+    private Task OnKey(KeyboardEventArgs e) => e.Key == "Escape" ? Dismiss() : Task.CompletedTask;
+
+    private Task Dismiss() => OnDismiss.InvokeAsync();
+}

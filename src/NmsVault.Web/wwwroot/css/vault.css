@@ -644,3 +644,152 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .pick .mark { width: 16px; height: 16px; }
 /* Nothing in front of a chip with no picture, or the name sits off its own left edge. */
 .pick:not(:has(.mark)) { padding-left: var(--space-sm); }
+
+
+/* ---------------------------------------------------------------- download menu */
+
+/*
+   The panel is fixed rather than absolute, and placed by script. Its other home is a table row,
+   and the table scrolls sideways on a narrow screen - a box that clips on one axis clips on both,
+   so a panel positioned against the row would be cut off at the table's edge.
+*/
+.vault-download > .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 0 var(--space-md);
+}
+
+.vault-download > .toggle .glyph { color: var(--accent); font-size: 14px; line-height: 1; }
+.vault-download > .toggle .drop { color: var(--text-faint); font-size: 10px; }
+.vault-download.open > .toggle { border-color: var(--accent-dim); background: var(--bg-hover); }
+
+.vault-download .panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    min-width: 280px;
+    /* Wide enough for "goatfungus NMSSaveEditor" and its marks on one line. */
+    max-width: 360px;
+    /* Its other home is a table cell that holds its row to one line. The panel is not the row. */
+    white-space: normal;
+    padding: var(--space-2xs);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-panel);
+}
+
+.vault-download .loading,
+.vault-download .failed { margin: 0; padding: var(--space-md); font-size: var(--text-sm); }
+.vault-download .failed { color: var(--bad); }
+
+.vault-download .options { margin: 0; padding: 0; list-style: none; }
+
+.vault-download .options > li > button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    height: auto;
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+}
+
+.vault-download .options > li > button:hover:not(:disabled) { background: var(--bg-hover); border-color: transparent; }
+.vault-download .options .name { flex: 1; font-weight: 600; }
+
+/*
+   The mark on a format that drops something. It is on the entry rather than only in the dialog
+   behind it, so the choice can be made before the press rather than after.
+*/
+.vault-download .options .warn { flex: none; color: var(--warn); font-size: 13px; line-height: 1; }
+
+.vault-download .options .tag {
+    flex: none;
+    padding: 0 var(--space-xs);
+    background: var(--bg-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+}
+
+.vault-download .options .ext { flex: none; font-family: var(--font-mono); font-size: var(--text-xs); }
+
+.vault-download .footnote {
+    margin: var(--space-2xs) 0 0;
+    padding: var(--space-sm) var(--space-md);
+    border-top: 1px solid var(--border);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+}
+
+/* The card's own row for it, so the button sits on the card's edge rather than in the text. */
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.item-table .col-actions { width: 1%; white-space: nowrap; text-align: right; }
+
+/*
+   In a row the word is redundant - the column has a heading and there is only one button - so the
+   arrow carries it alone, and the rows stay narrow enough to read across.
+*/
+.item-table .col-actions .vault-download > .toggle .label { display: none; }
+.item-table .col-actions .vault-download > .toggle { height: 26px; }
+
+
+/* ---------------------------------------------------------------- modal */
+
+.vault-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl);
+    background: rgba(3, 6, 10, 0.72);
+}
+
+.vault-modal .sheet {
+    width: min(520px, 100%);
+    max-height: calc(100vh - var(--space-3xl));
+    overflow-y: auto;
+    padding: var(--space-2xl);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-panel);
+}
+
+.vault-modal .sheet h2 { color: var(--warn); font-size: var(--text-lg); }
+.vault-modal .sheet p { color: var(--text-dim); font-size: var(--text-sm); }
+
+.vault-modal .losses {
+    margin: 0 0 var(--space-lg);
+    padding: var(--space-md) var(--space-lg) var(--space-md) var(--space-2xl);
+    background: var(--bg-raised);
+    border-left: 2px solid var(--warn);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: var(--text-sm);
+    line-height: 1.6;
+}
+
+.vault-modal .choices { display: flex; justify-content: flex-end; gap: var(--space-md); margin-top: var(--space-xl); }
+
+button.ghost { background: none; border-color: var(--border); color: var(--text-dim); }
+button.ghost:hover:not(:disabled) { color: var(--text); background: var(--bg-hover); }
+
+button.danger { border-color: var(--warn); color: var(--warn); }
+button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); border-color: var(--warn); }
