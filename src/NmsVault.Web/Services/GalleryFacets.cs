@@ -46,6 +46,11 @@ public static class GalleryFacets
             Facet<GalleryRow>.Many("tags", "Tags", r => r.Tags),
         };
 
+        // The one thing besides its type that anyone browses creatures by, and the game
+        // writes it into the pet object as a plain word.
+        if (page is "Stable")
+            common.Insert(1, Facet<GalleryRow>.One("biome", "Biome", r => r.Biome));
+
         if (page is "Shipyard" or "Armoury")
         {
             // The class heading wears the game's own marks, which is how anyone reads a class.

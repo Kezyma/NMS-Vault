@@ -32,6 +32,9 @@ public sealed record GalleryRow
     /// <summary>Inventory class, or null where the kind has none.</summary>
     public string? Class { get; init; }
 
+    /// <summary>Where a creature is from, e.g. "Lush". Null for everything else.</summary>
+    public string? Biome { get; init; }
+
     /// <summary>Seeds, keyed by what each governs.</summary>
     public IReadOnlyDictionary<string, string> Seeds { get; init; } = new Dictionary<string, string>();
 
@@ -95,6 +98,7 @@ public sealed record GalleryRow
             Type = entry.GetString("Type") ?? "",
             IsModified = entry.Get("Modified") is true,
             Class = entry.GetString("Class"),
+            Biome = entry.GetString("Biome"),
             Seeds = ReadMap(entry.GetObject("Seeds")),
             Stats = ReadStats(entry.GetObject("Stats")),
             Tech = ReadList(entry.GetArray("Tech")),
@@ -112,7 +116,7 @@ public sealed record GalleryRow
         return row with
         {
             SearchText = string.Join(' ',
-                new[] { row.DisplayName, row.Type, row.Summary }
+                new[] { row.DisplayName, row.Type, row.Summary, row.Biome ?? "" }
                     .Concat(row.AlternativeNames)
                     .Concat(row.Tags)),
         };

@@ -32,7 +32,8 @@ public class FixtureRoundTripTests
         // which would make every Theory below vacuously pass with zero cases.
         Assert.True(Directory.Exists(FixtureRoot), $"Fixture root missing: {FixtureRoot}");
         Assert.Equal(17, Directory.GetFiles(Path.Combine(FixtureRoot, "starships")).Length);
-        Assert.Equal(6, Directory.GetFiles(Path.Combine(FixtureRoot, "multitools")).Length);
+        Assert.Equal(12, Directory.GetFiles(Path.Combine(FixtureRoot, "multitools")).Length);
+        Assert.Single(Directory.GetFiles(Path.Combine(FixtureRoot, "companions")));
     }
 
     [Theory]

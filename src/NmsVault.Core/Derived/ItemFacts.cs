@@ -28,6 +28,9 @@ namespace NmsVault.Core.Derived;
 /// ships does not care which numbers the save carried and which were counted.
 /// </param>
 /// <param name="InstalledTech">Distinct base technology ids installed.</param>
+/// <param name="Biome">
+/// Where a creature is from, e.g. "Lush". Null for everything else - a ship has no biome.
+/// </param>
 /// <param name="RolledTech">
 /// The subset of <paramref name="InstalledTech"/> that are procedurally rolled upgrade
 /// modules. Recorded separately so the filter can leave them out while the count on the card
@@ -41,13 +44,15 @@ public sealed record ItemFacts(
     IReadOnlyList<LabelledSeed> Seeds,
     IReadOnlyList<ItemStat> Stats,
     IReadOnlyList<string> InstalledTech,
-    IReadOnlyList<string> RolledTech)
+    IReadOnlyList<string> RolledTech,
+    string? Biome = null)
 {
     /// <summary>Derives the facts for an item.</summary>
     public static ItemFacts For(VaultItem item) => item.Kind switch
     {
         EntityKind.Starship => ForStarship(item.Payload),
         EntityKind.Multitool => ForMultitool(item.Payload),
+        EntityKind.Companion => ForCompanion(item.Payload),
         _ => Minimal(item.Kind),
     };
 
@@ -84,6 +89,33 @@ public sealed record ItemFacts(
             tech?.RolledBaseIds ?? []);
     }
 
+    /// <summary>
+    /// What a companion is, read straight out of its payload.
+    /// </summary>
+    /// <remarks>
+    /// No database is involved. The game writes the creature's type and its biome into the
+    /// pet object as plain words - <c>Passive</c>, <c>Lush</c> - so the two things anyone
+    /// browses creatures by are already there.
+    /// <para>
+    /// What is not here is the battle classes: <c>PetBattlerCoreStatClassOverrides</c> holds
+    /// three of them, but only applies when <c>PetBattlerUseCoreStatClassOverrides</c> is
+    /// set, and on a hatched creature it is not - the real classes are procedural and would
+    /// need the rules the game rolls them with. Showing the overrides regardless would be
+    /// inventing three letters.
+    /// </para>
+    /// </remarks>
+    private static ItemFacts ForCompanion(JsonObject pet)
+        => new(
+            pet.GetObject("CreatureType")?.GetString("CreatureType") ?? "Companion",
+            IsModifiedResource: false,
+            Family: "Companion",
+            Class: null,
+            SeedReader.ForCompanion(pet),
+            Stats: [],
+            InstalledTech: [],
+            RolledTech: [],
+            Biome: pet.GetObject("Biome")?.GetString("Biome"));
+
     private static ItemFacts Minimal(EntityKind kind)
         => new(kind.ToString(), false, kind.ToString(), null, [], [], [], []);
 
@@ -94,6 +126,7 @@ public sealed record ItemFacts(
         if (IsModifiedResource) entry.Set("Modified", true);
         entry.Set("Family", Family);
         if (Class is not null) entry.Set("Class", Class);
+        if (Biome is not null) entry.Set("Biome", Biome);
 
         if (Seeds.Count > 0)
         {
@@ -147,6 +180,28 @@ public static class SeedReader
         => Read(multitool.GetArray("Seed")) is { } seed
             ? [new LabelledSeed("Seed", seed)]
             : [];
+
+    /// <summary>
+    /// The two seeds that decide what a creature is.
+    /// </summary>
+    /// <remarks>
+    /// Stored as plain hex strings rather than the <c>[occupied, "0xHEX"]</c> pair every other
+    /// seed uses. The pet object has three more - <c>CreatureSeed</c>, <c>ColourBaseSeed</c>
+    /// and <c>BoneScaleSeed</c> - but those are pairs whose flag is unset on a hatched
+    /// creature, so there is nothing in them to show.
+    /// </remarks>
+    public static IReadOnlyList<LabelledSeed> ForCompanion(JsonObject pet)
+    {
+        var seeds = new List<LabelledSeed>(2);
+
+        if (pet.GetString("SpeciesSeed") is { Length: > 0 } species)
+            seeds.Add(new LabelledSeed("Species", species));
+
+        if (pet.GetString("GenusSeed") is { Length: > 0 } genus)
+            seeds.Add(new LabelledSeed("Genus", genus));
+
+        return seeds;
+    }
 
     /// <summary>
     /// Reads the display half of a seed pair. The save stores <c>[occupied, "0xHEX"]</c>;

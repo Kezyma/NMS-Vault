@@ -421,12 +421,7 @@
 					]
 				}
 			],
-			"TextureOptions": [
-				{
-					"TextureOptionGroupName": "^SHIP_FIGHT",
-					"TextureOptionName": "^METALBOLT"
-				}
-			],
+			"TextureOptions": [],
 			"BoneScales": [],
 			"Scale": 1.0
 		}

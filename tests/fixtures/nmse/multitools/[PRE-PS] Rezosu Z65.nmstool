@@ -1,0 +1,198 @@
+{
+	"Layout": {
+		"Slots": 6,
+		"Seed": [
+			true,
+			"0x1"
+		],
+		"Level": 1
+	},
+	"Store": {
+		"Slots": [
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^LASER",
+				"Amount": 100,
+				"MaxAmount": 200,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 0,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^SCAN1",
+				"Amount": 1,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 1,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^SCANBINOC1",
+				"Amount": 1,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 2,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^BOLT",
+				"Amount": 100,
+				"MaxAmount": 200,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 2,
+					"Y": 1
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^LASER",
+				"Amount": 1,
+				"MaxAmount": 200,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 3,
+					"Y": 1
+				}
+			}
+		],
+		"ValidSlotIndices": [
+			{
+				"X": 0,
+				"Y": 0
+			},
+			{
+				"X": 1,
+				"Y": 0
+			},
+			{
+				"X": 2,
+				"Y": 0
+			},
+			{
+				"X": 2,
+				"Y": 1
+			},
+			{
+				"X": 3,
+				"Y": 1
+			},
+			{
+				"X": 4,
+				"Y": 1
+			},
+			{
+				"X": 5,
+				"Y": 1
+			}
+		],
+		"Class": {
+			"InventoryClass": "C"
+		},
+		"StackSizeGroup": {
+			"InventoryStackSizeGroup": "Default"
+		},
+		"BaseStatValues": [
+			{
+				"BaseStatID": "^WEAPON_DAMAGE",
+				"Value": 2.2006235122680666
+			},
+			{
+				"BaseStatID": "^WEAPON_MINING",
+				"Value": 0.0
+			},
+			{
+				"BaseStatID": "^WEAPON_SCAN",
+				"Value": 0.6071969270706177
+			}
+		],
+		"SpecialSlots": [
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 3,
+					"Y": 3
+				}
+			}
+		],
+		"Width": 6,
+		"Height": 3,
+		"IsCool": false,
+		"Name": "",
+		"Version": 1,
+		"NumSlotsFromTech": 0
+	},
+	"ScreenData": {
+		"ScreenScale": 0.029999999329447748,
+		"ScreenOffset": [
+			0.019999999552965165,
+			0.11999999731779099,
+			-0.05000000074505806
+		],
+		"ScreenRotation": [
+			0.0,
+			1.0,
+			0.0,
+			2.792526960372925
+		]
+	},
+	"Seed": [
+		true,
+		"0xCDDB99E6DCE0749C"
+	],
+	"CustomisationData": {
+		"DescriptorGroups": [],
+		"PaletteID": "^",
+		"Colours": [],
+		"TextureOptions": [],
+		"BoneScales": [],
+		"Scale": 1.0
+	},
+	"Name": "",
+	"IsLarge": false,
+	"PrimaryMode": 3,
+	"SecondaryMode": 9,
+	"UseLegacyColours": true,
+	"Resource": {
+		"Filename": "MODELS/COMMON/WEAPONS/MULTITOOL/MULTITOOL.SCENE.MBIN",
+		"Seed": [
+			false,
+			"0x0"
+		],
+		"ProceduralTexture": {
+			"Samplers": []
+		},
+		"AltId": ""
+	}
+}

@@ -33,11 +33,11 @@
     {
       "id": "nmse-multitools",
       "path": "nmse/multitools",
-      "count": 6,
+      "count": 12,
       "producer": "NMSE (No Man's Save Editor)",
       "producerVersion": "1.3.16+legacy-colours-fix",
       "gameVersion": "7.03 Cosmos",
-      "captured": "2026-09-18",
+      "captured": "2026-09-18, extended 2026-09-19",
       "extension": ".nmstool",
       "shape": "bare multitool object",
       "encoding": "ASCII only",
@@ -45,7 +45,41 @@
         "Multitools carry UseLegacyColours (no trailing s) inline on the object itself,",
         "which is why multitool export never lost it the way ship export did.",
         "Keys: Layout, Store, ScreenData, Seed, CustomisationData, Name, IsLarge,",
-        "PrimaryMode, SecondaryMode, UseLegacyColours, Resource."
+        "PrimaryMode, SecondaryMode, UseLegacyColours, Resource.",
+        "Six models are covered by their own scene file - three staffs, the swarm tool,",
+        "the retro tool and the switch tool - and six share MULTITOOL.SCENE.MBIN and so",
+        "can only be told apart by their stats. See MultitoolStatRanges.",
+        "Of those six shared-model tools, five have mining of exactly zero and land in",
+        "Rifle C: two have no rolled stats at all, and three (Rezosu Z65, Artios-VI,",
+        "Vetric-LX) have real rolls of 1.5 to 4.9 damage. All five carry IsLarge=false,",
+        "so the body flag and the stat ranges disagree about every one of them.",
+        "The two Starbound v0.27 files are byte-identical apart from PrimaryMode and",
+        "SecondaryMode, which is which weapon mode was selected when each was exported."
+      ]
+    },
+    {
+      "id": "nmse-companions",
+      "path": "nmse/companions",
+      "count": 1,
+      "producer": "NMSE (No Man's Save Editor)",
+      "producerVersion": "1.3.16+legacy-colours-fix",
+      "gameVersion": "7.03 Cosmos",
+      "captured": "2026-09-19",
+      "extension": ".nmspet",
+      "shape": "bare pet object with PetAccessoryCustomisation spliced in flat",
+      "encoding": "ASCII only",
+      "notes": [
+        "Carries a SenderData block - LID, UID, USN, PTK - which is where a gifted",
+        "creature records who sent it. Every field is empty in this file, so there was",
+        "nothing to scrub, but anything added later must be checked: see the note at the",
+        "top of this manifest.",
+        "CreatureType and Biome are plain words in the payload (Passive, Lush), so the",
+        "two things anyone browses creatures by need no database at all.",
+        "SpeciesSeed and GenusSeed are plain hex strings, not the [occupied, hex] pair",
+        "every other seed in the game uses.",
+        "PetBattlerCoreStatClassOverrides holds three inventory classes but",
+        "PetBattlerUseCoreStatClassOverrides is false, so they are not in effect - the",
+        "real battle classes are procedural and are not derived anywhere yet."
       ]
     }
   ],
@@ -53,7 +87,7 @@
     "goatfungus .sh0 / .wp0 / .pet",
     "NMS Companion (Kaii) .shp / .mlt / .cmp / .flt, with and without thumbnails",
     "NomNom .shp / .mlt / .cmp / .flt",
-    "NMSE .nmspet and .nmsfrig",
+    "NMSE .nmsfrig",
     "An NMSE corvette .nmsship, to exercise the Base sidecar",
     "An export with a non-ASCII name, to settle openQuestions.encoding",
     "An NMS Model IO Tool .nmsship ZIP, to validate PK-magic disambiguation"

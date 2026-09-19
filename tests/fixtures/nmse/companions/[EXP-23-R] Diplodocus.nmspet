@@ -1,0 +1,147 @@
+{
+	"Scale": 1.0,
+	"CreatureID": "^DIPLO_PET",
+	"Descriptors": [],
+	"CreatureSeed": [
+		true,
+		"0x1"
+	],
+	"CreatureSecondarySeed": [
+		false,
+		"0x0"
+	],
+	"SpeciesSeed": "0xF414C01605617978",
+	"GenusSeed": "0x4CADF3A76252BB24",
+	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
+	"Predator": false,
+	"UA": "0x40520103B004E0",
+	"AllowUnmodifiedReroll": true,
+	"ColourBaseSeed": [
+		false,
+		"0x0"
+	],
+	"BoneScaleSeed": [
+		true,
+		"0x1"
+	],
+	"HasFur": false,
+	"Biome": {
+		"Biome": "Lush"
+	},
+	"CreatureType": {
+		"CreatureType": "Passive"
+	},
+	"BirthTime": 1789838650,
+	"LastEggTime": 1789838650,
+	"LastTrustIncreaseTime": 0,
+	"LastTrustDecreaseTime": 1789838650,
+	"EggModified": false,
+	"HasBeenSummoned": true,
+	"CustomName": "",
+	"Trust": 0.699999988079071,
+	"SenderData": {
+		"LID": "",
+		"UID": "",
+		"USN": "",
+		"PTK": "",
+		"TS": 0
+	},
+	"Traits": [
+		0.5,
+		-1.0,
+		0.5
+	],
+	"Moods": [
+		0.8006265759468079,
+		0.20148511230945588
+	],
+	"PetBattlerUseCoreStatClassOverrides": false,
+	"PetBattlerCoreStatClassOverrides": [
+		{
+			"InventoryClass": "C"
+		},
+		{
+			"InventoryClass": "C"
+		},
+		{
+			"InventoryClass": "C"
+		}
+	],
+	"PetBattlerTreatsEaten": [
+		0,
+		0,
+		0
+	],
+	"PetBattlerTreatsAvailable": 0,
+	"PetBattleProgressToTreat": 0.0,
+	"PetBattlerVictories": 0,
+	"PetBattlerMoveList": [
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		}
+	],
+	"PetBattlerMoves": [
+		"^ATTACK_AFF",
+		"^BARRAGE_AFF",
+		"^DOT_BOMB",
+		"^SELF_HOT",
+		"^STUN"
+	],
+	"PetAccessoryCustomisation": [
+		{
+			"SelectedPreset": "^DEFAULT_PET",
+			"CustomData": {
+				"DescriptorGroups": [],
+				"PaletteID": "^",
+				"Colours": [],
+				"TextureOptions": [],
+				"BoneScales": [],
+				"Scale": 1.0
+			}
+		},
+		{
+			"SelectedPreset": "^DEFAULT_PET",
+			"CustomData": {
+				"DescriptorGroups": [],
+				"PaletteID": "^",
+				"Colours": [],
+				"TextureOptions": [],
+				"BoneScales": [],
+				"Scale": 1.0
+			}
+		},
+		{
+			"SelectedPreset": "^DEFAULT_PET",
+			"CustomData": {
+				"DescriptorGroups": [],
+				"PaletteID": "^",
+				"Colours": [],
+				"TextureOptions": [],
+				"BoneScales": [],
+				"Scale": 1.0
+			}
+		}
+	]
+}
