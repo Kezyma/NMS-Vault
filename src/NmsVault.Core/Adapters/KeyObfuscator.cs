@@ -46,6 +46,35 @@ public static class KeyObfuscator
         return result;
     }
 
+    /// <summary>
+    /// The inverse: returns a deep copy with every obfuscated key translated back to its
+    /// readable name. Used on ingestion, after detection has established that a document's
+    /// payload is obfuscated.
+    /// </summary>
+    public static JsonObject Deobfuscate(JsonObject source, JsonNameMapper mapper)
+    {
+        var result = new JsonObject();
+        foreach (var name in source.Names())
+            result.Set(mapper.ToName(name), DeobfuscateValue(source.Get(name), mapper));
+        return result;
+    }
+
+    /// <inheritdoc cref="Deobfuscate(JsonObject, JsonNameMapper)"/>
+    public static JsonArray Deobfuscate(JsonArray source, JsonNameMapper mapper)
+    {
+        var result = new JsonArray();
+        for (int i = 0; i < source.Length; i++)
+            result.Add(DeobfuscateValue(source.Get(i), mapper));
+        return result;
+    }
+
+    private static object? DeobfuscateValue(object? value, JsonNameMapper mapper) => value switch
+    {
+        JsonObject obj => Deobfuscate(obj, mapper),
+        JsonArray arr => Deobfuscate(arr, mapper),
+        _ => value,
+    };
+
     private static object? ObfuscateValue(object? value, JsonNameMapper mapper) => value switch
     {
         JsonObject obj => Obfuscate(obj, mapper),

@@ -134,7 +134,13 @@ public sealed class VaultItem
         if (accessorySlots is not null) root.Set("PetAccessoryCustomisation", accessorySlots);
         if (usesLegacyColours is not null) root.Set("UsesLegacyColours", usesLegacyColours.Value);
 
-        root.Set(VaultKey, meta.ToJson());
+        // Kind is written into the Vault block so the document is self-describing. Without
+        // it, reading back relies on inferring the kind from which payload key is present,
+        // which works but silently becomes wrong the moment two kinds share a key name.
+        var vaultBlock = meta.ToJson();
+        vaultBlock.Set("Kind", kind.ToString());
+        root.Set(VaultKey, vaultBlock);
+
         return new VaultItem(root, kind, meta);
     }
 

@@ -89,13 +89,13 @@ public sealed class GoatfungusExportAdapter : IExportAdapter
 /// <summary>
 /// Shared helpers for reading a <c>CharacterCustomisationData</c> entry.
 /// </summary>
-internal static class CustomisationHelpers
+public static class CustomisationHelpers
 {
     /// <summary>
     /// Whether a CCD entry is the blank default - all collections empty, palette and preset
     /// "^". Ported from NMSE's <c>StarshipLogic.IsCcdDefault</c>.
     /// </summary>
-    internal static bool IsDefault(JsonObject ccd)
+    public static bool IsDefault(JsonObject ccd)
     {
         try
         {
@@ -123,6 +123,6 @@ internal static class CustomisationHelpers
     /// The colours array from a CCD entry, or null. This is all Kaii and NomNom carry of a
     /// ship's customisation - the parts, textures and palette have nowhere to go.
     /// </summary>
-    internal static JsonArray? Colours(JsonObject? ccd)
+    public static JsonArray? Colours(JsonObject? ccd)
         => ccd?.GetObject("CustomData")?.GetArray("Colours");
 }

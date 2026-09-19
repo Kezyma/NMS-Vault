@@ -12,7 +12,7 @@ namespace NmsVault.Core;
 /// scrubbing code for with its legacy <c>__ShipCustomisation</c> key.
 /// </para>
 /// </summary>
-public sealed class VaultMetadata
+public sealed record VaultMetadata
 {
     /// <summary>The schema version written by this build.</summary>
     public const int CurrentSchemaVersion = 1;
