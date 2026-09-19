@@ -209,9 +209,13 @@ public class FilteringTests
             ["Name", "Type", "Class", "Damage", "Mining", "Scan", "Tech Slots", "Tech Installed"],
             GalleryFacets.SortsFor("Armoury").Select(s => s.Label));
 
-        // Companions have no class, no base stats and no technology, so there is nothing to
-        // order them by but their name and their type.
-        Assert.Equal(["Name", "Type"], GalleryFacets.SortsFor("Stable").Select(s => s.Label));
+        // Companions have no class and no technology, but they do have numbers of their own -
+        // the size and the three traits settled when they hatched. Trust and the moods are
+        // deliberately absent: those drift with play, so ordering by them would rank
+        // creatures by how their last owner left them.
+        Assert.Equal(
+            ["Name", "Type", "Scale", "Helpfulness", "Aggression", "Independence"],
+            GalleryFacets.SortsFor("Stable").Select(s => s.Label));
     }
 
     [Fact]

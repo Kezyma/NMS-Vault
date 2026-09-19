@@ -33,9 +33,14 @@
             {
                 <span class="badge warn" title="The model path did not match a known ship exactly">Modified</span>
             }
-            @foreach (var seed in Row.Seeds)
+            @* A creature has a block of its own for these, holding all five rather than the
+               two that name it. *@
+            @if (_creature is null)
             {
-                <span class="seed"><span class="dim">@seed.Key</span> <code>@seed.Value</code></span>
+                @foreach (var seed in Row.Seeds)
+                {
+                    <span class="seed"><span class="dim">@seed.Key</span> <code>@seed.Value</code></span>
+                }
             }
         </p>
 
@@ -74,6 +79,90 @@
                     </div>
                 }
             </dl>
+        }
+
+        @if (_creature is { } creature)
+        {
+            <section class="creature">
+                @*
+                    The numbers above are what the creature is - its size and its three traits,
+                    all settled when it hatched. What is here is everything else the payload
+                    says, and the moods are kept apart from the rest because they are not
+                    properties of the creature at all: they are how the last save left it.
+                *@
+                <div class="traits">
+                    <h3>Nature</h3>
+
+                    <p class="marks">
+                        <span class="chip">@(creature.IsPredator ? "Predator" : "Not a predator")</span>
+                        <span class="chip">@(creature.HasFur ? "Furred" : "Unfurred")</span>
+                        @if (creature.SpeciesId is { Length: > 0 } species)
+                        {
+                            <span class="chip mono">@species</span>
+                        }
+                    </p>
+
+                </div>
+
+                <div class="mood">
+                    <h3>As it was left</h3>
+
+                    <dl class="pairs">
+                        <div>
+                            <dt>Trust</dt>
+                            <dd>@creature.Trust.ToString("0.##")</dd>
+                        </div>
+                        @foreach (var mood in creature.Moods)
+                        {
+                            <div>
+                                <dt>@mood.Label</dt>
+                                <dd>@mood.Value.ToString("0.##")</dd>
+                            </div>
+                        }
+                    </dl>
+                </div>
+
+                @if (creature.Seeds.Count > 0)
+                {
+                    <div class="seeds">
+                        <h3>Seeds</h3>
+
+                        <dl class="pairs wide">
+                            @foreach (var seed in creature.Seeds)
+                            {
+                                <div>
+                                    <dt>@seed.Label</dt>
+                                    <dd><code>@seed.Value</code></dd>
+                                </div>
+                            }
+                        </dl>
+                    </div>
+                }
+
+                @if (creature.BattleMoves.Count > 0)
+                {
+                    <div class="moves">
+                        <h3>Battle moves</h3>
+
+                        @* The game's own ids. Their readable names live in the language files,
+                           which are not extracted - see docs. *@
+                        <p class="marks">
+                            @foreach (string move in creature.BattleMoves)
+                            {
+                                <span class="chip mono">@move</span>
+                            }
+                        </p>
+                    </div>
+                }
+
+                @if (creature.AccessorySlots > 0)
+                {
+                    <p class="dim accessories">
+                        @creature.AccessoriesWorn of @creature.AccessorySlots accessory
+                        slot@(creature.AccessorySlots == 1 ? "" : "s") in use
+                    </p>
+                }
+            </section>
         }
 
         @if (_inventory is { } inventory)
@@ -137,6 +226,7 @@
     private VaultItem? _item;
     private TechIndex _tech = TechIndex.Empty;
     private NamedInventory? _inventory;
+    private CompanionFacts? _creature;
     private IReadOnlyList<string> _images = [];
     private string? _failed;
     private string? _loadedFor;
@@ -161,6 +251,7 @@
         _loadedFor = Row.Id;
         _item = null;
         _inventory = null;
+        _creature = null;
         _failed = null;
 
         // The card's picture is shown at once so the sheet has something in it immediately;
@@ -186,6 +277,9 @@
         if (_item.Meta.Images.Count > 0) { _images = _item.Meta.Images; }
 
         _inventory = ItemInventories.Shown(_item);
+        _creature = _item.Kind == EntityKind.Companion
+            ? CompanionFacts.For(_item.Payload, _item.AccessorySlots)
+            : null;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

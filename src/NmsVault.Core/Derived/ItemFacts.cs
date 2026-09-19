@@ -52,7 +52,7 @@ public sealed record ItemFacts(
     {
         EntityKind.Starship => ForStarship(item.Payload),
         EntityKind.Multitool => ForMultitool(item.Payload),
-        EntityKind.Companion => ForCompanion(item.Payload),
+        EntityKind.Companion => ForCompanion(item.Payload, item.AccessorySlots),
         _ => Minimal(item.Kind),
     };
 
@@ -97,24 +97,35 @@ public sealed record ItemFacts(
     /// pet object as plain words - <c>Passive</c>, <c>Lush</c> - so the two things anyone
     /// browses creatures by are already there.
     /// <para>
-    /// What is not here is the battle classes: <c>PetBattlerCoreStatClassOverrides</c> holds
-    /// three of them, but only applies when <c>PetBattlerUseCoreStatClassOverrides</c> is
-    /// set, and on a hatched creature it is not - the real classes are procedural and would
-    /// need the rules the game rolls them with. Showing the overrides regardless would be
-    /// inventing three letters.
+    /// The numbers on the card are the ones settled at hatching - its size and the three
+    /// traits - rather than everything the payload holds. Trust and the moods drift with
+    /// play and say more about the last owner than about the creature, so they belong on the
+    /// item's own view rather than on something a reader is comparing at a glance. See
+    /// <see cref="CompanionFacts"/>, which reads the rest.
+    /// </para>
+    /// <para>
+    /// What is not here at all is the battle classes: <c>PetBattlerCoreStatClassOverrides</c>
+    /// holds three of them, but only applies when <c>PetBattlerUseCoreStatClassOverrides</c>
+    /// is set, and on a hatched creature it is not - the real classes are procedural and
+    /// would need the rules the game rolls them with. Showing the overrides regardless would
+    /// be inventing three letters.
     /// </para>
     /// </remarks>
-    private static ItemFacts ForCompanion(JsonObject pet)
-        => new(
-            pet.GetObject("CreatureType")?.GetString("CreatureType") ?? "Companion",
+    private static ItemFacts ForCompanion(JsonObject pet, JsonArray? accessories)
+    {
+        var creature = CompanionFacts.For(pet, accessories);
+
+        return new ItemFacts(
+            creature.CreatureType,
             IsModifiedResource: false,
             Family: "Companion",
             Class: null,
-            SeedReader.ForCompanion(pet),
-            Stats: [],
+            SeedReader.NamingCompanion(pet),
+            creature.AsStats(),
             InstalledTech: [],
             RolledTech: [],
-            Biome: pet.GetObject("Biome")?.GetString("Biome"));
+            Biome: creature.Biome);
+    }
 
     private static ItemFacts Minimal(EntityKind kind)
         => new(kind.ToString(), false, kind.ToString(), null, [], [], [], []);
@@ -185,12 +196,30 @@ public static class SeedReader
     /// The two seeds that decide what a creature is.
     /// </summary>
     /// <remarks>
-    /// Stored as plain hex strings rather than the <c>[occupied, "0xHEX"]</c> pair every other
-    /// seed uses. The pet object has three more - <c>CreatureSeed</c>, <c>ColourBaseSeed</c>
-    /// and <c>BoneScaleSeed</c> - but those are pairs whose flag is unset on a hatched
-    /// creature, so there is nothing in them to show.
+    /// Five of them, in two shapes. Species and genus are plain hex strings and are what name
+    /// the creature; the other three are the <c>[occupied, "0xHEX"]</c> pairs used everywhere
+    /// else in the game, and are only worth reading when the flag says something is there.
     /// </remarks>
     public static IReadOnlyList<LabelledSeed> ForCompanion(JsonObject pet)
+    {
+        var seeds = new List<LabelledSeed>(5);
+        seeds.AddRange(NamingCompanion(pet));
+
+        Pair(seeds, pet, "CreatureSeed", "Creature");
+        Pair(seeds, pet, "ColourBaseSeed", "Colour");
+        Pair(seeds, pet, "BoneScaleSeed", "Bone scale");
+
+        return seeds;
+    }
+
+    /// <summary>
+    /// The two seeds that say which creature this is, for a card that has room for a line
+    /// rather than a table. The other three describe how it looks and are worth reading only
+    /// once someone has opened it.
+    /// </summary>
+    /// <param name="pet">The creature payload.</param>
+    /// <returns>The species and genus seeds.</returns>
+    public static IReadOnlyList<LabelledSeed> NamingCompanion(JsonObject pet)
     {
         var seeds = new List<LabelledSeed>(2);
 
@@ -201,6 +230,15 @@ public static class SeedReader
             seeds.Add(new LabelledSeed("Genus", genus));
 
         return seeds;
+    }
+
+    /// <summary>Adds a paired seed, if its flag says it holds anything.</summary>
+    private static void Pair(List<LabelledSeed> into, JsonObject pet, string key, string label)
+    {
+        var pair = pet.GetArray(key);
+        if (pair is null || pair.Length < 2 || pair.Get(0) is not true) return;
+
+        if (Read(pair) is { } value) into.Add(new LabelledSeed(label, value));
     }
 
     /// <summary>

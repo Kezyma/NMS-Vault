@@ -179,6 +179,12 @@ public static class GalleryFacets
                       ("techslots", SlotCounts.TechSlotsLabel),
                       ("techinstalled", SlotCounts.TechInstalledLabel)],
 
+        // A creature's size and its three traits - the numbers settled when it hatched. Trust
+        // and the moods are not here: they drift with play, so ordering a gallery by them
+        // would rank creatures by how their last owner left them.
+        "Stable" => [("scale", "Scale"),
+                     .. CompanionFacts.TraitLabels.Select(t => (t.ToLowerInvariant(), t))],
+
         _ => [],
     };
 
