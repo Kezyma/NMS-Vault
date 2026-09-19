@@ -2,8 +2,11 @@ using NmsVault.Json;
 
 namespace NmsVault.Core.Derived;
 
-/// <summary>One base stat, as the gallery shows and sorts on it.</summary>
-/// <param name="Id">The game's stat id, e.g. <c>^SHIP_DAMAGE</c>.</param>
+/// <summary>One stat, as the gallery shows and sorts on it.</summary>
+/// <param name="Id">
+/// The game's stat id, e.g. <c>^SHIP_DAMAGE</c>, or one of the gallery's own derived ids,
+/// which start with a hash so the two can never be confused - see <see cref="SlotCounts"/>.
+/// </param>
 /// <param name="Label">Display label, e.g. "Damage".</param>
 /// <param name="Value">The raw value.</param>
 public readonly record struct ItemStat(string Id, string Label, double Value);

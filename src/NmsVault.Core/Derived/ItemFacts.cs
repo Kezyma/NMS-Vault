@@ -22,7 +22,11 @@ namespace NmsVault.Core.Derived;
 /// <param name="Family">Ownership family, which governs what technology fits.</param>
 /// <param name="Class">Inventory class - S, A, B, C - or null where the kind has none.</param>
 /// <param name="Seeds">Seeds worth showing, labelled. Ships have one; companions have four.</param>
-/// <param name="Stats">Base stats, in the order the game presents them.</param>
+/// <param name="Stats">
+/// The game's base stats in the order it presents them, followed by the slot counts the
+/// gallery derives - see <see cref="SlotCounts"/>. One list, because a reader comparing two
+/// ships does not care which numbers the save carried and which were counted.
+/// </param>
 /// <param name="InstalledTech">Distinct base technology ids installed.</param>
 /// <param name="RolledTech">
 /// The subset of <paramref name="InstalledTech"/> that are procedurally rolled upgrade
@@ -59,7 +63,7 @@ public sealed record ItemFacts(
             type.Family.ToString(),
             inventory?.GetObject("Class")?.GetString("InventoryClass"),
             SeedReader.ForShip(ship),
-            ItemStats.ForShip(ship),
+            [.. ItemStats.ForShip(ship), .. SlotCounts.ForShip(ship)],
             tech?.InstalledBaseIds ?? [],
             tech?.RolledBaseIds ?? []);
     }
@@ -75,7 +79,7 @@ public sealed record ItemFacts(
             Family: "Multitool",
             store?.GetObject("Class")?.GetString("InventoryClass"),
             SeedReader.ForMultitool(multitool),
-            ItemStats.ForMultitool(multitool),
+            [.. ItemStats.ForMultitool(multitool), .. SlotCounts.ForMultitool(multitool)],
             tech?.InstalledBaseIds ?? [],
             tech?.RolledBaseIds ?? []);
     }

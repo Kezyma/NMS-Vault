@@ -74,38 +74,18 @@
             </dl>
         }
 
-        @if (_inventories.Count > 0)
+        @if (_inventory is { } inventory)
         {
             <section class="inventories">
-                @if (_inventories.Count > 1)
-                {
-                    <div class="tabs" role="tablist">
-                        @foreach (var inventory in _inventories)
-                        {
-                            <button type="button" role="tab" @key="inventory.Key"
-                                    class="@(inventory.Key == _tab ? "at" : null)"
-                                    aria-selected="@(inventory.Key == _tab ? "true" : "false")"
-                                    @onclick="() => _tab = inventory.Key">
-                                @inventory.Label
-                                <span class="count">@Installed(inventory)</span>
-                            </button>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <h3>@_inventories[0].Label</h3>
-                }
+                <h3>@inventory.Label</h3>
 
-                @foreach (var inventory in _inventories.Where(i => i.Key == _tab))
-                {
-                    <TechGridView Grid="inventory.Grid" Label="@inventory.Label" Tech="_tech" @key="inventory.Key" />
-                }
+                <TechGridView Grid="inventory.Grid" Label="@inventory.Label" Tech="_tech" />
 
+                @* No key for a cell nobody owns: it is drawn as nothing, and nothing needs
+                   no explaining. *@
                 <p class="legend dim">
                     <span class="key filled"></span> installed
                     <span class="key empty"></span> empty
-                    <span class="key locked"></span> not owned
                     <span class="key super"></span> supercharged
                 </p>
             </section>
@@ -154,10 +134,9 @@
     private IJSObjectReference? _module;
     private VaultItem? _item;
     private TechIndex _tech = TechIndex.Empty;
-    private IReadOnlyList<NamedInventory> _inventories = [];
+    private NamedInventory? _inventory;
     private IReadOnlyList<string> _images = [];
     private string? _failed;
-    private string _tab = "";
     private string? _loadedFor;
 
     /// <summary>
@@ -171,9 +150,6 @@
 
     private string? GameVersion => _item?.Meta.GameVersion;
 
-    private static int Installed(NamedInventory inventory)
-        => inventory.Grid.Slots.Count(s => s.State == SlotState.Filled);
-
     protected override async Task OnParametersSetAsync()
     {
         // Guarded because a parameter change that is not a change of item - a parent redraw -
@@ -182,9 +158,8 @@
 
         _loadedFor = Row.Id;
         _item = null;
-        _inventories = [];
+        _inventory = null;
         _failed = null;
-        _tab = "";
 
         // The card's picture is shown at once so the sheet has something in it immediately;
         // the rest of the pictures are in the document.
@@ -208,8 +183,7 @@
 
         if (_item.Meta.Images.Count > 0) { _images = _item.Meta.Images; }
 
-        _inventories = ItemInventories.For(_item);
-        _tab = _inventories.Count > 0 ? _inventories[0].Key : "";
+        _inventory = ItemInventories.Shown(_item);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

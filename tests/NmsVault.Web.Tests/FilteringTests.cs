@@ -197,11 +197,16 @@ public class FilteringTests
     public void SortsOfferEveryColumnWorthOrderingBy()
     {
         // One list serves the dropdown over the cards and the headings on the table, so it
-        // covers the columns as well as the stats.
-        Assert.Equal(["Name", "Type", "Class", "Damage", "Shield", "Hyperdrive", "Manoeuvrability", "Tech"],
+        // covers the columns as well as the stats - including the slot counts the gallery
+        // derives, which a reader sorts by exactly as they sort by damage.
+        Assert.Equal(
+            ["Name", "Type", "Class", "Damage", "Shield", "Hyperdrive", "Manoeuvrability",
+             "Tech Slots", "Storage", "Tech Installed"],
             GalleryFacets.SortsFor("Shipyard").Select(s => s.Label));
 
-        Assert.Equal(["Name", "Type", "Class", "Damage", "Mining", "Scan", "Tech"],
+        // No storage for a multi-tool: it has one inventory and it is all technology.
+        Assert.Equal(
+            ["Name", "Type", "Class", "Damage", "Mining", "Scan", "Tech Slots", "Tech Installed"],
             GalleryFacets.SortsFor("Armoury").Select(s => s.Label));
 
         // Companions have no class, no base stats and no technology, so there is nothing to

@@ -311,7 +311,12 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 }
 
 .card-stats div { display: flex; flex-direction: column; gap: var(--space-2xs); }
-.card-stats[data-count="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.card-stats[data-count="4"],
+.card-stats[data-count="5"],
+.card-stats[data-count="6"],
+.card-stats[data-count="7"],
+.card-stats[data-count="8"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 .card-stats dt {
     color: var(--text-faint);
@@ -336,7 +341,6 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 }
 
 .card-tags { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin: 0; }
-.card-tech { margin: 0; font-size: var(--text-xs); }
 
 /* ---------------------------------------------------------------- chips and badges */
 
@@ -791,6 +795,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
 .item-table .col-actions { width: 1%; white-space: nowrap; text-align: right; }
+.item-table .col-actions .actions { display: flex; gap: var(--space-xs); justify-content: flex-end; }
 
 /*
    In a row the word is redundant - the column has a heading and there is only one button - so the
@@ -997,11 +1002,6 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 
 .item-modal .inventories h3 { margin: 0 0 var(--space-md); font-size: var(--text-md); }
 
-.item-modal .tabs { display: flex; gap: var(--space-xs); margin-bottom: var(--space-lg); }
-.item-modal .tabs button { display: inline-flex; align-items: center; gap: var(--space-sm); }
-.item-modal .tabs button.at { color: var(--accent); border-color: var(--accent-dim); background: rgba(245, 137, 46, 0.1); }
-.item-modal .tabs .count { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--text-xs); }
-
 /*
    Square cells on a fixed number of columns, as the game lays them out. The grid keeps its
    shape when it is too wide for the sheet rather than reflowing: a technology layout that
@@ -1032,9 +1032,13 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 .tech-grid .slot.filled { background: var(--bg-raised); border-color: var(--border-strong); }
 .tech-grid .slot.filled:hover { border-color: var(--tech); background: var(--bg-hover); }
 
-/* Owned but empty reads as an outline; not owned reads as absence. */
+/*
+   Owned but empty reads as an outline. Not owned is drawn as nothing at all - no outline, no
+   fill, no shadow - because that is what the game shows and because a grid of faint boxes
+   around cells that do not exist reads as a bigger inventory than the ship has.
+*/
 .tech-grid .slot.empty { background: rgba(19, 29, 41, 0.35); border-style: dashed; border-color: var(--border); opacity: 1; }
-.tech-grid .slot.locked { background: transparent; border-color: transparent; box-shadow: inset 0 0 0 1px rgba(31, 46, 61, 0.5); opacity: 1; }
+.tech-grid .slot.locked { background: none; border-color: transparent; box-shadow: none; opacity: 1; }
 
 /*
    Supercharged is a property of the cell, not of what is in it, so it is drawn on the cell
@@ -1067,7 +1071,6 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 
 .item-modal .legend .key.filled { background: var(--bg-raised); }
 .item-modal .legend .key.empty { background: rgba(19, 29, 41, 0.35); border-style: dashed; border-color: var(--border); }
-.item-modal .legend .key.locked { background: transparent; border-color: rgba(31, 46, 61, 0.8); }
 .item-modal .legend .key.super { border-color: var(--gold); background: rgba(232, 192, 90, 0.12); }
 
 .item-modal .stray { margin: var(--space-md) 0 0; color: var(--warn); font-size: var(--text-xs); }
@@ -1129,5 +1132,18 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 button.info { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0 var(--space-md); }
 button.info .glyph { color: var(--tech); font-size: 14px; line-height: 1; }
 
-.item-table .col-actions { display: flex; gap: var(--space-xs); justify-content: flex-end; }
+/*
+   Pinned to the right edge. With the slot counts added the table is wider than most windows,
+   and the buttons were the first thing to go off the end - which is the one column a reader
+   needs to reach from every row.
+*/
+.item-table .col-actions {
+    position: sticky;
+    right: 0;
+    background: var(--bg-panel);
+    box-shadow: inset 1px 0 0 var(--border);
+}
+
+.item-table thead .col-actions { background: var(--bg-raised); }
+.item-table tbody tr:hover .col-actions { background: var(--bg-hover); }
 .item-table .col-actions button.info { height: 26px; padding: 0 var(--space-sm); }

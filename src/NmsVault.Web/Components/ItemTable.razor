@@ -87,16 +87,19 @@
                         }
                     </td>
 
-                    <td class="col-num">@(row.Tech.Count > 0 ? row.Tech.Count.ToString() : "")</td>
-
+                    @* The buttons sit in their own row inside the cell rather than the cell
+                       being that row: a table cell told to be a flex container stops sizing
+                       itself the way the column needs. *@
                     <td class="col-actions">
-                        <button type="button" class="info" title="@($"More about {row.DisplayName}")"
-                                aria-label="@($"More about {row.DisplayName}")"
-                                @onclick="() => OnInfo.InvokeAsync(row)">
-                            <span class="glyph" aria-hidden="true">&#9432;</span>
-                        </button>
+                        <div class="actions">
+                            <button type="button" class="info" title="@($"More about {row.DisplayName}")"
+                                    aria-label="@($"More about {row.DisplayName}")"
+                                    @onclick="() => OnInfo.InvokeAsync(row)">
+                                <span class="glyph" aria-hidden="true">&#9432;</span>
+                            </button>
 
-                        <DownloadMenu Row="row" />
+                            <DownloadMenu Row="row" />
+                        </div>
                     </td>
                 </tr>
             }
@@ -141,7 +144,6 @@
         new("Seed"),
         .. StatColumns.Select(stat => new Column(stat, "col-stat")),
         new("Tags"),
-        new("Tech", "col-num"),
     ];
 
     /// <summary>

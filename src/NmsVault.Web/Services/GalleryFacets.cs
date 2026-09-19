@@ -109,9 +109,6 @@ public static class GalleryFacets
         foreach (var (key, label) in StatLabels(page))
             sorts.Add(new SortOption(key, label, Descending: true, r => Stat(r, label)));
 
-        if (page is "Shipyard" or "Armoury")
-            sorts.Add(new SortOption("tech", "Tech", Descending: true, r => r.Tech.Count));
-
         return sorts;
     }
 
@@ -157,11 +154,26 @@ public static class GalleryFacets
         _ => "Ship type",
     };
 
+    /// <summary>
+    /// The stats a page can order by, in the order they appear on a card and as columns.
+    /// </summary>
+    /// <remarks>
+    /// The derived slot counts are here alongside the game's own stats because a reader sorts
+    /// by them the same way. Their labels come from <see cref="SlotCounts"/> rather than being
+    /// written out again, so a heading, a card label and a sort cannot drift apart.
+    /// </remarks>
     private static (string Key, string Label)[] StatLabels(string page) => page switch
     {
         "Shipyard" => [("damage", "Damage"), ("shield", "Shield"),
-                       ("hyperdrive", "Hyperdrive"), ("manoeuvrability", "Manoeuvrability")],
-        "Armoury" => [("damage", "Damage"), ("mining", "Mining"), ("scan", "Scan")],
+                       ("hyperdrive", "Hyperdrive"), ("manoeuvrability", "Manoeuvrability"),
+                       ("techslots", SlotCounts.TechSlotsLabel),
+                       ("storage", SlotCounts.StorageLabel),
+                       ("techinstalled", SlotCounts.TechInstalledLabel)],
+
+        "Armoury" => [("damage", "Damage"), ("mining", "Mining"), ("scan", "Scan"),
+                      ("techslots", SlotCounts.TechSlotsLabel),
+                      ("techinstalled", SlotCounts.TechInstalledLabel)],
+
         _ => [],
     };
 

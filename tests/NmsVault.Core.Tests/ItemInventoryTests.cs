@@ -1,16 +1,12 @@
 using NmsVault.Core.Adapters;
 using NmsVault.Core.Derived;
+using NmsVault.Json;
 
 namespace NmsVault.Core.Tests;
 
 /// <summary>
-/// Tests for which inventories an item offers, and in what order.
+/// Tests for the grid an item shows, and for the slot counts derived beside it.
 /// </summary>
-/// <remarks>
-/// The grid itself is covered elsewhere; what is checked here is the selection - that a ship
-/// leads with its technology, that a multitool has exactly one, and that a kind with no grid
-/// at all offers nothing rather than an empty tab.
-/// </remarks>
 public class ItemInventoryTests
 {
     private static string FixtureRoot => Path.Combine(AppContext.BaseDirectory, "fixtures", "nmse");
@@ -23,65 +19,76 @@ public class ItemInventoryTests
     private static VaultItem Tool(string name) => NmseImporter.Read(
         File.ReadAllBytes(Path.Combine(FixtureRoot, "multitools", name)), Meta, ".nmstool");
 
-    [Fact]
-    public void AShipLeadsWithItsTechnology()
-    {
-        // Technology first because that is what anyone looking at a ship in a gallery came to
-        // see; the general inventory and the cargo hold follow, as the game orders its tabs.
-        var found = ItemInventories.For(Ship("[EXP-13-R] Iron Vulture.nmsship"));
+    private const string Vulture = "[EXP-13-R] Iron Vulture.nmsship";
+    private const string Sceptre = "[EXP-12-R] Atlas Sceptre.nmstool";
 
-        Assert.Equal(["tech", "general", "cargo"], found.Select(i => i.Key));
-        Assert.Equal(["Technology", "General", "Cargo"], found.Select(i => i.Label));
+    [Fact]
+    public void AShipShowsItsTechnologyAndNothingElse()
+    {
+        // The general inventory holds whatever its last owner was carrying, which says nothing
+        // about the ship; the cargo hold is not a thing a starship has at all. How much room
+        // the general inventory has is worth knowing, and that is a number - see the storage
+        // stat below - rather than a picture.
+        var shown = ItemInventories.Shown(Ship(Vulture));
+
+        Assert.NotNull(shown);
+        Assert.Equal("tech", shown!.Value.Key);
+        Assert.Equal("Technology", shown.Value.Label);
     }
 
     [Fact]
-    public void AShipsTechnologyGridHoldsWhatTheIndexCounted()
+    public void AMultitoolsOneGridIsCalledTechnology()
     {
-        // The same number the card shows, arrived at two different ways: the card counts
-        // distinct base ids from the facts, this counts filled cells in the grid. They are
-        // allowed to differ only when a ship has two of the same technology installed.
-        var item = Ship("[EXP-13-R] Iron Vulture.nmsship");
+        var shown = ItemInventories.Shown(Tool(Sceptre));
 
-        var tech = ItemInventories.For(item).Single(i => i.Key == "tech");
-        int filled = tech.Grid.Slots.Count(s => s.State == SlotState.Filled);
-
-        Assert.Equal(ItemFacts.For(item).InstalledTech.Count, tech.Grid.InstalledBaseIds.Count);
-        Assert.True(filled >= tech.Grid.InstalledBaseIds.Count);
+        Assert.NotNull(shown);
+        Assert.Equal("Technology", shown!.Value.Label);
     }
 
     [Fact]
-    public void AMultitoolHasOneInventoryCalledTechnology()
+    public void ACompanionShowsNoGrid()
     {
-        // The game gives a multitool's single grid no tab at all, so it takes the only
-        // heading a reader has already seen over a grid of this shape.
-        var found = ItemInventories.For(Tool("[EXP-12-R] Atlas Sceptre.nmstool"));
+        var pet = VaultItem.Create(EntityKind.Companion, JsonObject.Parse("""{ "CreatureID": "x" }"""), Meta);
 
-        Assert.Single(found);
-        Assert.Equal("Technology", found[0].Label);
+        Assert.Null(ItemInventories.Shown(pet));
     }
 
     [Fact]
-    public void EveryCellOfEveryGridIsAccountedFor()
+    public void AnInventoryWithNoDeclaredSizeIsNotAnInventory()
+    {
+        // An object carrying zeroes is a placeholder, and TechGrids will happily derive a
+        // one-cell grid from it - which would draw a tab over a single empty square.
+        var ship = VaultItem.Create(
+            EntityKind.Starship,
+            JsonObject.Parse("""
+            {
+                "Resource": { "Filename": "FIGHTER_PROC.SCENE.MBIN" },
+                "Inventory_TechOnly": { "Width": 0, "Height": 0, "Slots": [], "ValidSlotIndices": [] }
+            }
+            """),
+            Meta);
+
+        Assert.Null(ItemInventories.Shown(ship));
+    }
+
+    [Fact]
+    public void EveryCellOfTheGridIsAccountedFor()
     {
         // Slots is sparse and unordered in the save; the grid must be neither. Width x Height
         // cells, each one reachable at its own position.
-        foreach (var item in new[] { Ship("[EXP-13-R] Iron Vulture.nmsship"),
-                                     Ship("[PRE-PS] Alpha Vector (Original).nmsship"),
-                                     Tool("[EXP-12-R] Atlas Sceptre.nmstool") })
+        foreach (var item in new[] { Ship(Vulture), Ship("[PRE-PS] Alpha Vector (Original).nmsship"), Tool(Sceptre) })
         {
-            foreach (var inventory in ItemInventories.For(item))
-            {
-                var grid = inventory.Grid;
-                Assert.Equal(grid.Width * grid.Height, grid.Slots.Count);
+            var grid = ItemInventories.Shown(item)!.Value.Grid;
 
-                for (int y = 0; y < grid.Height; y++)
-                    for (int x = 0; x < grid.Width; x++)
-                    {
-                        var cell = grid.At(x, y);
-                        Assert.NotNull(cell);
-                        Assert.Equal((x, y), (cell!.Value.X, cell.Value.Y));
-                    }
-            }
+            Assert.Equal(grid.Width * grid.Height, grid.Slots.Count);
+
+            for (int y = 0; y < grid.Height; y++)
+                for (int x = 0; x < grid.Width; x++)
+                {
+                    var cell = grid.At(x, y);
+                    Assert.NotNull(cell);
+                    Assert.Equal((x, y), (cell!.Value.X, cell.Value.Y));
+                }
         }
     }
 
@@ -89,44 +96,87 @@ public class ItemInventoryTests
     public void NothingFallsOutsideAGridInTheRealCorpus()
     {
         // A slot whose Index is past the declared size is invisible in NMSE. The grid records
-        // them so they can be said out loud; this asserts the corpus has none, so anything
-        // the gallery ever reports is a real problem rather than a routine one.
+        // them so they can be said out loud; this asserts the corpus has none, so anything the
+        // gallery ever reports is a real problem rather than a routine one.
         foreach (string name in Directory.GetFiles(Path.Combine(FixtureRoot, "starships")))
         {
             var item = NmseImporter.Read(File.ReadAllBytes(name), Meta, ".nmsship");
+            Assert.Empty(ItemInventories.Shown(item)!.Value.Grid.OutOfBounds);
+        }
+    }
 
-            foreach (var inventory in ItemInventories.For(item))
-                Assert.Empty(inventory.Grid.OutOfBounds);
+    // --- the derived counts -------------------------------------------
+
+    [Fact]
+    public void AShipCountsItsTechnologySlotsItsStorageAndWhatIsInstalled()
+    {
+        var stats = SlotCounts.ForShip(Ship(Vulture).Payload);
+
+        Assert.Equal(
+            [SlotCounts.TechSlotsLabel, SlotCounts.StorageLabel, SlotCounts.TechInstalledLabel],
+            stats.Select(s => s.Label));
+
+        Assert.All(stats, s => Assert.True(s.Value > 0));
+    }
+
+    [Fact]
+    public void SlotsAreCountedUnlockedRatherThanTotal()
+    {
+        // A cell nobody owns is not room - it is a cell the next owner would have to buy.
+        var grid = ItemInventories.Shown(Ship(Vulture))!.Value.Grid;
+
+        int locked = grid.Slots.Count(s => s.State == SlotState.Locked);
+        Assert.True(locked > 0, "the fixture should have locked cells for this to mean anything");
+
+        Assert.Equal(grid.Slots.Count - locked, SlotCounts.Unlocked(grid));
+    }
+
+    [Fact]
+    public void WhatIsInstalledNeverExceedsTheSlotsToPutItIn()
+    {
+        foreach (string name in Directory.GetFiles(Path.Combine(FixtureRoot, "starships")))
+        {
+            var stats = SlotCounts.ForShip(NmseImporter.Read(File.ReadAllBytes(name), Meta, ".nmsship").Payload);
+
+            double slots = stats.Single(s => s.Id == SlotCounts.TechSlotsId).Value;
+            double installed = stats.Single(s => s.Id == SlotCounts.TechInstalledId).Value;
+
+            Assert.True(installed <= slots, $"{Path.GetFileName(name)}: {installed} in {slots} slots");
         }
     }
 
     [Fact]
-    public void ACompanionOffersNoGrid()
+    public void AMultitoolHasNoSeparateStorage()
     {
-        var pet = VaultItem.Create(
-            EntityKind.Companion,
-            Json.JsonObject.Parse("""{ "CreatureID": "x" }"""),
-            Meta);
+        // One inventory, and it is all technology, so a storage number would be the same
+        // number said twice.
+        var stats = SlotCounts.ForMultitool(Tool(Sceptre).Payload);
 
-        Assert.Empty(ItemInventories.For(pet));
+        Assert.Equal([SlotCounts.TechSlotsLabel, SlotCounts.TechInstalledLabel], stats.Select(s => s.Label));
     }
 
     [Fact]
-    public void AnInventoryWithNoCellsIsNotOffered()
+    public void TheDerivedStatsJoinTheGamesOwnOnTheCard()
     {
-        // An inventory can exist in the payload and have nothing to draw. A tab reading
-        // "Cargo 0" over an empty rectangle is worse than no tab.
-        var ship = VaultItem.Create(
-            EntityKind.Starship,
-            Json.JsonObject.Parse("""
-            {
-                "Resource": { "Filename": "FIGHTER_PROC.SCENE.MBIN" },
-                "Inventory_TechOnly": { "Width": 2, "Height": 2, "Slots": [], "ValidSlotIndices": [] },
-                "Inventory_Cargo": { "Width": 0, "Height": 0, "Slots": [], "ValidSlotIndices": [] }
-            }
-            """),
-            Meta);
+        // One list, because a reader comparing two ships does not care which numbers the save
+        // carried and which were counted.
+        var stats = ItemFacts.For(Ship(Vulture)).Stats;
 
-        Assert.Equal(["tech"], ItemInventories.For(ship).Select(i => i.Key));
+        Assert.Equal(
+            ["Damage", "Shield", "Hyperdrive", "Manoeuvrability",
+             SlotCounts.TechSlotsLabel, SlotCounts.StorageLabel, SlotCounts.TechInstalledLabel],
+            stats.Select(s => s.Label));
+    }
+
+    [Fact]
+    public void ADerivedStatIdCannotBeMistakenForAGameOne()
+    {
+        // The game writes a caret; these write a hash. Asserted rather than left to a comment,
+        // because the ids reach index.json and an accidental caret would look like a stat the
+        // save carries.
+        foreach (string id in (string[])[SlotCounts.TechSlotsId, SlotCounts.StorageId, SlotCounts.TechInstalledId])
+            Assert.StartsWith("#", id, StringComparison.Ordinal);
+
+        Assert.All(ItemStats.ShipStats, s => Assert.StartsWith("^", s.Id, StringComparison.Ordinal));
     }
 }
