@@ -23,8 +23,11 @@
         "by deleting the key; that case is what the absent-flag rule exists for.",
         "5 files are legacy=true, 12 are legacy=false.",
         "Horizon Omega (Original/New) and Alpha Vector (Original/New) are matched pairs:",
-        "same model and class, differing only in UsesLegacyColours. They are the sharpest",
-        "regression test available for the flag surviving a conversion.",
+        "the same model and class captured twice, once with UsesLegacyColours set and once",
+        "without. They were exported from different saves, so their names, cargo and texture",
+        "options differ as well - the model is what is held constant, and the flag is what",
+        "distinguishes them. They are the sharpest regression test available for the flag",
+        "surviving a conversion.",
         "The Wraith exercises NMSE's AlienShip owner-type mapping; Vintage Interceptor",
         "exercises RobotShip. Starborn Phoenix is a DLC model.",
         "No corvettes, so no fixture exercises the Base sidecar yet."

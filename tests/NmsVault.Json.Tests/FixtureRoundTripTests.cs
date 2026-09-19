@@ -115,11 +115,14 @@ public class FixtureRoundTripTests
     [Theory]
     [InlineData("Horizon Omega", true, false)]
     [InlineData("Alpha Vector", true, false)]
-    public void MatchedPairs_DifferOnlyInTheLegacyColourFlag(
+    public void MatchedPairs_CarryTheSameModelWithTheFlagSetBothWays(
         string shipName, bool originalExpected, bool newExpected)
     {
-        // These pairs are the same model and class, captured with the flag set both ways.
-        // If a conversion ever loses UsesLegacyColours, these two stop being distinguishable.
+        // The same model captured twice, once with the flag set and once without. That is all
+        // they have in common: they were exported from different saves, so their names, their
+        // cargo and their texture options differ too. What makes them useful is that the model
+        // is identical while the flag is not - if a conversion ever drops UsesLegacyColours,
+        // nothing is left to tell the two apart.
         var original = LoadShip($"[PRE-PC] {shipName} (Original).nmsship",
                                 $"[PRE-PS] {shipName} (Original).nmsship");
         var modern = LoadShip($"[PRE-PC] {shipName} (New).nmsship",
