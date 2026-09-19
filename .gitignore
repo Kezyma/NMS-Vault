@@ -5,3 +5,7 @@ obj/
 .vs/
 .idea/
 *.swp
+
+# Ingested gallery content is regenerated from the fixtures during development.
+# When real items exist they will be committed; this keeps the WIP corpus out.
+src/NmsVault.Web/wwwroot/gallery/

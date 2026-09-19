@@ -1,0 +1,17 @@
+@*
+    The router. NotFound renders the same shell as a real page so a mistyped URL still has
+    the navigation on it, rather than dropping the reader somewhere with no way back.
+*@
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <h1>Not found</h1>
+            <p class="dim">There is nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>

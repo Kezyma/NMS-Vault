@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!--
+      Blazor's generated index.html carries an asset-fingerprint placeholder; this lets the
+      publish step rewrite it rather than shipping the placeholder text.
+    -->
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NmsVault.Core\NmsVault.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    Where the site is served from. GitHub Pages serves a project page under the repository
+    name, so every asset would otherwise resolve against the domain root and the page would
+    come up blank. A custom domain would pass "/" here instead.
+  -->
+  <PropertyGroup>
+    <PagesBase Condition="'$(PagesBase)' == ''">/NMS-Vault/</PagesBase>
+  </PropertyGroup>
+
+  <Target Name="PrepareForPages" AfterTargets="Publish">
+    <PropertyGroup>
+      <PagesRoot>$(PublishDir)wwwroot\</PagesRoot>
+      <PagesIndex>$([System.IO.File]::ReadAllText('$(PagesRoot)index.html'))</PagesIndex>
+    </PropertyGroup>
+
+    <!--
+      Checked rather than hoped for. A string replace that silently matches nothing publishes
+      a blank site with nothing in the build log to say why.
+    -->
+    <Error Condition="!$(PagesIndex.Contains('&lt;base href=&quot;/&quot; /&gt;'))"
+           Text="index.html has no &lt;base href=&quot;/&quot; /&gt; to rewrite, so the site would publish with the wrong base and come up blank." />
+
+    <!-- Escaped because Lines is an item list and MSBuild splits it on semicolons. -->
+    <WriteLinesToFile File="$(PagesRoot)index.html"
+                      Lines="$([MSBuild]::Escape($(PagesIndex.Replace('&lt;base href=&quot;/&quot; /&gt;', '&lt;base href=&quot;$(PagesBase)&quot; /&gt;'))))"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+
+    <!-- A copy made at publish time, so it cannot drift from index.html. -->
+    <Copy SourceFiles="$(PagesRoot)index.html" DestinationFiles="$(PagesRoot)404.html" />
+
+    <Message Importance="high" Text="Prepared for GitHub Pages at $(PagesBase)" />
+  </Target>
+
+</Project>

@@ -1,5 +1,6 @@
 using System.Text;
 using NmsVault.Core;
+using NmsVault.Core.Derived;
 using NmsVault.Json;
 
 namespace NmsVault.Ingest;
@@ -74,6 +75,11 @@ public sealed class GalleryStore(string root)
             entry.Set("Kind", item.Kind.ToString());
             entry.Set("Page", item.Kind.Page());
             entry.Set("DisplayName", item.Meta.DisplayName);
+
+            // Type, class, seeds, stats and installed tech, derived from the payload. They
+            // live here rather than being computed in the browser because filtering on any
+            // of them would otherwise mean fetching every item document first.
+            ItemFacts.For(item).WriteTo(entry);
 
             if (item.Meta.Description.Length > 0) entry.Set("Description", item.Meta.Description);
             if (item.Meta.Images.Count > 0) entry.Set("Image", item.Meta.Images[0]);

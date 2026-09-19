@@ -1,0 +1,26 @@
+@inherits LayoutComponentBase
+
+@*
+    The shell: a fixed header naming the three rooms, and the page under it.
+*@
+
+<header class="vault-header">
+    <a class="brand" href="">
+        <span class="mark">NMS</span><span class="mark-dim">Vault</span>
+    </a>
+
+    <nav class="rooms" aria-label="Sections">
+        <NavLink href="shipyard" class="room">Shipyard</NavLink>
+        <NavLink href="armoury" class="room">Armoury</NavLink>
+        <NavLink href="stable" class="room">Stable</NavLink>
+    </nav>
+</header>
+
+<main class="vault-main">
+    @Body
+</main>
+
+<footer class="vault-footer">
+    <span>Ship, multi-tool and companion backups for <em>No Man's Sky</em>, in the format your editor reads.</span>
+    <a href="https://github.com/Kezyma/NMS-Vault" target="_blank" rel="noopener">Source</a>
+</footer>

@@ -1,0 +1,111 @@
+@inject GalleryData Data
+
+@*
+    One room of the gallery. The filter bar, the two views and the download menu land here
+    as they are built; for now it loads the manifest and draws what is in it, so the shape
+    of the data is visible while the rest is written.
+*@
+
+<h1>@Heading</h1>
+
+@if (_rows is null)
+{
+    <p class="dim">Loading&hellip;</p>
+}
+else if (_rows.Count == 0)
+{
+    <p class="dim">Nothing here yet.</p>
+}
+else
+{
+    <p class="count">@_rows.Count item@(_rows.Count == 1 ? "" : "s")</p>
+
+    <div class="card-grid">
+        @foreach (var row in _rows)
+        {
+            <article class="item-card" @key="row.Id">
+                <div class="card-art">
+                    @if (row.Image is { } image)
+                    {
+                        <img src="@($"gallery/{image}")" alt="" loading="lazy" />
+                    }
+                    else
+                    {
+                        <span class="no-art" aria-hidden="true">@Initial(row.DisplayName)</span>
+                    }
+                </div>
+
+                <div class="card-body">
+                    <h2 class="card-name">@row.DisplayName</h2>
+
+                    <p class="card-type">
+                        @row.Type
+                        @if (row.IsModified)
+                        {
+                            <span class="badge warn" title="The model path did not match a known ship exactly">Modified</span>
+                        }
+                        @if (row.Class is { } cls)
+                        {
+                            <span class="badge class-@cls.ToLowerInvariant()">@cls</span>
+                        }
+                    </p>
+
+                    @foreach (var seed in row.Seeds)
+                    {
+                        <p class="card-seed"><span class="dim">@seed.Key</span> <code>@seed.Value</code></p>
+                    }
+
+                    @if (row.Stats.Count > 0)
+                    {
+                        <dl class="card-stats">
+                            @foreach (var stat in row.Stats)
+                            {
+                                <div>
+                                    <dt>@stat.Key</dt>
+                                    @* Raw values: the game exposes no maxima to scale against. *@
+                                    <dd>@stat.Value.ToString("0.#")</dd>
+                                </div>
+                            }
+                        </dl>
+                    }
+
+                    @if (row.Tags.Count > 0)
+                    {
+                        <p class="card-tags">
+                            @foreach (var tag in row.Tags)
+                            {
+                                <span class="chip">@tag</span>
+                            }
+                        </p>
+                    }
+
+                    @if (row.Tech.Count > 0)
+                    {
+                        <p class="card-tech dim">@row.Tech.Count installed</p>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Which page's rows to show, as <c>EntityKinds.Page</c> names them.</summary>
+    [Parameter, EditorRequired]
+    public required string Page { get; set; }
+
+    /// <summary>The heading over the list.</summary>
+    [Parameter, EditorRequired]
+    public required string Heading { get; set; }
+
+    private IReadOnlyList<GalleryRow>? _rows;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _rows = null;
+        _rows = await Data.ForPageAsync(Page).ConfigureAwait(true);
+    }
+
+    private static string Initial(string name)
+        => name.Length > 0 ? name[..1].ToUpperInvariant() : "?";
+}

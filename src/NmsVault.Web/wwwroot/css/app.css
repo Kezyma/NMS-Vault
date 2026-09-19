@@ -1,0 +1,38 @@
+/*
+   Host-only styling: the pre-boot message and the Blazor error bar. Everything else lives
+   in vault.css, which is the application's own stylesheet.
+
+   Deliberately no link to NmsVault.Web.styles.css - that bundle is only produced when a
+   .razor.css exists, and this project has none, so the link would 404 on every page load.
+*/
+
+.boot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font: 400 1rem/1.4 "Segoe UI", system-ui, sans-serif;
+    color: #7f8fa0;
+    background: #06090f;
+}
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 0.7rem 1.2rem;
+    background: #2a1a0e;
+    border-top: 1px solid #d98a3a;
+    color: #f0d8bc;
+    font: 400 0.9rem/1.4 "Segoe UI", system-ui, sans-serif;
+}
+
+#blazor-error-ui .dismiss {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.9rem;
+    cursor: pointer;
+}
