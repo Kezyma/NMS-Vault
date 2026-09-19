@@ -37,7 +37,7 @@
                             @onclick="() => Toggle(value.Key)" @onclick:stopPropagation="true">
                         @Mark(value)
                         <span>@value.Label</span>
-                        <span class="drop" aria-hidden="true">&times;</span>
+                        <Icon Name="close" Size="12" Weight="2.6" Class="drop" />
                     </button>
                 }
             </span>
@@ -46,7 +46,7 @@
         <button type="button" class="toggle" aria-expanded="@(_open ? "true" : "false")"
                 title="@(_open ? "Close the list" : "Show every option")"
                 aria-label="@(_open ? "Close the list" : "Show every option")"
-                @onclick="Flip" @onclick:stopPropagation="true">&#9662;</button>
+                @onclick="Flip" @onclick:stopPropagation="true"><Icon Name="chevron-down" Size="13" Weight="2.4" /></button>
     </div>
 
     @if (_open)

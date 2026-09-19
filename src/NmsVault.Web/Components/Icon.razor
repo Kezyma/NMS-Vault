@@ -1,0 +1,100 @@
+@*
+    The interface's marks, drawn rather than typed.
+
+    These were Unicode characters - an encircled i, a downward arrow, a couple of triangles -
+    and every one of them came from whichever font on the reader's machine happened to carry
+    that codepoint. Two marks side by side would be drawn by two different fonts at two
+    different optical sizes and weights, hinted for body text rather than for a 20px button,
+    so they looked mismatched and rough. Nothing in a stylesheet fixes that: the shapes are
+    not ours to size.
+
+    Drawn as paths they are the same size, the same weight, and the same colour as the text
+    they sit beside, at any scale and on any machine. One geometry (24 by 24, stroked, round
+    caps) so a new mark added later matches the ones already here without being told to.
+*@
+
+<svg class="@($"icon {Class}".TrimEnd())" width="@Size" height="@Size" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor" stroke-width="@Weight"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+    @switch (Name)
+    {
+        case "info":
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11.5v4.8" />
+            <circle cx="12" cy="7.8" r="1" fill="currentColor" stroke="none" />
+            break;
+
+        case "download":
+            <path d="M12 3.5v11" />
+            <path d="M7.5 10.5 12 15l4.5-4.5" />
+            @* The line it lands on, which is what says "out of here" rather than just "down". *@
+            <path d="M4.5 19.5h15" />
+            break;
+
+        case "chevron-down":
+            <path d="m6 9.5 6 6 6-6" />
+            break;
+
+        case "chevron-up":
+            <path d="m6 14.5 6-6 6 6" />
+            break;
+
+        case "chevron-left":
+            <path d="M14.5 6 8.5 12l6 6" />
+            break;
+
+        case "chevron-right":
+            <path d="m9.5 6 6 6-6 6" />
+            break;
+
+        case "close":
+            <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+            break;
+
+        case "warning":
+            <path d="M12 4.2 21 19.4H3z" />
+            <path d="M12 10.2v4.1" />
+            <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+            break;
+
+        case "cards":
+            <rect x="3.5" y="3.5" width="7" height="7" rx="1" />
+            <rect x="13.5" y="3.5" width="7" height="7" rx="1" />
+            <rect x="3.5" y="13.5" width="7" height="7" rx="1" />
+            <rect x="13.5" y="13.5" width="7" height="7" rx="1" />
+            break;
+
+        case "table":
+            <path d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17" />
+            break;
+
+        default:
+            @* Nothing, rather than a box with a name in it. A mark that is missing is a bug
+               to fix in this file, not something to shout about on the page. *@
+            break;
+    }
+</svg>
+
+@code {
+    /// <summary>Which mark to draw.</summary>
+    [Parameter, EditorRequired]
+    public required string Name { get; set; }
+
+    /// <summary>Its size in pixels, square.</summary>
+    [Parameter]
+    public int Size { get; set; } = 16;
+
+    /// <summary>
+    /// Stroke width, in the 24-unit space rather than in pixels.
+    /// </summary>
+    /// <remarks>
+    /// Lighter for a large mark and heavier for a small one, so they read as the same weight:
+    /// a two-unit stroke is a third of a pixel at 12px and nearly two pixels at 96.
+    /// </remarks>
+    [Parameter]
+    public double Weight { get; set; } = 2;
+
+    /// <summary>An extra class, for colouring it or spacing it.</summary>
+    [Parameter]
+    public string? Class { get; set; }
+}

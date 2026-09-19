@@ -17,10 +17,10 @@
     @if (Images.Count > 1)
     {
         <button type="button" class="step back" title="Previous picture" aria-label="Previous picture"
-                @onclick="() => Step(-1)">&#10094;</button>
+                @onclick="() => Step(-1)"><Icon Name="chevron-left" Size="18" /></button>
 
         <button type="button" class="step on" title="Next picture" aria-label="Next picture"
-                @onclick="() => Step(1)">&#10095;</button>
+                @onclick="() => Step(1)"><Icon Name="chevron-right" Size="18" /></button>
 
         <div class="dots" role="tablist">
             @for (int i = 0; i < Images.Count; i++)

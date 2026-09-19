@@ -31,7 +31,12 @@
                                 <span>@column.Label</span>
                                 @* Marked only on the column in use; an arrow on every heading is
                                    four arrows saying nothing. *@
-                                <span class="arrow" aria-hidden="true">@(active ? (Sort.Descending ? "▾" : "▴") : "")</span>
+                                <span class="arrow" aria-hidden="true">
+                                    @if (active)
+                                    {
+                                        <Icon Name="@(Sort.Descending ? "chevron-down" : "chevron-up")" Size="12" Weight="2.6" />
+                                    }
+                                </span>
                             </button>
                         }
                         else
@@ -95,7 +100,7 @@
                             <button type="button" class="info icon" title="@($"More about {row.DisplayName}")"
                                     aria-label="@($"More about {row.DisplayName}")"
                                     @onclick="() => OnInfo.InvokeAsync(row)">
-                                <span class="glyph" aria-hidden="true">&#9432;</span>
+                                <Icon Name="info" Size="20" Class="tech" />
                             </button>
 
                             <DownloadMenu Row="row" Compact="true" />

@@ -30,7 +30,7 @@
                 <button type="button" class="info icon" title="@($"More about {Row.DisplayName}")"
                         aria-label="@($"More about {Row.DisplayName}")"
                         @onclick="() => OnInfo.InvokeAsync(Row)">
-                    <span class="glyph" aria-hidden="true">&#9432;</span>
+                    <Icon Name="info" Size="20" Class="tech" />
                 </button>
 
                 <DownloadMenu Row="Row" Compact="true" />

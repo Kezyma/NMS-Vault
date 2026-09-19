@@ -23,7 +23,7 @@
             title="Download this in a save editor's format"
             aria-label="Download this in a save editor's format" @ref="_control"
             @onclick="Flip" @onclick:stopPropagation="true">
-        <span class="glyph" aria-hidden="true">&#8681;</span>
+        <Icon Name="download" Size="20" Class="accent" />
         @*
             The label and the arrow are the same thing said twice over: both are there to say
             this opens a list, and neither is worth the width beside a title. The icon alone
@@ -32,7 +32,7 @@
         @if (!Compact)
         {
             <span class="label">Download</span>
-            <span class="drop" aria-hidden="true">&#9662;</span>
+            <Icon Name="chevron-down" Size="13" Weight="2.4" Class="drop" />
         }
     </button>
 
@@ -70,7 +70,7 @@
 
                                 @if (option.NeedsConfirming)
                                 {
-                                    <span class="warn" aria-label="Loses information">&#9888;</span>
+                                    <Icon Name="warning" Size="15" Class="warn" />
                                 }
 
                                 <span class="ext dim">@(option.Extension ?? "-")</span>

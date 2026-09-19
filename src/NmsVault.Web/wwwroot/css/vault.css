@@ -105,6 +105,16 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 
 .dim { color: var(--text-dim); }
 
+/*
+   Every mark in the interface is drawn rather than typed - see Icon.razor for why. A block so
+   it contributes no line-height of its own, and never shrinking, because they sit in flex rows
+   beside text that will happily take the space.
+*/
+.icon { display: block; flex: none; }
+.icon.tech { color: var(--tech); }
+.icon.accent { color: var(--accent); }
+.icon.drop { color: var(--text-faint); }
+
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 :root { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
@@ -427,7 +437,9 @@ input[type="search"]:focus, select:focus { border-color: var(--accent-dim); }
     width: 22px;
     height: 22px;
     padding: 0;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     color: var(--text-faint);
@@ -544,6 +556,9 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     border: none;
     color: var(--text-faint);
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .vault-combo.vault-multi > .control > .toggle:hover { color: var(--text); background: none; }
@@ -691,7 +706,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .item-table .sorter.active { color: var(--accent); }
 
 /* Reserved whether or not it is drawn, so pressing a heading does not shift the row. */
-.item-table .sorter .arrow { width: 8px; flex: none; font-size: 9px; }
+/* Held open whether or not a mark is in it, so pressing a heading does not shift the row. */
+.item-table .sorter .arrow { width: 12px; height: 12px; flex: none; }
 
 .item-table .col-stat .sorter, .item-table .col-num .sorter { justify-content: flex-end; }
 
@@ -739,11 +755,9 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     padding: 0 var(--space-md);
 }
 
-.vault-download > .toggle.icon .glyph { color: var(--accent); }
 .vault-download.open > .toggle.icon { background: none; border-color: transparent; opacity: 1; }
 
-.vault-download > .toggle .glyph { color: var(--accent); font-size: 14px; line-height: 1; }
-.vault-download > .toggle .drop { color: var(--text-faint); font-size: 10px; }
+
 .vault-download.open > .toggle { border-color: var(--accent-dim); background: var(--bg-hover); }
 
 .vault-download .panel {
@@ -789,7 +803,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
    The mark on a format that drops something. It is on the entry rather than only in the dialog
    behind it, so the choice can be made before the press rather than after.
 */
-.vault-download .options .warn { flex: none; color: var(--warn); font-size: 13px; line-height: 1; }
+.vault-download .options .warn { color: var(--warn); }
 
 .vault-download .options .ext { flex: none; font-family: var(--font-mono); font-size: var(--text-xs); }
 
@@ -888,9 +902,10 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
     flex: none;
     width: var(--control-h);
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-dim);
-    font-size: 18px;
-    line-height: 1;
 }
 
 .item-modal .kind,
@@ -960,7 +975,9 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
     background: rgba(6, 9, 15, 0.65);
     border-color: transparent;
     color: var(--text-dim);
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .carousel .step:hover:not(:disabled) { color: var(--text); background: rgba(6, 9, 15, 0.9); border-color: var(--accent-dim); }
@@ -1143,9 +1160,7 @@ button.icon {
 }
 
 button.icon:hover:not(:disabled) { background: none; border-color: transparent; opacity: 1; }
-button.icon .glyph { font-size: 20px; line-height: 1; }
 
-button.info .glyph { color: var(--tech); }
 
 /*
    Pinned to the right edge. With the slot counts added the table is wider than most windows,
