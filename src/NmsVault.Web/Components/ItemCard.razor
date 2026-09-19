@@ -70,6 +70,12 @@
     </div>
 
     <div class="card-actions">
+        <button type="button" class="info" title="@($"More about {Row.DisplayName}")"
+                @onclick="() => OnInfo.InvokeAsync(Row)">
+            <span class="glyph" aria-hidden="true">&#9432;</span>
+            <span class="label">Info</span>
+        </button>
+
         <DownloadMenu Row="Row" />
     </div>
 </article>
@@ -78,6 +84,10 @@
     /// <summary>The item to draw.</summary>
     [Parameter, EditorRequired]
     public required GalleryRow Row { get; set; }
+
+    /// <summary>Raised when the reader asks to see the whole item.</summary>
+    [Parameter]
+    public EventCallback<GalleryRow> OnInfo { get; set; }
 
     private string Initial => Row.DisplayName.Length > 0 ? Row.DisplayName[..1].ToUpperInvariant() : "?";
 }

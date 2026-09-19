@@ -1,0 +1,199 @@
+@inject IJSRuntime Js
+@implements IAsyncDisposable
+
+@*
+    An inventory drawn the way the game draws it: a fixed grid of square cells, each one
+    locked, empty or holding something, with the supercharged cells marked.
+
+    The cells come from the payload alone - position, size, which cells are owned and which
+    are supercharged are all in the file. The only thing the grid cannot supply is what an
+    installed id means, which is what the technology lookup is for; without it a cell still
+    draws, it just has no name behind it.
+
+    One popover serves the whole grid rather than one per cell. It is placed in viewport
+    coordinates because the grid sits inside a sheet that scrolls, and a tooltip clipped at
+    the edge of its own container is worse than none.
+*@
+
+<div class="tech-grid-wrap">
+    <div class="tech-grid" style="@($"--cols:{Grid.Width}")" role="grid" @ref="_grid"
+         aria-label="@($"{Label} inventory, {Grid.Width} by {Grid.Height}")">
+        @for (int y = 0; y < Grid.Height; y++)
+        {
+            @for (int x = 0; x < Grid.Width; x++)
+            {
+                var slot = Grid.At(x, y)!.Value;
+                var entry = slot.BaseItemId is { } id ? Tech.Find(id) : null;
+
+                @* A cell holding something is pressable, because on a touch screen there is no
+                   hover and the name has to be reachable somehow. An empty one is not. *@
+                <button type="button" @key="(y * Grid.Width) + x"
+                        class="slot @StateClass(slot)"
+                        disabled="@(slot.State != SlotState.Filled)"
+                        title="@(entry?.Name ?? slot.BaseItemId)"
+                        @onmouseenter="() => Show(slot)" @onmouseleave="Hide"
+                        @onfocus="() => Show(slot)" @onblur="Hide"
+                        @onclick="() => Toggle(slot)">
+                    @if (entry?.Icon is { Length: > 0 } icon)
+                    {
+                        <img src="@($"gallery/img/tech/{icon}")" alt="@entry.Name" loading="lazy" />
+                    }
+                    else if (slot.State == SlotState.Filled)
+                    {
+                        @* Something is installed that the lookup does not know. Better to show
+                           that a cell is occupied than to draw it as empty. *@
+                        <span class="unknown" aria-hidden="true">?</span>
+                    }
+                </button>
+            }
+        }
+    </div>
+
+    @if (Grid.OutOfBounds.Count > 0)
+    {
+        @* NMSE drops these silently. Saying so is the whole reason the grid records them. *@
+        <p class="stray">
+            @Grid.OutOfBounds.Count item@(Grid.OutOfBounds.Count == 1 ? " sits" : "s sit")
+            outside the declared grid and cannot be drawn:
+            @string.Join(", ", Grid.OutOfBounds)
+        </p>
+    }
+</div>
+
+@if (_shown is { } shown)
+{
+    var entry = shown.BaseItemId is { } id ? Tech.Find(id) : null;
+
+    <div class="tech-popover" @ref="_popover" role="tooltip">
+        <h4>@(entry?.Name ?? shown.BaseItemId)</h4>
+
+        @if (entry?.Subtitle is { Length: > 0 } subtitle)
+        {
+            <p class="subtitle">@subtitle</p>
+        }
+
+        @if (shown.IsSupercharged || shown.IsDamaged || shown.IsProceduralRoll)
+        {
+            <p class="marks">
+                @if (shown.IsSupercharged) { <span class="mark super">Supercharged slot</span> }
+                @if (shown.IsDamaged) { <span class="mark damaged">Damaged</span> }
+                @if (shown.IsProceduralRoll) { <span class="mark rolled">Upgrade module</span> }
+            </p>
+        }
+
+        @if (entry?.Description is { Length: > 0 } description)
+        {
+            @* The game writes these with blank lines between paragraphs. *@
+            @foreach (string paragraph in description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                <p>@paragraph.Trim()</p>
+            }
+        }
+        else if (entry is null)
+        {
+            <p class="dim">Not in the technology lookup. It may be modded, or newer than the
+                extracted data.</p>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>The inventory to draw.</summary>
+    [Parameter, EditorRequired]
+    public required TechGrid Grid { get; set; }
+
+    /// <summary>What this inventory is called, for the accessible name.</summary>
+    [Parameter, EditorRequired]
+    public required string Label { get; set; }
+
+    /// <summary>The technology lookup, for names, icons and descriptions.</summary>
+    [Parameter, EditorRequired]
+    public required TechIndex Tech { get; set; }
+
+    private TechSlot? _shown;
+    private ElementReference _grid;
+    private ElementReference _popover;
+    private bool _pinned;
+    private IJSObjectReference? _module;
+
+    private static string StateClass(TechSlot slot)
+    {
+        var classes = new List<string>(3)
+        {
+            slot.State switch
+            {
+                SlotState.Filled => "filled",
+                SlotState.Empty => "empty",
+                _ => "locked",
+            },
+        };
+
+        if (slot.IsSupercharged) classes.Add("super");
+        if (slot.IsDamaged) classes.Add("damaged");
+
+        return string.Join(' ', classes);
+    }
+
+    private void Show(TechSlot slot)
+    {
+        if (slot.State != SlotState.Filled || _pinned) { return; }
+        _shown = slot;
+    }
+
+    private void Hide()
+    {
+        if (_pinned) { return; }
+        _shown = null;
+    }
+
+    /// <summary>
+    /// Keeps the popover up after a press, so a reader on a touch screen - where there is no
+    /// hover to keep it open - can read it. Pressing the same cell again lets it go.
+    /// </summary>
+    private void Toggle(TechSlot slot)
+    {
+        if (slot.State != SlotState.Filled) { return; }
+
+        if (_pinned && _shown is { } current && current.X == slot.X && current.Y == slot.Y)
+        {
+            _pinned = false;
+            _shown = null;
+            return;
+        }
+
+        _pinned = true;
+        _shown = slot;
+    }
+
+    /// <summary>Places the popover against the cell it belongs to.</summary>
+    /// <param name="firstRender">Whether this is the first render.</param>
+    /// <returns>A task that completes once it is placed.</returns>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shown is not { } slot) { return; }
+
+        _module ??= await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+
+        // By position within this grid rather than by a selector: the cells are drawn in
+        // row-major order, and asking the document for an nth-child would find whichever
+        // grid happened to be first if two were ever on screen together.
+        await _module.InvokeVoidAsync("anchorPanelWithin", _popover, _grid,
+            (slot.Y * Grid.Width) + slot.X).ConfigureAwait(true);
+    }
+
+    /// <summary>Releases the imported module.</summary>
+    /// <returns>A task that completes when it is released.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null) { return; }
+
+        try
+        {
+            await _module.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page went away first; there is nothing left to release.
+        }
+    }
+}

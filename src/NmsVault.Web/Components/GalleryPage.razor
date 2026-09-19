@@ -67,16 +67,21 @@ else
     }
     else if (_asTable)
     {
-        <ItemTable Rows="Shown" Sorts="_sorts" Sort="_sort" SortChanged="SortPicked" />
+        <ItemTable Rows="Shown" Sorts="_sorts" Sort="_sort" SortChanged="SortPicked" OnInfo="Open" />
     }
     else
     {
         <div class="card-grid">
             @foreach (var row in Shown)
             {
-                <ItemCard Row="row" @key="row.Id" />
+                <ItemCard Row="row" OnInfo="Open" @key="row.Id" />
             }
         </div>
+    }
+
+    @if (_open is { } open)
+    {
+        <ItemModal Row="open" OnClose="CloseItem" @key="open.Id" />
     }
 }
 
@@ -95,6 +100,10 @@ else
     private SortOption _sort;
     private Sifter<GalleryRow>? _sifter;
     private bool _asTable;
+
+    // One modal for the page. A modal per card would be seventeen dialogs in the document,
+    // sixteen of them holding a fetch nobody asked for.
+    private GalleryRow? _open;
 
     // Memoised against the list it was built from, so narrowing and ordering happen once
     // per change rather than once per render.
@@ -128,6 +137,7 @@ else
         StateHasChanged();
     }
 
+
     private void SortChanged(ChangeEventArgs e)
     {
         string key = e.Value?.ToString() ?? "";
@@ -152,4 +162,8 @@ else
     }
 
     private void ViewChanged(bool asTable) => _asTable = asTable;
+
+    private void Open(GalleryRow row) => _open = row;
+
+    private void CloseItem() => _open = null;
 }

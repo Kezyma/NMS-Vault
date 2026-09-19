@@ -812,6 +812,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     width: min(520px, 100%);
     max-height: calc(100vh - var(--space-3xl));
     overflow-y: auto;
+    /* Reaching the end of the sheet does not start scrolling whatever is behind it. */
+    overscroll-behavior: contain;
     padding: var(--space-2xl);
     background: var(--bg-panel);
     border: 1px solid var(--border-strong);
@@ -841,3 +843,286 @@ button.ghost:hover:not(:disabled) { color: var(--text); background: var(--bg-hov
 
 button.danger { border-color: var(--warn); color: var(--warn); }
 button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); border-color: var(--warn); }
+
+
+/* ---------------------------------------------------------------- item modal */
+
+/*
+   Wider than the confirmation, and scrolling, because this holds a picture, prose and a grid
+   rather than a question. The sheet's own rules come from .vault-modal .sheet above; only
+   what differs is restated.
+*/
+.item-modal .sheet {
+    width: min(720px, 100%);
+    padding: 0;
+}
+
+.item-modal .head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg) var(--space-xl);
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+}
+
+.item-modal .head h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    color: var(--text);
+}
+
+.item-modal .head .name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.item-modal .shut {
+    flex: none;
+    width: var(--control-h);
+    padding: 0;
+    color: var(--text-dim);
+    font-size: 18px;
+    line-height: 1;
+}
+
+.item-modal .kind,
+.item-modal .prose,
+.item-modal .modal-stats,
+.item-modal .inventories,
+.item-modal .card-tags,
+.item-modal .loading,
+.item-modal .failed { margin: var(--space-lg) var(--space-xl); }
+
+.item-modal .kind {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm) var(--space-lg);
+    color: var(--text-dim);
+    font-size: var(--text-sm);
+}
+
+.item-modal .kind .seed { display: flex; gap: var(--space-xs); }
+.item-modal .failed { color: var(--bad); }
+.item-modal .prose p { color: var(--text-dim); font-size: var(--text-sm); line-height: 1.6; }
+.item-modal .prose p:last-child { margin-bottom: 0; }
+
+.item-modal .modal-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg) 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.item-modal .modal-stats div { display: flex; flex-direction: column; gap: var(--space-2xs); }
+.item-modal .modal-stats dt { color: var(--text-faint); font-size: var(--text-xs); letter-spacing: 0.06em; text-transform: uppercase; }
+.item-modal .modal-stats dd { margin: 0; font-family: var(--font-mono); font-size: var(--text-lg); }
+
+.item-modal .foot {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-lg);
+    padding: var(--space-lg) var(--space-xl);
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+}
+
+.item-modal .credit { display: flex; flex-wrap: wrap; gap: var(--space-lg); margin: 0; font-size: var(--text-xs); }
+
+
+/* ---------------------------------------------------------------- carousel */
+
+.carousel { position: relative; background: #05080d; border-block: 1px solid var(--border); }
+.carousel .frame { aspect-ratio: 16 / 9; }
+
+/* Fitted, never filled. The same picture in the same shape as on the card. */
+.carousel img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+.carousel .step {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    width: 34px;
+    padding: 0;
+    background: rgba(6, 9, 15, 0.65);
+    border-color: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+}
+
+.carousel .step:hover:not(:disabled) { color: var(--text); background: rgba(6, 9, 15, 0.9); border-color: var(--accent-dim); }
+.carousel .step.back { left: var(--space-md); }
+.carousel .step.on { right: var(--space-md); }
+
+.carousel .dots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--space-md);
+    display: flex;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.carousel .dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    background: var(--text-faint);
+    border: none;
+    border-radius: var(--radius-pill);
+    opacity: 0.6;
+}
+
+.carousel .dot.at { background: var(--accent); opacity: 1; }
+.carousel .dot:hover { opacity: 1; }
+
+
+/* ---------------------------------------------------------------- tech grid */
+
+.item-modal .inventories h3 { margin: 0 0 var(--space-md); font-size: var(--text-md); }
+
+.item-modal .tabs { display: flex; gap: var(--space-xs); margin-bottom: var(--space-lg); }
+.item-modal .tabs button { display: inline-flex; align-items: center; gap: var(--space-sm); }
+.item-modal .tabs button.at { color: var(--accent); border-color: var(--accent-dim); background: rgba(245, 137, 46, 0.1); }
+.item-modal .tabs .count { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--text-xs); }
+
+/*
+   Square cells on a fixed number of columns, as the game lays them out. The grid keeps its
+   shape when it is too wide for the sheet rather than reflowing: a technology layout that
+   wrapped would be a different layout, and the whole point is that it matches the game.
+*/
+.tech-grid-wrap { overflow-x: auto; }
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 44px);
+    gap: var(--space-xs);
+    width: max-content;
+}
+
+.tech-grid .slot {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.tech-grid .slot img { width: 34px; height: 34px; object-fit: contain; }
+.tech-grid .slot .unknown { color: var(--text-faint); font-size: var(--text-lg); }
+
+.tech-grid .slot.filled { background: var(--bg-raised); border-color: var(--border-strong); }
+.tech-grid .slot.filled:hover { border-color: var(--tech); background: var(--bg-hover); }
+
+/* Owned but empty reads as an outline; not owned reads as absence. */
+.tech-grid .slot.empty { background: rgba(19, 29, 41, 0.35); border-style: dashed; border-color: var(--border); opacity: 1; }
+.tech-grid .slot.locked { background: transparent; border-color: transparent; box-shadow: inset 0 0 0 1px rgba(31, 46, 61, 0.5); opacity: 1; }
+
+/*
+   Supercharged is a property of the cell, not of what is in it, so it is drawn on the cell
+   and shows on an empty one too - which is exactly when a reader most wants to see it.
+*/
+.tech-grid .slot.super { border-color: var(--gold); box-shadow: inset 0 0 8px rgba(232, 192, 90, 0.25); }
+.tech-grid .slot.super.empty { background: rgba(232, 192, 90, 0.08); }
+.tech-grid .slot.damaged { border-color: var(--bad); box-shadow: inset 0 0 8px rgba(224, 92, 92, 0.3); }
+
+.tech-grid .slot:disabled { cursor: default; }
+
+.item-modal .legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-xs) var(--space-lg);
+    margin: var(--space-lg) 0 0;
+    font-size: var(--text-xs);
+}
+
+.item-modal .legend .key {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: var(--space-2xs);
+    vertical-align: -2px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+}
+
+.item-modal .legend .key.filled { background: var(--bg-raised); }
+.item-modal .legend .key.empty { background: rgba(19, 29, 41, 0.35); border-style: dashed; border-color: var(--border); }
+.item-modal .legend .key.locked { background: transparent; border-color: rgba(31, 46, 61, 0.8); }
+.item-modal .legend .key.super { border-color: var(--gold); background: rgba(232, 192, 90, 0.12); }
+
+.item-modal .stray { margin: var(--space-md) 0 0; color: var(--warn); font-size: var(--text-xs); }
+
+
+/* ---------------------------------------------------------------- tech popover */
+
+/*
+   The game's own item tooltip in outline: a name, the line under it that says what family the
+   thing belongs to, then the description. Fixed and placed by script, because the grid sits in
+   a sheet that scrolls and a tooltip clipped by its own container is worse than none.
+*/
+.tech-popover {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 120;
+    width: min(320px, calc(100vw - 32px));
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+    background: var(--bg-panel);
+    border: 1px solid var(--tech-dim);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-panel);
+    /* Never the thing under the pointer, or moving onto it would count as leaving the cell. */
+    pointer-events: none;
+}
+
+.tech-popover h4 { margin: 0; color: var(--tech); font-size: var(--text-md); font-weight: 600; }
+
+.tech-popover .subtitle {
+    margin: var(--space-2xs) 0 var(--space-md);
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.tech-popover p { margin: 0 0 var(--space-md); color: var(--text-dim); font-size: var(--text-sm); line-height: 1.5; }
+.tech-popover p:last-child { margin-bottom: 0; }
+
+.tech-popover .marks { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+
+.tech-popover .mark {
+    padding: 0 var(--space-sm);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+}
+
+.tech-popover .mark.super { color: var(--gold); }
+.tech-popover .mark.damaged { color: var(--bad); }
+.tech-popover .mark.rolled { color: var(--text-faint); }
+
+
+/* ---------------------------------------------------------------- info button */
+
+.card-actions { justify-content: space-between; }
+
+button.info { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0 var(--space-md); }
+button.info .glyph { color: var(--tech); font-size: 14px; line-height: 1; }
+
+.item-table .col-actions { display: flex; gap: var(--space-xs); justify-content: flex-end; }
+.item-table .col-actions button.info { height: 26px; padding: 0 var(--space-sm); }

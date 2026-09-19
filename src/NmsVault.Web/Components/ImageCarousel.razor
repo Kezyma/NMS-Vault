@@ -1,0 +1,68 @@
+@*
+    The item's pictures, one at a time.
+
+    Sixteen by nine and fitted rather than filled, the same as the card, so a picture is the
+    same picture in both places. Nothing here crops.
+
+    With one picture there is nothing to page through, so the controls are not drawn at all -
+    an arrow that cannot do anything is worse than no arrow.
+*@
+
+<div class="carousel @(Images.Count > 1 ? null : "single")" @onkeydown="OnKey" tabindex="0"
+     aria-roledescription="carousel" aria-label="@($"Pictures of {Name}")">
+    <div class="frame">
+        <img src="@($"gallery/{Images[_at]}")" alt="@($"{Name}, picture {_at + 1} of {Images.Count}")" />
+    </div>
+
+    @if (Images.Count > 1)
+    {
+        <button type="button" class="step back" title="Previous picture" aria-label="Previous picture"
+                @onclick="() => Step(-1)">&#10094;</button>
+
+        <button type="button" class="step on" title="Next picture" aria-label="Next picture"
+                @onclick="() => Step(1)">&#10095;</button>
+
+        <div class="dots" role="tablist">
+            @for (int i = 0; i < Images.Count; i++)
+            {
+                var index = i;
+
+                <button type="button" class="dot @(index == _at ? "at" : null)" @key="index"
+                        role="tab" aria-selected="@(index == _at ? "true" : "false")"
+                        title="@($"Picture {index + 1}")" aria-label="@($"Picture {index + 1}")"
+                        @onclick="() => _at = index"></button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>The pictures, gallery-relative, best first. Never empty.</summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<string> Images { get; set; }
+
+    /// <summary>What is being shown, for the alternative text.</summary>
+    [Parameter, EditorRequired]
+    public required string Name { get; set; }
+
+    private int _at;
+
+    protected override void OnParametersSet()
+    {
+        // A different item can arrive in the same component instance, and its third picture
+        // may not exist.
+        if (_at >= Images.Count) { _at = 0; }
+    }
+
+    /// <summary>
+    /// Wraps at both ends. A gallery of three pictures is a ring, not a document with a first
+    /// page and a last one, and stopping at the end just makes the arrow look broken.
+    /// </summary>
+    private void Step(int by) => _at = (_at + by + Images.Count) % Images.Count;
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "ArrowLeft") { Step(-1); }
+        else if (e.Key == "ArrowRight") { Step(1); }
+    }
+}

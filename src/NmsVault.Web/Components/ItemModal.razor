@@ -1,0 +1,249 @@
+@inject ExportService Exports
+@inject TechData TechSource
+@inject IJSRuntime Js
+@implements IAsyncDisposable
+
+@*
+    One item, in full: its pictures, what it is, what it carries, and where to get it.
+
+    The card is built from the manifest, which holds only what a card and a filter need. This
+    is the first thing that wants the item document itself - the description, the grid, the
+    slot-by-slot contents - so the document is fetched when the modal opens and never before.
+    That is the whole reason the manifest stays small.
+*@
+
+<div class="vault-modal item-modal" @onclick="Close">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="@_titleId"
+         tabindex="-1" @ref="_sheet" @onkeydown="OnKey" @onclick:stopPropagation="true">
+
+        <header class="head">
+            <h2 id="@_titleId">
+                <ClassBadge Class="@Row.Class" />
+                <span class="name-text">@Row.DisplayName</span>
+            </h2>
+
+            <button type="button" class="shut" title="Close" aria-label="Close" @onclick="Close">&times;</button>
+        </header>
+
+        <p class="kind">
+            <span>@Row.Type</span>
+            @if (Row.IsModified)
+            {
+                <span class="badge warn" title="The model path did not match a known ship exactly">Modified</span>
+            }
+            @foreach (var seed in Row.Seeds)
+            {
+                <span class="seed"><span class="dim">@seed.Key</span> <code>@seed.Value</code></span>
+            }
+        </p>
+
+        @if (_images.Count > 0)
+        {
+            <ImageCarousel Images="_images" Name="@Row.DisplayName" />
+        }
+
+        @if (_item is null && _failed is null)
+        {
+            <p class="dim loading">Reading the item&hellip;</p>
+        }
+        else if (_failed is { } failed)
+        {
+            <p class="failed">@failed</p>
+        }
+
+        @if (Description is { Length: > 0 } description)
+        {
+            <div class="prose">
+                @foreach (string paragraph in description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    <p>@paragraph.Trim()</p>
+                }
+            </div>
+        }
+
+        @if (Row.Stats.Count > 0)
+        {
+            <dl class="modal-stats">
+                @foreach (var stat in Row.Stats)
+                {
+                    <div>
+                        <dt>@stat.Key</dt>
+                        <dd>@stat.Value.ToString("0.#")</dd>
+                    </div>
+                }
+            </dl>
+        }
+
+        @if (_inventories.Count > 0)
+        {
+            <section class="inventories">
+                @if (_inventories.Count > 1)
+                {
+                    <div class="tabs" role="tablist">
+                        @foreach (var inventory in _inventories)
+                        {
+                            <button type="button" role="tab" @key="inventory.Key"
+                                    class="@(inventory.Key == _tab ? "at" : null)"
+                                    aria-selected="@(inventory.Key == _tab ? "true" : "false")"
+                                    @onclick="() => _tab = inventory.Key">
+                                @inventory.Label
+                                <span class="count">@Installed(inventory)</span>
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <h3>@_inventories[0].Label</h3>
+                }
+
+                @foreach (var inventory in _inventories.Where(i => i.Key == _tab))
+                {
+                    <TechGridView Grid="inventory.Grid" Label="@inventory.Label" Tech="_tech" @key="inventory.Key" />
+                }
+
+                <p class="legend dim">
+                    <span class="key filled"></span> installed
+                    <span class="key empty"></span> empty
+                    <span class="key locked"></span> not owned
+                    <span class="key super"></span> supercharged
+                </p>
+            </section>
+        }
+
+        @if (Row.Tags.Count > 0)
+        {
+            <p class="card-tags">
+                @foreach (string tag in Row.Tags)
+                {
+                    <span class="chip">@tag</span>
+                }
+            </p>
+        }
+
+        <footer class="foot">
+            <p class="credit dim">
+                @if (Author is { Length: > 0 } author)
+                {
+                    <span>Contributed by @author</span>
+                }
+                @if (GameVersion is { Length: > 0 } version)
+                {
+                    <span>Captured in @version</span>
+                }
+            </p>
+
+            <DownloadMenu Row="Row" />
+        </footer>
+    </div>
+</div>
+
+@code {
+    /// <summary>The item to show, as the manifest has it.</summary>
+    [Parameter, EditorRequired]
+    public required GalleryRow Row { get; set; }
+
+    /// <summary>Raised when the modal should go away.</summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private readonly string _titleId = $"item-{Guid.NewGuid():N}";
+    private readonly CancellationTokenSource _leaving = new();
+
+    private ElementReference _sheet;
+    private IJSObjectReference? _module;
+    private VaultItem? _item;
+    private TechIndex _tech = TechIndex.Empty;
+    private IReadOnlyList<NamedInventory> _inventories = [];
+    private IReadOnlyList<string> _images = [];
+    private string? _failed;
+    private string _tab = "";
+    private string? _loadedFor;
+
+    /// <summary>
+    /// The full text, which lives in the document rather than the manifest. Falls back to the
+    /// card's one-liner while the document is on its way, so the space does not jump.
+    /// </summary>
+    private string? Description =>
+        _item?.Meta.Description is { Length: > 0 } full ? full : Row.Summary;
+
+    private string? Author => _item?.Meta.Author;
+
+    private string? GameVersion => _item?.Meta.GameVersion;
+
+    private static int Installed(NamedInventory inventory)
+        => inventory.Grid.Slots.Count(s => s.State == SlotState.Filled);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Guarded because a parameter change that is not a change of item - a parent redraw -
+        // must not refetch and blank the sheet.
+        if (_loadedFor == Row.Id) { return; }
+
+        _loadedFor = Row.Id;
+        _item = null;
+        _inventories = [];
+        _failed = null;
+        _tab = "";
+
+        // The card's picture is shown at once so the sheet has something in it immediately;
+        // the rest of the pictures are in the document.
+        _images = Row.Image is { } image ? [image] : [];
+
+        _tech = await TechSource.IndexAsync(_leaving.Token).ConfigureAwait(true);
+
+        try
+        {
+            _item = await Exports.ItemAsync(Row.Id, _leaving.Token).ConfigureAwait(true);
+        }
+        catch (HttpRequestException)
+        {
+            _failed = "That item could not be read. It may not have finished publishing.";
+            return;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (_item.Meta.Images.Count > 0) { _images = _item.Meta.Images; }
+
+        _inventories = ItemInventories.For(_item);
+        _tab = _inventories.Count > 0 ? _inventories[0].Key : "";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) { return; }
+
+        // Takes the keyboard so Escape reaches the sheet and Tab stays inside it.
+        await _sheet.FocusAsync().ConfigureAwait(true);
+
+        _module = await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+        await _module.InvokeVoidAsync("lockPageScroll", true).ConfigureAwait(true);
+    }
+
+    private Task OnKey(KeyboardEventArgs e) => e.Key == "Escape" ? Close() : Task.CompletedTask;
+
+    private Task Close() => OnClose.InvokeAsync();
+
+    /// <summary>Abandons a fetch still running, and gives the page back its scrollbar.</summary>
+    /// <returns>A task that completes once both are done.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        _leaving.Cancel();
+        _leaving.Dispose();
+
+        if (_module is null) { return; }
+
+        try
+        {
+            await _module.InvokeVoidAsync("lockPageScroll", false).ConfigureAwait(false);
+            await _module.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page went away first, and took its scrollbar with it.
+        }
+    }
+}

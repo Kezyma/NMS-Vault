@@ -136,3 +136,45 @@ export function closeMenusOnScroll() {
         }
     }, true);
 }
+
+/**
+ * Places a panel against one child of a container, by position rather than by selector.
+ *
+ * For the technology grid, whose cells are drawn in row-major order and have nothing to
+ * identify them individually. Asking the document for an nth-child would find whichever grid
+ * came first if two were ever on screen at once; the container makes that unambiguous.
+ */
+export function anchorPanelWithin(panel, container, index) {
+    const cell = container.children[index];
+
+    if (cell) {
+        anchorPanel(panel, cell);
+    }
+}
+
+/**
+ * Holds the page still while a dialog is open.
+ *
+ * Scrolling the list behind an open dialog looks like the dialog has lost its grip on the
+ * page, and on returning to it the reader is somewhere else than they left. The scrollbar is
+ * replaced by a padding of the same width, so the page does not jump sideways as it goes.
+ *
+ * Counted rather than toggled: a dialog can open over another one, and the first to close
+ * must not hand the page back while the second is still up.
+ */
+let locks = 0;
+
+export function lockPageScroll(on) {
+    locks = Math.max(0, locks + (on ? 1 : -1));
+
+    if (locks === 1 && on) {
+        const bar = window.innerWidth - document.documentElement.clientWidth;
+        document.body.dataset.scrollLockPad = document.body.style.paddingRight;
+        document.body.style.paddingRight = `${bar}px`;
+        document.body.style.overflow = 'hidden';
+    } else if (locks === 0) {
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = document.body.dataset.scrollLockPad || '';
+        delete document.body.dataset.scrollLockPad;
+    }
+}

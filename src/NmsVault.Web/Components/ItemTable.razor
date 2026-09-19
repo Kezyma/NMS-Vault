@@ -89,7 +89,15 @@
 
                     <td class="col-num">@(row.Tech.Count > 0 ? row.Tech.Count.ToString() : "")</td>
 
-                    <td class="col-actions"><DownloadMenu Row="row" /></td>
+                    <td class="col-actions">
+                        <button type="button" class="info" title="@($"More about {row.DisplayName}")"
+                                aria-label="@($"More about {row.DisplayName}")"
+                                @onclick="() => OnInfo.InvokeAsync(row)">
+                            <span class="glyph" aria-hidden="true">&#9432;</span>
+                        </button>
+
+                        <DownloadMenu Row="row" />
+                    </td>
                 </tr>
             }
         </tbody>
@@ -117,6 +125,10 @@
     /// <summary>Raised when a heading is pressed.</summary>
     [Parameter]
     public EventCallback<SortOption> SortChanged { get; set; }
+
+    /// <summary>Raised when the reader asks to see a whole item.</summary>
+    [Parameter]
+    public EventCallback<GalleryRow> OnInfo { get; set; }
 
     private IReadOnlyList<string> StatColumns =>
         Rows.Count == 0 ? [] : [.. Rows[0].Stats.Select(s => s.Key)];
