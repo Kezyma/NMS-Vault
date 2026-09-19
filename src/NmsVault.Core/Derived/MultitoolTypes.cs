@@ -12,11 +12,14 @@ namespace NmsVault.Core.Derived;
 /// have to be told apart by something else. There is no type field in the save.
 /// </para>
 /// <para>
-/// <b>The body comes from <c>IsLarge</c>:</b> a pistol is the small one, a rifle the large.
-/// NMSE instead runs a heuristic over the base stats, and that answers "Rifle" when every stat
-/// is zero - which is exactly the state of a freshly found tool, so every starter pistol came
-/// out a rifle. The stat ranges still earn their place distinguishing alien and pristine tools,
-/// which share a body with the ordinary ones, but only where there are stats to read.
+/// A shared-model tool is identified by <b>which stat range it rolled within</b> - see
+/// <see cref="MultitoolStatRanges"/>. Each type has fixed bounds per class, and they separate
+/// cleanly: pistols roll no damage, rifles roll no mining, and experimental tools scan far
+/// higher than either.
+/// </para>
+/// <para>
+/// The stats are the whole answer for a shared-model tool; nothing else is consulted. A tool
+/// whose stats match no range at all is reported as Unknown rather than guessed at.
 /// </para>
 /// <para>
 /// Names follow NomNom's own vocabulary, where Pistol and Rifle are distinct types and there is
@@ -48,7 +51,7 @@ public static class MultitoolTypes
     /// <summary>Every type detection can produce, for building a filter list.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
-        .. ByModel.Select(m => m.Type).Concat(["Pistol", "Rifle", "Alien", "Pristine"])
+        .. ByModel.Select(m => m.Type).Concat(MultitoolStatRanges.SharedModelTypes)
                   .Distinct().Order(StringComparer.Ordinal)
     ];
 
@@ -70,50 +73,25 @@ public static class MultitoolTypes
                         StringComparison.OrdinalIgnoreCase))
                     return type;
 
-            return filename.Length == 0 ? "Unknown" : Body(multitool);
+            return "Unknown";
         }
 
         return FromSharedModel(multitool);
     }
 
     /// <summary>
-    /// The body a shared-model tool has. <c>IsLarge</c> is the only thing in the file that
-    /// says, and it is present whether or not the tool has any stats yet.
-    /// </summary>
-    private static string Body(JsonObject multitool)
-        => multitool.Get("IsLarge") is true ? "Rifle" : "Pistol";
-
-    /// <summary>
-    /// Tells apart the tools that share the standard model. The body is decided by
-    /// <c>IsLarge</c>; the stat ranges, which come from NMSE, only distinguish the alien and
-    /// pristine variants, and only where there are stats to read.
+    /// Tells apart the tools that share the standard model, by the stat range they rolled
+    /// within - which is the only thing in the file that distinguishes them.
     /// </summary>
     private static string FromSharedModel(JsonObject multitool)
     {
-        string body = Body(multitool);
-
         var store = multitool.GetObject("Store");
-        string? cls = store?.GetObject("Class")?.GetString("InventoryClass");
 
-        // C=0, B=1, A=2, S=3 - NMSE's own ordering, lowest to highest.
-        int classIndex = cls switch { "C" => 0, "B" => 1, "A" => 2, "S" => 3, _ => -1 };
-
-        double damage = ItemStats.Read(store, "^WEAPON_DAMAGE");
-        double mining = ItemStats.Read(store, "^WEAPON_MINING");
-        double scan = ItemStats.Read(store, "^WEAPON_SCAN");
-
-        // A tool that has not been upgraded yet has nothing to distinguish it beyond its body,
-        // and guessing past that is how the starter pistols became rifles.
-        if (classIndex < 0 || (damage == 0.0 && mining == 0.0 && scan == 0.0)) return body;
-
-        if (mining > 0.0)
-            return classIndex <= 1
-                ? scan < 40.0 ? "Alien" : "Pristine"
-                : scan >= 80.0 ? "Pristine" : "Alien";
-
-        // Damage and scan but no mining at all: NMSE reads a C-class scan above 5 as alien.
-        if (classIndex == 0 && damage > 0.0 && scan > 5.0) return "Alien";
-
-        return body;
+        return MultitoolStatRanges.Match(
+                store?.GetObject("Class")?.GetString("InventoryClass"),
+                ItemStats.Read(store, "^WEAPON_DAMAGE"),
+                ItemStats.Read(store, "^WEAPON_MINING"),
+                ItemStats.Read(store, "^WEAPON_SCAN"))
+            ?? "Unknown";
     }
 }

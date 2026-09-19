@@ -244,16 +244,26 @@ public class AdapterTests
     }
 
     [Fact]
-    public void StarterMultitoolsArePistolsNotRifles()
+    public void UnrolledToolsLandInRifleC()
     {
-        // The body comes from IsLarge. A stat heuristic answers "Rifle" for a tool whose stats
-        // are all zero, which is the state of every freshly found one.
+        // Both shared-model fixtures are scripted tools with every stat written as an explicit
+        // 0.0 - not absent, actually zero. That is inside Rifle C (damage 0-5, mining 0, scan
+        // 0-5) and inside nothing else, so the table answers Rifle for them.
+        //
+        // This is a property of the table rather than of these two files: any C-class tool that
+        // has rolled nothing reads as a rifle, because zero is a legal rifle roll and is not a
+        // legal pistol one. Pinned here so the consequence stays visible.
         foreach (var name in (string[])["[START] Waveform Focuser N56-P.nmstool",
                                         "[EXP-23-S] Iselovke-risho v0.27.nmstool"])
         {
             var tool = LoadTool(name);
-            Assert.Equal("Pistol", MultitoolTypes.FromMultitool(tool.Payload));
-            Assert.Equal("Pistol", Parse(new NomNomExportAdapter(Mapper).Export(tool))
+
+            Assert.Equal(0.0, ItemStats.Read(tool.Payload.GetObject("Store"), "^WEAPON_DAMAGE"));
+            Assert.Equal(0.0, ItemStats.Read(tool.Payload.GetObject("Store"), "^WEAPON_MINING"));
+            Assert.Equal(0.0, ItemStats.Read(tool.Payload.GetObject("Store"), "^WEAPON_SCAN"));
+
+            Assert.Equal("Rifle", MultitoolTypes.FromMultitool(tool.Payload));
+            Assert.Equal("Rifle", Parse(new NomNomExportAdapter(Mapper).Export(tool))
                 .GetObject("Data")!.GetString("Type"));
         }
     }

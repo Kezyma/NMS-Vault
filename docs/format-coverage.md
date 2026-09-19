@@ -96,8 +96,9 @@ parallel arrays elsewhere in the save. Anything that copies the whole object get
 That is exactly why multitool export never suffered the bug ship export did.
 
 **Type** is not a game field — no fixture has one. It is editor metadata (Pistol / Rifle /
-Staff / Alien), derivable from `Resource.Filename` and `IsLarge`, so it is marked 🔄 for
-NMSE rather than ❌. libNOM reads goatfungus's `Type` as `null` and drops it on write, so a
+Staff / Alien), derivable from `Resource.Filename` and, for the four types that share
+`MULTITOOL.SCENE.MBIN`, from which per-class stat range the tool rolled within. So it is
+marked 🔄 for NMSE rather than ❌. libNOM reads goatfungus's `Type` as `null` and drops it on write, so a
 goatfungus round trip loses it even where the source had it.
 
 ---
@@ -267,7 +268,12 @@ counter is what turns that from a silent corruption into a failing test.
    JSONPath (`CharacterCustomisationData[i].CustomData.Colours`, terminating at `.Colours`),
    but not from a real file.
 3. **Multitool `Type` vocabulary** — NMS-Vault derives Staff / Alien / Royal / Rifle /
-   Pistol from the model path and `IsLarge`. The exact strings NomNom expects are unconfirmed.
-4. **No corvette fixture**, so the `Base` rows are exercised only by a synthesised object.
-5. **`BinaryData` in payloads.** No fixture contains any. If some entity type does carry
+   Pistol from the model path and the stat ranges. The exact strings NomNom expects are
+   unconfirmed, and the two vocabularies are known to differ: what the gallery calls
+   Experimental and Voltaic Staff, NomNom calls `Pristine` and `StaffAtlas`.
+4. **Unrolled tools read as Rifle C.** A tool with every stat at zero falls inside Rifle C
+   and outside every other C range, so scripted tools — the one from a crashed ship, an
+   expedition's starter — are typed as rifles. The stats carry no other signal to go on.
+5. **No corvette fixture**, so the `Base` rows are exercised only by a synthesised object.
+6. **`BinaryData` in payloads.** No fixture contains any. If some entity type does carry
    binary fields, every adapter needs to prove it survives.

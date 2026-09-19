@@ -170,7 +170,9 @@ public sealed class NomNomExportAdapter : IExportAdapter
             "Pistol" => "Pistol",
             "Rifle" => "Rifle",
             "Switch" => "RifleSwitch",
-            "Pristine" => "Pristine",
+            // NomNom's enum has no Experimental; Pristine is the value it uses for the
+            // high-scanning shared-model tool.
+            "Experimental" => "Pristine",
             "Alien" => "Alien",
             "Royal" => "Royal",
             "Sentinel" or "Sentinel B" => "Robot",
