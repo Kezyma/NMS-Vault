@@ -1,13 +1,20 @@
 namespace NmsVault.Web.Services;
 
 /// <summary>One value a filter heading can offer, and the count of rows holding it.</summary>
-/// <param name="Key">The value as it is matched, e.g. "Hauler".</param>
-/// <param name="Label">How it reads to someone, usually the same.</param>
-public readonly record struct FacetValue(string Key, string Label)
+/// <param name="Key">The value as it is matched, e.g. "Hauler" or "^HYPERDRIVE".</param>
+/// <param name="Label">
+/// How it reads to someone. For most headings this is the key; for technology it is the game's
+/// name for it, because "^UP_PULSE4" is not something anyone is looking for.
+/// </param>
+/// <param name="Icon">
+/// A gallery-relative image for this value, where the game has one. Half of these lists are
+/// things a player knows by their picture before they know them by name.
+/// </param>
+public readonly record struct FacetValue(string Key, string Label, string? Icon = null)
 {
-    /// <summary>A value whose key and label are the same.</summary>
+    /// <summary>A value whose key and label are the same, with no icon.</summary>
     /// <param name="key">The value.</param>
-    public FacetValue(string key) : this(key, key) { }
+    public FacetValue(string key) : this(key, key, null) { }
 }
 
 /// <summary>

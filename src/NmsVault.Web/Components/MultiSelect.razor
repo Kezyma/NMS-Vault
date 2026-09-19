@@ -35,6 +35,7 @@
                             title="@($"Stop asking for {value.Label}")"
                             aria-label="@($"Stop asking for {value.Label}")"
                             @onclick="() => Toggle(value.Key)" @onclick:stopPropagation="true">
+                        @Mark(value)
                         <span>@value.Label</span>
                         <span class="drop" aria-hidden="true">&times;</span>
                     </button>
@@ -81,6 +82,7 @@
                                 @onmousedown:preventDefault="true"
                                 @onclick="() => Toggle(value.Key)">
                             <span class="tick" aria-hidden="true">@(held ? "✓" : "")</span>
+                            @Mark(value)
                             <span class="name">@value.Label</span>
                             <span class="count">@count</span>
                         </button>
@@ -92,6 +94,18 @@
 </div>
 
 @code {
+    /// <summary>
+    /// The game's own picture beside an option, where the thing has one. Drawn in both places an
+    /// option appears - the panel of everything, and the chips saying what was picked out of it -
+    /// which is why it is here rather than written twice.
+    /// </summary>
+    private RenderFragment Mark(FacetValue value) => @<text>
+        @if (value.Icon is { Length: > 0 } icon)
+        {
+            <img class="mark" src="@icon" alt="" loading="lazy" />
+        }
+    </text>;
+
     /// <summary>
     /// Above this many options the panel offers a way to search them. Low, because the box is only
     /// worth leaving out where scrolling is plainly faster than typing - four classes, three types.

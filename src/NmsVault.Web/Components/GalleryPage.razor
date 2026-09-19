@@ -1,4 +1,5 @@
 @inject GalleryData Data
+@inject TechData Tech
 
 @*
     One room of the gallery: a filter bar, then the items as cards or as a table.
@@ -100,7 +101,11 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        _facets = GalleryFacets.For(Page);
+        // Loaded before the headings are built, so the technology heading can name what it
+        // offers rather than listing raw ids.
+        var tech = await Tech.IndexAsync().ConfigureAwait(true);
+
+        _facets = GalleryFacets.For(Page, tech);
         _sorts = GalleryFacets.SortsFor(Page);
         _sort = _sorts[0];
         _sifter = new Sifter<GalleryRow>(_facets, r => r.SearchText);

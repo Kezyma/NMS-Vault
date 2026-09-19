@@ -155,20 +155,36 @@ public sealed class NomNomExportAdapter : IExportAdapter
     }
 
     /// <summary>
-    /// Derives a multitool type label. The exact vocabulary NomNom expects is unconfirmed —
-    /// these are the names the game uses for the four multitool bodies.
+    /// The multitool type NomNom records. Not a game field - no export carries one - so it is
+    /// derived, and then translated into NomNom's own vocabulary.
     /// </summary>
+    /// <remarks>
+    /// The derivation is shared with the gallery so the two cannot disagree about what a tool
+    /// is, but the words are not: NomNom's enum draws distinctions the gallery spells
+    /// differently - what is shown as "Voltaic Staff" is <c>StaffAtlas</c> there - and writing
+    /// the display name into the file would produce a value it cannot read back.
+    /// </remarks>
     internal static string MultitoolType(JsonObject multitool)
-    {
-        string filename = multitool.GetObject("Resource")?.GetString("Filename") ?? "";
-
-        if (filename.Contains("STAFF", StringComparison.OrdinalIgnoreCase)) return "Staff";
-        if (filename.Contains("ALIEN", StringComparison.OrdinalIgnoreCase)) return "Alien";
-        if (filename.Contains("ROBOT", StringComparison.OrdinalIgnoreCase)) return "Royal";
-
-        // IsLarge distinguishes a rifle from a pistol on the standard body.
-        return multitool.Get("IsLarge") is true ? "Rifle" : "Pistol";
-    }
+        => Derived.MultitoolTypes.FromMultitool(multitool) switch
+        {
+            "Pistol" => "Pistol",
+            "Rifle" => "Rifle",
+            "Switch" => "RifleSwitch",
+            "Pristine" => "Pristine",
+            "Alien" => "Alien",
+            "Royal" => "Royal",
+            "Sentinel" or "Sentinel B" => "Robot",
+            "Atlantid" => "Atlas",
+            "Staff" or "Staff NPC" => "Staff",
+            "Voltaic Staff" => "StaffAtlas",
+            "Staff Ruin" => "StaffRuin",
+            "Staff Bone" => "StaffBone",
+            // Bodies NomNom has no value for. NMSE files these under the family they behave
+            // as, which is the nearest honest answer available.
+            "Direwasp Disintegrator" => "Rifle",
+            "Starbound" => "Pistol",
+            _ => "Unknown",
+        };
 
     private static JsonObject WrapAccessories(JsonArray slots, JsonNameMapper mapper)
     {

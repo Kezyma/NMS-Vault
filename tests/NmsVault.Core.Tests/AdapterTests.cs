@@ -1,6 +1,7 @@
 using System.Text;
 using NmsVault.Core;
 using NmsVault.Core.Adapters;
+using NmsVault.Core.Derived;
 using NmsVault.Json;
 
 namespace NmsVault.Core.Tests;
@@ -231,14 +232,30 @@ public class AdapterTests
     }
 
     [Fact]
-    public void NomNom_DerivesMultitoolType()
+    public void NomNom_DerivesMultitoolTypeInItsOwnVocabulary()
     {
-        // No NMSE fixture carries a Type field, so it has to be derived. Atlas Sceptre is
-        // a staff (STAFFMULTITOOLATLAS).
+        // No NMSE fixture carries a Type field, so it is derived - and then translated, because
+        // NomNom's enum spells things differently. Atlas Sceptre uses STAFFMULTITOOLATLAS,
+        // which the gallery shows as "Voltaic Staff" and NomNom calls StaffAtlas.
         var root = Parse(new NomNomExportAdapter(Mapper)
             .Export(LoadTool("[EXP-12-R] Atlas Sceptre.nmstool")));
 
-        Assert.Equal("Staff", root.GetObject("Data")!.GetString("Type"));
+        Assert.Equal("StaffAtlas", root.GetObject("Data")!.GetString("Type"));
+    }
+
+    [Fact]
+    public void StarterMultitoolsArePistolsNotRifles()
+    {
+        // The body comes from IsLarge. A stat heuristic answers "Rifle" for a tool whose stats
+        // are all zero, which is the state of every freshly found one.
+        foreach (var name in (string[])["[START] Waveform Focuser N56-P.nmstool",
+                                        "[EXP-23-S] Iselovke-risho v0.27.nmstool"])
+        {
+            var tool = LoadTool(name);
+            Assert.Equal("Pistol", MultitoolTypes.FromMultitool(tool.Payload));
+            Assert.Equal("Pistol", Parse(new NomNomExportAdapter(Mapper).Export(tool))
+                .GetObject("Data")!.GetString("Type"));
+        }
     }
 
     [Fact]

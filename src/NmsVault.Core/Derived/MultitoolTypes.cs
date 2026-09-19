@@ -7,13 +7,20 @@ namespace NmsVault.Core.Derived;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Ported from NMSE's <c>MultitoolLogic</c>. Most types are decided by the model file alone,
-/// but <b>five share one model</b> - Standard, Rifle, Alien, Pristine and Experimental all use
-/// <c>MULTITOOL.SCENE.MBIN</c> - so those are separated by a heuristic over the tool's base
-/// stats and class. There is nothing in the file that says which one it is.
+/// Most types are decided by the model file alone, but several share
+/// <c>MULTITOOL.SCENE.MBIN</c> - pistols, rifles, alien and pristine tools all use it - so those
+/// have to be told apart by something else. There is no type field in the save.
 /// </para>
 /// <para>
-/// Experimental is never produced by detection; NMSE offers it in its UI only.
+/// <b>The body comes from <c>IsLarge</c>:</b> a pistol is the small one, a rifle the large.
+/// NMSE instead runs a heuristic over the base stats, and that answers "Rifle" when every stat
+/// is zero - which is exactly the state of a freshly found tool, so every starter pistol came
+/// out a rifle. The stat ranges still earn their place distinguishing alien and pristine tools,
+/// which share a body with the ordinary ones, but only where there are stats to read.
+/// </para>
+/// <para>
+/// Names follow NomNom's own vocabulary, where Pistol and Rifle are distinct types and there is
+/// no "Standard".
 /// </para>
 /// </remarks>
 public static class MultitoolTypes
@@ -41,7 +48,7 @@ public static class MultitoolTypes
     /// <summary>Every type detection can produce, for building a filter list.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
-        .. ByModel.Select(m => m.Type).Concat(["Standard", "Rifle", "Alien", "Pristine"])
+        .. ByModel.Select(m => m.Type).Concat(["Pistol", "Rifle", "Alien", "Pristine"])
                   .Distinct().Order(StringComparer.Ordinal)
     ];
 
@@ -63,42 +70,50 @@ public static class MultitoolTypes
                         StringComparison.OrdinalIgnoreCase))
                     return type;
 
-            return filename.Length == 0 ? "Unknown" : "Standard";
+            return filename.Length == 0 ? "Unknown" : Body(multitool);
         }
 
-        return FromSharedModelStats(multitool);
+        return FromSharedModel(multitool);
     }
 
     /// <summary>
-    /// Separates the five types that share a model, using the stat and class ranges NMSE
-    /// documents. Ported from <c>MultitoolLogic.cs:186-231</c>.
+    /// The body a shared-model tool has. <c>IsLarge</c> is the only thing in the file that
+    /// says, and it is present whether or not the tool has any stats yet.
     /// </summary>
-    private static string FromSharedModelStats(JsonObject multitool)
+    private static string Body(JsonObject multitool)
+        => multitool.Get("IsLarge") is true ? "Rifle" : "Pistol";
+
+    /// <summary>
+    /// Tells apart the tools that share the standard model. The body is decided by
+    /// <c>IsLarge</c>; the stat ranges, which come from NMSE, only distinguish the alien and
+    /// pristine variants, and only where there are stats to read.
+    /// </summary>
+    private static string FromSharedModel(JsonObject multitool)
     {
+        string body = Body(multitool);
+
         var store = multitool.GetObject("Store");
         string? cls = store?.GetObject("Class")?.GetString("InventoryClass");
 
-        // C=0, B=1, A=2, S=3. NMSE's own ordering, lowest to highest.
+        // C=0, B=1, A=2, S=3 - NMSE's own ordering, lowest to highest.
         int classIndex = cls switch { "C" => 0, "B" => 1, "A" => 2, "S" => 3, _ => -1 };
-        if (classIndex < 0) return "Standard";
 
         double damage = ItemStats.Read(store, "^WEAPON_DAMAGE");
         double mining = ItemStats.Read(store, "^WEAPON_MINING");
         double scan = ItemStats.Read(store, "^WEAPON_SCAN");
 
-        if (damage == 0.0)
-        {
-            if (classIndex != 0) return "Standard";
-            if (mining == 0.0) return "Rifle";
-            return scan > 20.0 ? "Pristine" : "Standard";
-        }
+        // A tool that has not been upgraded yet has nothing to distinguish it beyond its body,
+        // and guessing past that is how the starter pistols became rifles.
+        if (classIndex < 0 || (damage == 0.0 && mining == 0.0 && scan == 0.0)) return body;
 
-        if (mining == 0.0)
-            return classIndex == 0 && scan > 5.0 ? "Alien" : "Rifle";
+        if (mining > 0.0)
+            return classIndex <= 1
+                ? scan < 40.0 ? "Alien" : "Pristine"
+                : scan >= 80.0 ? "Pristine" : "Alien";
 
-        if (classIndex <= 1)
-            return scan < 40.0 ? "Alien" : "Pristine";
+        // Damage and scan but no mining at all: NMSE reads a C-class scan above 5 as alien.
+        if (classIndex == 0 && damage > 0.0 && scan > 5.0) return "Alien";
 
-        return scan >= 80.0 ? "Pristine" : "Alien";
+        return body;
     }
 }

@@ -1,4 +1,5 @@
 using NmsVault.Core;
+using NmsVault.Core.Derived;
 
 namespace NmsVault.Web.Services;
 
@@ -26,8 +27,13 @@ public static class GalleryFacets
 {
     /// <summary>The headings a page offers.</summary>
     /// <param name="page">Which page.</param>
+    /// <param name="tech">
+    /// The technology lookup, used to give the technology heading real names and icons. Pass
+    /// <see cref="TechIndex.Empty"/> where it has not loaded; the heading then shows raw ids,
+    /// which is worse but not broken.
+    /// </param>
     /// <returns>Its headings, in the order they should appear.</returns>
-    public static IReadOnlyList<Facet<GalleryRow>> For(string page)
+    public static IReadOnlyList<Facet<GalleryRow>> For(string page, TechIndex? tech = null)
     {
         var common = new List<Facet<GalleryRow>>
         {
@@ -37,13 +43,32 @@ public static class GalleryFacets
 
         if (page is "Shipyard" or "Armoury")
         {
-            // Class reads S, A, B, C rather than alphabetically: it is a ranking, and the
-            // order people expect is best first.
-            common.Insert(1, Facet<GalleryRow>.One("class", "Class", r => r.Class));
-            common.Add(Facet<GalleryRow>.Many("tech", "Technology installed", r => r.Tech));
+            // The class heading wears the game's own marks, which is how anyone reads a class.
+            common.Insert(1, Facet<GalleryRow>.Labelled("class", "Class", r =>
+                r.Class is { Length: > 0 } cls
+                    ? [new FacetValue(cls, cls, $"gallery/img/class/{cls.ToLowerInvariant()}.webp")]
+                    : []));
+
+            common.Add(Facet<GalleryRow>.Labelled("tech", "Technology installed",
+                r => r.Tech.Select(id => Technology(id, tech))));
         }
 
         return common;
+    }
+
+    /// <summary>
+    /// One installed technology as something a reader can recognise. "^UP_PULSE4" is not a
+    /// thing anyone is looking for; "Instability Drive" with its own icon is.
+    /// </summary>
+    private static FacetValue Technology(string id, TechIndex? tech)
+    {
+        var entry = tech?.Find(id);
+        if (entry is null) return new FacetValue(id);
+
+        return new FacetValue(
+            id,
+            entry.Name,
+            entry.Icon is { Length: > 0 } icon ? $"gallery/img/tech/{icon}" : null);
     }
 
     /// <summary>The sort orders a page offers, best default first.</summary>

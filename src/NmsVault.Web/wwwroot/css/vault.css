@@ -639,3 +639,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     clip: rect(0 0 0 0);
     white-space: nowrap;
 }
+
+.vault-combo.vault-multi .mark { width: 18px; height: 18px; flex: none; object-fit: contain; }
+.pick .mark { width: 16px; height: 16px; }
+/* Nothing in front of a chip with no picture, or the name sits off its own left edge. */
+.pick:not(:has(.mark)) { padding-left: var(--space-sm); }
