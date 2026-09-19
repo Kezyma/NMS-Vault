@@ -77,6 +77,25 @@ dotnet test
 
 > **Requires:** [.NET 10 SDK][dotnet]
 
+### Running the gallery
+
+```bash
+dotnet run --project src/NmsVault.Web
+```
+
+Then <http://localhost:5210>.
+
+> **Restart it after a build.** `dotnet build` and `dotnet test` both rebuild the web project,
+> and a running server keeps serving the manifest it started with - which names WebAssembly
+> files by a content hash the rebuild has just changed. The page then fails to start with
+> *"Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of"*,
+> because the file the manifest asks for is no longer there. Stopping and starting the server
+> fixes it; if it persists, the build output itself is half-replaced:
+>
+> ```bash
+> rm -rf Build/bin/NmsVault.Web Build/obj/NmsVault.Web && dotnet build src/NmsVault.Web
+> ```
+
 ---
 
 ## Licence
