@@ -11,6 +11,9 @@ namespace NmsVault.Core;
 /// </remarks>
 public static class Slug
 {
+    /// <summary>Folds a display name into a slug.</summary>
+    /// <param name="name">The display name.</param>
+    /// <returns>A URL-safe slug, or "item" when nothing usable survives folding.</returns>
     public static string From(string name)
     {
         var sb = new System.Text.StringBuilder(name.Length);

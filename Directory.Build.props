@@ -8,7 +8,19 @@
 
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!--
+      On together with TreatWarningsAsErrors, so CS1591 turns an undocumented public member
+      into a build failure. This is the cheapest way to keep a library legible: the only way
+      to add public API is to say what it is for.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <!-- No culture-sensitive formatting anywhere; this also drops the ICU payload in WASM. -->
     <InvariantGlobalization>true</InvariantGlobalization>

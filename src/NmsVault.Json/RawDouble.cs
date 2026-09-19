@@ -1,7 +1,7 @@
 // Ported from NMSE (No Man's Save Editor) — https://github.com/vectorcmdr/NMSE
 // Original: Models/RawDouble.cs
 // Copyright (C) the NMSE authors. Licensed under the GNU Affero General Public License v3.
-// Modified 2026-09-18 for NMS-Vault: namespace changed
+// Modified 2026-09-18 for NMS-Vault: added the XML docs the build now requires; namespace changed
 // This file has been changed from the original.
 
 namespace NmsVault.Json;
@@ -25,6 +25,9 @@ public readonly struct RawDouble
     /// <summary>The original JSON text (e.g., "0.30000001192092898").</summary>
     public readonly string Text;
 
+    /// <summary>Pairs a parsed value with the text it was parsed from.</summary>
+    /// <param name="value">The numeric value.</param>
+    /// <param name="text">The original JSON text, preserved verbatim for round-tripping.</param>
     public RawDouble(double value, string text)
     {
         Value = value;
@@ -34,5 +37,7 @@ public readonly struct RawDouble
     /// <summary>Implicit conversion to <see cref="double"/> for arithmetic and comparisons.</summary>
     public static implicit operator double(RawDouble rd) => rd.Value;
 
+    /// <summary>Returns the original JSON text, not a reformatted number.</summary>
+    /// <returns>The verbatim source text.</returns>
     public override string ToString() => Text;
 }

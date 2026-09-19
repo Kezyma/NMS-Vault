@@ -1,0 +1,15 @@
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!--
+      Test methods are named as the assertion they make and carry no summary, so CS1591 is
+      noise here - it would demand a doc comment restating the method name. The rule stays
+      on for src/, where public API genuinely needs explaining.
+    -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>
