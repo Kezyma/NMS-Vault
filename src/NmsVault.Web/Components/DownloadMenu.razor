@@ -24,11 +24,16 @@
             aria-label="Download this in a save editor's format" @ref="_control"
             @onclick="Flip" @onclick:stopPropagation="true">
         <span class="glyph" aria-hidden="true">&#8681;</span>
+        @*
+            The label and the arrow are the same thing said twice over: both are there to say
+            this opens a list, and neither is worth the width beside a title. The icon alone
+            is the control.
+        *@
         @if (!Compact)
         {
             <span class="label">Download</span>
+            <span class="drop" aria-hidden="true">&#9662;</span>
         }
-        <span class="drop" aria-hidden="true">&#9662;</span>
     </button>
 
     @if (_open)

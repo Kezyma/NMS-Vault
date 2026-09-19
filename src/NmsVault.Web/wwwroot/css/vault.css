@@ -739,7 +739,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     padding: 0 var(--space-md);
 }
 
-.vault-download > .toggle.icon { gap: var(--space-2xs); padding: 0 var(--space-xs); }
+.vault-download > .toggle.icon .glyph { color: var(--accent); }
+.vault-download.open > .toggle.icon { background: none; border-color: transparent; opacity: 1; }
 
 .vault-download > .toggle .glyph { color: var(--accent); font-size: 14px; line-height: 1; }
 .vault-download > .toggle .drop { color: var(--text-faint); font-size: 10px; }
@@ -1120,23 +1121,31 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 /* ---------------------------------------------------------------- info button */
 
 /*
-   Square, and no wider than the glyph in it. These sit beside a title and in a table row -
-   both places where the word would be the widest thing there and the column has no room for
-   it. The name a screen reader announces is on the button either way.
+   The mark on its own: no box, no border, no fill. These sit beside a title and in a table
+   row, and a pair of outlined buttons there reads as chrome competing with the name rather
+   than as two things to press.
+
+   The hit area stays a comfortable square even though nothing is drawn around it, because
+   what a finger has to land on is not the same as what the eye has to see.
 */
 button.icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-2xs);
-    width: auto;
-    min-width: 28px;
-    height: 28px;
-    padding: 0 var(--space-xs);
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
     line-height: 1;
+    opacity: 0.8;
 }
 
-button.info .glyph { color: var(--tech); font-size: 15px; line-height: 1; }
+button.icon:hover:not(:disabled) { background: none; border-color: transparent; opacity: 1; }
+button.icon .glyph { font-size: 20px; line-height: 1; }
+
+button.info .glyph { color: var(--tech); }
 
 /*
    Pinned to the right edge. With the slot counts added the table is wider than most windows,
@@ -1152,4 +1161,4 @@ button.info .glyph { color: var(--tech); font-size: 15px; line-height: 1; }
 
 .item-table thead .col-actions { background: var(--bg-raised); }
 .item-table tbody tr:hover .col-actions { background: var(--bg-hover); }
-.item-table .col-actions button.icon { height: 26px; }
+
