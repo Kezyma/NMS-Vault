@@ -32,7 +32,17 @@
         <span class="dismiss">&times;</span>
     </div>
 
-    <script src="_framework/blazor.webassembly.js"></script>
+    <!--
+        The marker in the name below is a placeholder the SDK replaces with a content hash.
+        Publish renames this script to include one, so without somewhere to put it the page
+        goes on asking for a name the file no longer has - which 404s, leaving the loading
+        message above as the entire site. A plain build replaces it with nothing.
+
+        Do not write that marker anywhere else on this page, comments included. The SDK
+        rewrites the first place it appears and leaves the rest alone, so a second mention
+        takes the substitution and the script tag keeps the placeholder.
+    -->
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 
 </html>

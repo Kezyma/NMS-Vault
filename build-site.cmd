@@ -70,6 +70,23 @@ if errorlevel 1 (
     goto :failed
 )
 
+rem  The script index.html asks for has to be the one that was published. Publish renames it to
+rem  carry a content hash and the page names it through a placeholder the SDK fills in, so the
+rem  two can disagree - and when they do, every page loads its shell and never starts.
+rem
+rem  Done in PowerShell because reading a name out of a line and testing a path is a regular
+rem  expression and an if, and in batch it is neither.
+powershell -NoProfile -Command ^
+  "$root = Join-Path $env:PAGES 'wwwroot';" ^
+  "$asked = (Select-String -Path (Join-Path $root 'index.html') -Pattern '_framework/blazor\.webassembly[^\"]*\.js' -AllMatches).Matches.Value | Select-Object -First 1;" ^
+  "if (-not $asked) { Write-Host 'FAILED: index.html names no Blazor script at all.'; exit 1 };" ^
+  "if (-not (Test-Path (Join-Path $root $asked))) {" ^
+  "  Write-Host \"FAILED: index.html asks for '$asked', which was not published. The page would never start.\";" ^
+  "  Get-ChildItem (Join-Path $root '_framework') -Filter 'blazor.webassembly*' | Select-Object -ExpandProperty Name;" ^
+  "  exit 1 };" ^
+  "Write-Host \"index.html asks for $asked, which is there.\""
+if errorlevel 1 goto :failed
+
 rem  A generated gallery that generated nothing is a build that quietly did nothing.
 if not exist "%PAGES%\wwwroot\gallery\index.json" (
     echo.

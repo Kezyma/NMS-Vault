@@ -89,7 +89,7 @@
     <PagesBase Condition="'$(PagesBase)' == ''">/NMS-Vault/</PagesBase>
   </PropertyGroup>
 
-  <Target Name="PrepareForPages" AfterTargets="Publish">
+  <Target Name="PrepareForPages" AfterTargets="Publish" Condition="'$(PreparePages)' != 'false'">
     <PropertyGroup>
       <PagesRoot>$(PublishDir)wwwroot\</PagesRoot>
       <PagesIndex>$([System.IO.File]::ReadAllText('$(PagesRoot)index.html'))</PagesIndex>

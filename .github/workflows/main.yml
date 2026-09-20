@@ -56,21 +56,30 @@ jobs:
       # page loads without it and sits on "Loading the vault..." forever, because the script
       # that would replace it 404s. Everything else can be present and correct and the site
       # still be nothing but its loading screen, which is how this got deployed once already.
-      - name: Check the application was published
+      # The script index.html asks for has to be the script that was published. Publish renames
+      # it to carry a content hash, and the page names it through a placeholder the SDK fills
+      # in - so the two can disagree, and when they do every page loads its shell, sits on
+      # "Loading the vault..." and never starts. Checked by following what the page actually
+      # asks for rather than by looking for a fixed name, because the name is not fixed.
+      - name: Check the page asks for a script that exists
         run: |
-          if [ ! -f artifacts/pages/wwwroot/_framework/blazor.webassembly.js ]; then
-            echo "::error::No _framework/blazor.webassembly.js in the published site; the page would never start."
-            echo "Published tree:"
-            find artifacts/pages -maxdepth 3 | sort | head -60
+          root=artifacts/pages/wwwroot
+          asked=$(grep -o '_framework/blazor\.webassembly[^"]*\.js' "$root/index.html" | head -1)
+
+          if [ -z "$asked" ]; then
+            echo "::error::index.html names no Blazor script at all."
             exit 1
           fi
 
-          echo "_framework holds $(find artifacts/pages/wwwroot/_framework -type f | wc -l) file(s), $(du -sh artifacts/pages/wwwroot/_framework | cut -f1)."
+          if [ ! -f "$root/$asked" ]; then
+            echo "::error::index.html asks for '$asked', which was not published. The page would never start."
+            echo "What _framework actually holds:"
+            ls "$root/_framework" | grep -E '^blazor\.webassembly' || echo "  no blazor.webassembly script at all"
+            exit 1
+          fi
 
-      - name: Show what is about to be uploaded
-        run: |
-          echo "Total: $(find artifacts/pages/wwwroot -type f | wc -l) file(s), $(du -sh artifacts/pages/wwwroot | cut -f1)."
-          find artifacts/pages/wwwroot -maxdepth 1 | sort
+          echo "index.html asks for $asked, which is there."
+          echo "Publishing $(find "$root" -type f | wc -l) file(s), $(du -sh "$root" | cut -f1)."
 
       # Without this, Pages runs the output through Jekyll, which drops every folder whose name
       # begins with an underscore - _framework among them, which is the whole application. The
