@@ -94,7 +94,7 @@
        Titillium Web is not the game's typeface - that one ships with the game and is not ours
        to use - but it is the nearest thing with an open licence: the same humanist sans with
        squared-off terminals, and it tracks well in uppercase, which this interface asks of it
-       constantly.
+       constantly. Served from this site; see css/fonts.css.
     */
     --font: "Titillium Web", "Segoe UI", system-ui, -apple-system, sans-serif;
     --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;

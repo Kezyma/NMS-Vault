@@ -9,15 +9,14 @@
     <!-- The game's own S-class badge, which is the mark the gallery is about. -->
     <link rel="icon" type="image/webp" href="gallery/img/class/s.webp" />
     <!--
-        The nearest open-licensed match for the game's own UI face: a humanist sans with
-        squared terminals that holds up in tracked uppercase, which this interface leans on.
-        Preconnected because it is a render-blocking stylesheet on a static host.
+        The nearest open-licensed match for the game's own UI face, served from here rather
+        than from a third party. The two weights the page opens with are preloaded, because a
+        font discovered inside a stylesheet is two round trips late.
     -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600&display=swap" />
+    <link rel="preload" href="fonts/titillium-web-300-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/titillium-web-400-latin.woff2" as="font" type="font/woff2" crossorigin />
 
+    <link rel="stylesheet" href="css/fonts.css" />
     <link rel="stylesheet" href="css/vault.css" />
     <link rel="stylesheet" href="css/app.css" />
 </head>

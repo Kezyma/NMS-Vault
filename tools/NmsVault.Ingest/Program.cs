@@ -51,7 +51,7 @@ public static class Program
         var description = new Option<string?>("--description") { Description = "Full text, shown when the item is opened." };
         var tags = new Option<string?>("--tags") { Description = "Comma-separated filter tags." };
         var altNames = new Option<string?>("--alt-names") { Description = "Comma-separated alternative names, for search." };
-        var images = new Option<string?>("--images") { Description = "Comma-separated image paths, best first." };
+        var images = new Option<string?>("--images") { Description = "Comma-separated image paths. Defaults to the pictures stored beside the export." };
         var author = new Option<string?>("--author") { Description = "Contributor credit." };
         var gameVersion = new Option<string?>("--game-version") { Description = "Game version captured from, e.g. 7.03." };
         var force = new Option<bool>("--force") { Description = "Replace an item that already exists." };
@@ -115,6 +115,10 @@ public static class Program
         };
 
         var item = new VaultImporter(mapper).Import(bytes, meta, source.Name);
+
+        // Beside the export unless told otherwise: a capture is kept next to the backup it is
+        // of, under the same name, so an item's pictures arrive with it.
+        if (images.Count == 0) images = GalleryStore.PicturesBeside(source.FullName);
 
         if (images.Count > 0)
         {
@@ -229,10 +233,18 @@ public static class Program
     /// Replaces stored payloads from their source exports, leaving the gallery metadata alone.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The verb exists because the two halves of an item have different lifetimes. The payload
-    /// comes from a backup and gets corrected when the backup does; the display name, summary,
-    /// tags and pictures are work done here and must survive that. Adding the file again with
-    /// --force would replace both.
+    /// comes from a backup and gets corrected when the backup does; the display name, summary
+    /// and tags are work done here and must survive that. Adding the file again with --force
+    /// would replace both.
+    /// </para>
+    /// <para>
+    /// Pictures side with the payload rather than with the metadata, because they live beside
+    /// the export and are re-read from there. An item whose export has no picture beside it
+    /// ends up with none - which is how a picture is removed, and why one set by hand with
+    /// <c>update --images</c> does not survive a re-import.
+    /// </para>
     /// </remarks>
     private static int Reimport(GalleryStore store, FileInfo? file, string? id, DirectoryInfo? from)
     {
@@ -295,11 +307,17 @@ public static class Program
             var before = VaultItem.FromBytes(File.ReadAllBytes(store.PathFor(target)), target);
             byte[] bytes = File.ReadAllBytes(export.FullName);
 
+            var pictures = GalleryStore.PicturesBeside(export.FullName);
+            var meta = before.Meta with
+            {
+                Source = export.Name,
+                Images = [.. pictures.Select((path, i) => store.AddImage(path, target, i))],
+            };
+
             VaultItem after;
             try
             {
-                after = new VaultImporter(mapper).Import(
-                    bytes, before.Meta with { Source = export.Name }, export.Name);
+                after = new VaultImporter(mapper).Import(bytes, meta, export.Name);
             }
             catch (Exception ex) when (ex is ImportException or InvalidDataException)
             {
@@ -347,6 +365,9 @@ public static class Program
 
         if (DescribeCustomisation(before) != DescribeCustomisation(after))
             notes.Add($"customisation {DescribeCustomisation(before)} -> {DescribeCustomisation(after)}");
+
+        if (before.Meta.Images.Count != after.Meta.Images.Count)
+            notes.Add($"pictures {before.Meta.Images.Count} -> {after.Meta.Images.Count}");
 
         var wasTech = ItemFacts.For(before).InstalledTech.Count;
         var nowTech = ItemFacts.For(after).InstalledTech.Count;
