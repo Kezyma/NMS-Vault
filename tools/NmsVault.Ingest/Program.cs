@@ -33,6 +33,7 @@ public static class Program
             ValidateCommand(gallery),
             UpdateCommand(gallery),
             ReimportCommand(gallery),
+            ConvertCommand(),
             ReindexCommand(gallery),
             ExtractTechCommand(gallery),
         };
@@ -435,6 +436,87 @@ public static class Program
     private static string Describe(VaultMetadata meta) => string.Join('',
         meta.DisplayName, meta.Summary, meta.Description, meta.Author ?? "", meta.GameVersion ?? "",
         string.Join(',', meta.AlternativeNames), string.Join(',', meta.Tags));
+
+    // --- convert ------------------------------------------------------
+
+    private static Command ConvertCommand()
+    {
+        var file = new Option<FileInfo>("--file") { Description = "The export to read.", Required = true };
+        var to = new Option<EditorId>("--to") { Description = "Which editor to write for.", Required = true };
+        var output = new Option<FileInfo?>("--out") { Description = "Where to write it. Defaults to beside the source." };
+        var name = new Option<string?>("--name") { Description = "Name to write inside formats that carry one." };
+
+        var command = new Command("convert",
+            "Read one export and write it out in another editor's format. Touches no gallery.")
+        { file, to, output, name };
+
+        command.SetAction(result => Convert(
+            result.GetValue(file)!, result.GetValue(to), result.GetValue(output), result.GetValue(name)));
+
+        return command;
+    }
+
+    /// <summary>
+    /// Converts a single file, without storing anything.
+    /// </summary>
+    /// <remarks>
+    /// The gallery is the reason this project exists, but the conversion underneath it is
+    /// useful on its own - somebody with an old backup and a current editor wants one file
+    /// turned into another, not a gallery.
+    /// </remarks>
+    private static int Convert(FileInfo source, EditorId to, FileInfo? output, string? name)
+    {
+        var mapper = JsonNameMapper.LoadEmbedded();
+        byte[] bytes = File.ReadAllBytes(source.FullName);
+
+        var detected = FormatDetector.Detect(bytes, mapper, source.Name);
+        Console.WriteLine($"  read:    {detected.Format} / {detected.Kind} / {detected.Keys} keys ({detected.Certainty})");
+        Console.WriteLine($"    reason: {detected.Reason}");
+
+        if (detected.Format == SourceFormat.Unknown)
+        {
+            Console.Error.WriteLine("error: that file is not a format this recognises.");
+            return 1;
+        }
+
+        VaultItem item;
+        try
+        {
+            item = new VaultImporter(mapper).Import(bytes, new VaultMetadata
+            {
+                Id = "convert",
+                DisplayName = name ?? Path.GetFileNameWithoutExtension(source.Name),
+            }, source.Name);
+        }
+        catch (Exception ex) when (ex is ImportException or InvalidDataException or InvalidOperationException)
+        {
+            Console.Error.WriteLine($"error: {ex.Message}");
+            return 1;
+        }
+
+        var adapter = Adapters(mapper).First(a => a.Editor == to);
+        var extension = adapter.Extension(item.Kind);
+
+        if (!extension.HasValue)
+        {
+            Console.Error.WriteLine($"error: {adapter.DisplayName} {extension.Alternative.Reason}");
+            return 1;
+        }
+
+        // Said before the file is written, not after: the point of saying it is to give
+        // somebody the chance to not write it.
+        foreach (string loss in adapter.LossesFor(item))
+            Console.WriteLine($"  loses:   {loss}");
+
+        var written = adapter.Export(item);
+        string target = output?.FullName
+            ?? Path.Combine(source.DirectoryName ?? ".", Path.GetFileNameWithoutExtension(source.Name) + extension.Value);
+
+        File.WriteAllBytes(target, written.Content);
+
+        Console.WriteLine($"  written: {target} ({written.Content.Length:n0} bytes, {adapter.DisplayName})");
+        return 0;
+    }
 
     // --- inspect ------------------------------------------------------
 

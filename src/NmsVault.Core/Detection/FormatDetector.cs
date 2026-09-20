@@ -128,10 +128,13 @@ public static class FormatDetector
 
         string? extension = ExtensionOf(fileName);
 
-        // 3. Wrapped third-party formats, discriminated on FileVersion as a parsed number.
+        // 3. Wrapped third-party formats, discriminated on FileVersion.
+        //
         //    libNOM's own check is a substring test for "\"FileVersion\":1", which breaks on
-        //    pretty-printed input - deliberately not copied.
-        int? fileVersion = root.Get("FileVersion") as int?;
+        //    pretty-printed input - deliberately not copied. Reading it as a number is not
+        //    enough either: older NMS Companion files write it as the string "1.0", and a
+        //    file that says what it is in a slightly different way is still saying it.
+        int? fileVersion = MajorVersion(root.Get("FileVersion"));
         bool hasData = root.Contains("Data");
 
         if (fileVersion == 2 && hasData)
@@ -141,6 +144,19 @@ public static class FormatDetector
         if (fileVersion == 1 && !hasData)
             return DetectWrapped(root, mapper, SourceFormat.Companion, null,
                 "FileVersion 1 with root-level entity key: NMS Companion.");
+
+        // A wrapper with obfuscated keys is one of the two editors that obfuscate, whatever
+        // its version says. Only NMSE writes a Ship wrapper with readable keys, and the rule
+        // below would otherwise claim this one for it.
+        if (fileVersion is null
+            && root.GetObject("Ship") is { } wrapped
+            && wrapped.Contains(CompanionShipKey)
+            && KeySpaceOf(wrapped.GetObject(CompanionShipKey), mapper) == KeySpace.Obfuscated)
+        {
+            return DetectWrapped(root, mapper, SourceFormat.Companion, null,
+                "Ship wrapper holding an obfuscated payload under " + CompanionShipKey +
+                ": NMS Companion, with no readable FileVersion.");
+        }
 
         if (fileVersion is not null)
             return DetectionResult.Unrecognised(
@@ -168,6 +184,40 @@ public static class FormatDetector
         return DetectBare(root, mapper, extension);
     }
 
+    /// <summary>
+    /// The obfuscated key NMS Companion nests a ship under, written literally in libNOM and
+    /// so written literally here - matching the real file matters more than the table
+    /// agreeing with it.
+    /// </summary>
+    internal const string CompanionShipKey = "@Cs";
+
+    /// <summary>
+    /// The major part of a FileVersion, however it was written.
+    /// </summary>
+    /// <remarks>
+    /// A number in current files and the string "1.0" in older NMS Companion ones. Only the
+    /// major part is compared, because that is what distinguishes the formats: Companion is 1
+    /// and NomNom is 2, and neither has ever needed a minor.
+    /// </remarks>
+    private static int? MajorVersion(object? value) => value switch
+    {
+        int i => i,
+        long l => (int)l,
+        double d => (int)d,
+        RawDouble r => (int)r.Value,
+        string text => Major(text),
+        _ => null,
+    };
+
+    private static int? Major(string text)
+    {
+        int stop = text.IndexOf('.', StringComparison.Ordinal);
+        string head = stop < 0 ? text : text[..stop];
+
+        return int.TryParse(head, System.Globalization.NumberStyles.Integer,
+            System.Globalization.CultureInfo.InvariantCulture, out int major) ? major : null;
+    }
+
     private static DetectionResult DetectWrapped(
         JsonObject root, JsonNameMapper mapper, SourceFormat format, string? envelopeKey, string reason)
     {
@@ -184,7 +234,7 @@ public static class FormatDetector
 
         // Kaii nests the ship one deeper, under the hardcoded obfuscated @Cs.
         if (format == SourceFormat.Companion && kind == EntityKind.Starship)
-            payload = payload?.GetObject("@Cs") ?? payload;
+            payload = payload?.GetObject(CompanionShipKey) ?? payload;
 
         return new DetectionResult(format, kind, KeySpaceOf(payload, mapper), Certainty.Certain, reason);
     }

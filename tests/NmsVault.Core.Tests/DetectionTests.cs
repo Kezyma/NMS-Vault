@@ -34,6 +34,62 @@ public class DetectionTests
     private static byte[] Read(string folder, string name)
         => File.ReadAllBytes(Path.Combine(FixtureRoot, folder, name));
 
+    // --- Older writers of the same formats -----------------------------
+
+    /// <summary>
+    /// The shape an NMS Companion export had years ago: the version written as a string, and
+    /// the ship under the hardcoded obfuscated keys. Trimmed to the keys detection looks at.
+    /// </summary>
+    private const string OldCompanionShip = """
+        {
+          "Ship": {
+            "4hl": false,
+            "@Cs": {
+              "NKm": "",
+              "NTx": { "93M": "MODELS/COMMON/SPACECRAFT/SCIENTIFIC/SCIENTIFIC_PROC.SCENE.MBIN" }
+            }
+          },
+          "Thumbnail": "/9j/4AAQSkZJRg==",
+          "FileVersion": "1.0"
+        }
+        """;
+
+    [Fact]
+    public void AVersionWrittenAsAStringIsStillAVersion()
+    {
+        // Current NMS Companion files write FileVersion as the number 1; files from some
+        // years ago write the string "1.0". Reading it as a number alone left this falling
+        // through to the rule below, which claims a Ship wrapper for NMSE - and NMSE has
+        // never written an obfuscated key in its life, so the answer was one the file itself
+        // contradicted two lines above.
+        var detected = FormatDetector.Detect(
+            Encoding.Latin1.GetBytes(OldCompanionShip), Mapper, "Honmatan OQ5.shp");
+
+        Assert.Equal(SourceFormat.Companion, detected.Format);
+        Assert.Equal(EntityKind.Starship, detected.Kind);
+        Assert.Equal(KeySpace.Obfuscated, detected.Keys);
+        Assert.Equal(Certainty.Certain, detected.Certainty);
+    }
+
+    [Fact]
+    public void AWrapperWithObfuscatedKeysIsNeverNmseHoweverItIsVersioned()
+    {
+        // The backstop, for a writer that omits the version entirely. NMSE writes a Ship
+        // wrapper and readable keys; anything with a wrapper and obfuscated keys is one of
+        // the two editors that obfuscate, whatever else the file does or does not say.
+        string versionless = OldCompanionShip.Replace("""
+              "FileVersion": "1.0"
+            """.Trim(), """
+              "FileVersion": "x"
+            """.Trim(), StringComparison.Ordinal);
+
+        var detected = FormatDetector.Detect(
+            Encoding.Latin1.GetBytes(versionless), Mapper, "whatever.shp");
+
+        Assert.Equal(SourceFormat.Companion, detected.Format);
+        Assert.NotEqual(SourceFormat.Nmse, detected.Format);
+    }
+
     // --- Real files ----------------------------------------------------
 
     [Theory]
