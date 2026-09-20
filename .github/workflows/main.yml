@@ -1,0 +1,79 @@
+# What a push to main does: check it, then publish the site.
+#
+# One workflow with the check as a job, rather than a separate workflow triggering on the same
+# push, so the build and the tests run once per push instead of once for the check and again for
+# the deployment. ci.yml still runs on its own for a pull request, which is the case with no
+# deployment behind it.
+
+name: Main
+
+on:
+  push:
+    branches: [main]
+
+  # Republishes without a commit - after changing a Pages setting, say.
+  workflow_dispatch:
+
+jobs:
+  # Nothing is deployed from a commit whose tests did not pass, and "it compiled" is not that
+  # check: the publish below would build happily over a failing test.
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: check
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    # Never two at once, and a newer publish wins rather than queueing behind an older one.
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # The gallery is built from data/ as part of this, by the web project itself, and the base
+      # href is rewritten from "/" to the repository path by its PrepareForPages target. Both are
+      # in the project rather than here, so that building the site locally produces the same site.
+      - name: Publish
+        run: dotnet publish src/NmsVault.Web --configuration Release --output artifacts/pages
+
+      # Without this, Pages runs the output through Jekyll, which drops every folder whose name
+      # begins with an underscore - _framework among them, which is the whole application. The
+      # symptom is a blank page with nothing in the console to explain it.
+      - name: Check the site will not be run through Jekyll
+        run: test -f artifacts/pages/wwwroot/.nojekyll || { echo "::error::No .nojekyll in the published site; Pages would drop _framework."; exit 1; }
+
+      # A site published with base href="/" resolves every asset against the domain root and comes
+      # up blank. PrepareForPages rewrites it, and a rewrite that silently matched nothing would
+      # otherwise only be discovered by opening the deployed page.
+      - name: Check the base href was rewritten
+        run: grep -q '<base href="/NMS-Vault/" />' artifacts/pages/wwwroot/index.html || { echo "::error::index.html still has base href=\"/\"; every asset would resolve against the domain root."; exit 1; }
+
+      # The gallery is generated, so an empty one is a build that quietly did nothing rather than
+      # a site worth publishing.
+      - name: Check the gallery is not empty
+        run: test -s artifacts/pages/wwwroot/gallery/index.json || { echo "::error::No gallery index in the published site."; exit 1; }
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/pages/wwwroot
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

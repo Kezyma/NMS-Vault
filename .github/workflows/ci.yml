@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+  # Called by the Main workflow, so nothing is deployed until this has passed. No push trigger:
+  # a push to main runs this once through Main, and a pull request - which has no deployment
+  # behind it - runs it here.
+  workflow_call:
+
+jobs:
+  build:
+    # Nothing here is Windows-only. The ingest tool draws with Skia, which needs native binaries
+    # the SkiaSharp package does not carry for Linux; SkiaSharp.NativeAssets.Linux supplies them.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      # This also builds the gallery out of data/, because the web project builds it before it
+      # builds itself. A backup that cannot be read is a failed build here rather than a blank
+      # page after deployment.
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      - name: Check every export in data/ became an item
+        shell: bash
+        run: |
+          exports=$(find data -type f \( -name '*.nmsship' -o -name '*.nmstool' -o -name '*.nmspet' -o -name '*.nmsfrig' \) | wc -l)
+          items=$(find src/NmsVault.Web/wwwroot/gallery/items -name '*.json' | wc -l)
+
+          echo "data/ holds $exports export(s); the gallery holds $items item(s)."
+
+          if [ "$exports" -ne "$items" ]; then
+            echo "::error::$exports export(s) in data/ produced $items item(s). One of them was skipped or two share an id."
+            exit 1
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/TestResults/*.trx"
+          if-no-files-found: ignore

@@ -1,0 +1,473 @@
+{
+	"Ship": {
+		"Name": "Horizon Vector NX",
+		"Resource": {
+			"Filename": "MODELS/COMMON/SPACECRAFT/FIGHTERS/FIGHTERSPECIALSWITCH.SCENE.MBIN",
+			"Seed": [
+				true,
+				"0x1"
+			],
+			"ProceduralTexture": {
+				"Samplers": []
+			},
+			"AltId": ""
+		},
+		"Inventory": {
+			"Slots": [],
+			"ValidSlotIndices": [
+				{
+					"X": 0,
+					"Y": 0
+				},
+				{
+					"X": 1,
+					"Y": 0
+				},
+				{
+					"X": 2,
+					"Y": 0
+				},
+				{
+					"X": 3,
+					"Y": 0
+				},
+				{
+					"X": 4,
+					"Y": 0
+				},
+				{
+					"X": 5,
+					"Y": 0
+				},
+				{
+					"X": 0,
+					"Y": 1
+				},
+				{
+					"X": 1,
+					"Y": 1
+				},
+				{
+					"X": 3,
+					"Y": 1
+				},
+				{
+					"X": 4,
+					"Y": 1
+				},
+				{
+					"X": 5,
+					"Y": 1
+				},
+				{
+					"X": 6,
+					"Y": 1
+				},
+				{
+					"X": 0,
+					"Y": 2
+				},
+				{
+					"X": 1,
+					"Y": 2
+				},
+				{
+					"X": 2,
+					"Y": 2
+				},
+				{
+					"X": 3,
+					"Y": 2
+				},
+				{
+					"X": 5,
+					"Y": 2
+				},
+				{
+					"X": 6,
+					"Y": 2
+				},
+				{
+					"X": 2,
+					"Y": 3
+				},
+				{
+					"X": 3,
+					"Y": 3
+				},
+				{
+					"X": 4,
+					"Y": 3
+				},
+				{
+					"X": 5,
+					"Y": 3
+				},
+				{
+					"X": 0,
+					"Y": 4
+				},
+				{
+					"X": 1,
+					"Y": 4
+				},
+				{
+					"X": 2,
+					"Y": 4
+				},
+				{
+					"X": 3,
+					"Y": 4
+				},
+				{
+					"X": 4,
+					"Y": 4
+				},
+				{
+					"X": 5,
+					"Y": 4
+				},
+				{
+					"X": 6,
+					"Y": 4
+				}
+			],
+			"Class": {
+				"InventoryClass": "S"
+			},
+			"StackSizeGroup": {
+				"InventoryStackSizeGroup": "Ship"
+			},
+			"BaseStatValues": [
+				{
+					"BaseStatID": "^SHIP_DAMAGE",
+					"Value": 77.06786346435547
+				},
+				{
+					"BaseStatID": "^SHIP_SHIELD",
+					"Value": 24.301799774169923
+				},
+				{
+					"BaseStatID": "^SHIP_HYPERDRIVE",
+					"Value": 0.0
+				},
+				{
+					"BaseStatID": "^SHIP_AGILE",
+					"Value": 42.13533020019531
+				}
+			],
+			"SpecialSlots": [],
+			"Width": 7,
+			"Height": 5,
+			"IsCool": false,
+			"Name": "",
+			"Version": 1,
+			"NumSlotsFromTech": 0
+		},
+		"Inventory_Cargo": {
+			"Slots": [],
+			"ValidSlotIndices": [],
+			"Class": {
+				"InventoryClass": "C"
+			},
+			"StackSizeGroup": {
+				"InventoryStackSizeGroup": "ShipCargo"
+			},
+			"BaseStatValues": [
+				{
+					"BaseStatID": "^SHIP_DAMAGE",
+					"Value": 77.06786346435547
+				},
+				{
+					"BaseStatID": "^SHIP_SHIELD",
+					"Value": 24.301799774169923
+				},
+				{
+					"BaseStatID": "^SHIP_HYPERDRIVE",
+					"Value": 0.0
+				},
+				{
+					"BaseStatID": "^SHIP_AGILE",
+					"Value": 42.13533020019531
+				}
+			],
+			"SpecialSlots": [],
+			"Width": 7,
+			"Height": 5,
+			"IsCool": false,
+			"Name": "",
+			"Version": 1,
+			"NumSlotsFromTech": 0
+		},
+		"Inventory_TechOnly": {
+			"Slots": [
+				{
+					"Type": {
+						"InventoryType": "Technology"
+					},
+					"Id": "^LAUNCHER",
+					"Amount": 200,
+					"MaxAmount": 200,
+					"DamageFactor": 0.0,
+					"FullyInstalled": true,
+					"AddedAutomatically": false,
+					"Index": {
+						"X": 0,
+						"Y": 0
+					}
+				},
+				{
+					"Type": {
+						"InventoryType": "Technology"
+					},
+					"Id": "^SHIPJUMP1",
+					"Amount": 200,
+					"MaxAmount": 200,
+					"DamageFactor": 0.0,
+					"FullyInstalled": true,
+					"AddedAutomatically": false,
+					"Index": {
+						"X": 1,
+						"Y": 0
+					}
+				},
+				{
+					"Type": {
+						"InventoryType": "Technology"
+					},
+					"Id": "^SHIPSHIELD",
+					"Amount": 200,
+					"MaxAmount": 200,
+					"DamageFactor": 0.0,
+					"FullyInstalled": true,
+					"AddedAutomatically": false,
+					"Index": {
+						"X": 2,
+						"Y": 0
+					}
+				},
+				{
+					"Type": {
+						"InventoryType": "Technology"
+					},
+					"Id": "^HYPERDRIVE",
+					"Amount": 120,
+					"MaxAmount": 120,
+					"DamageFactor": 0.0,
+					"FullyInstalled": true,
+					"AddedAutomatically": false,
+					"Index": {
+						"X": 3,
+						"Y": 0
+					}
+				},
+				{
+					"Type": {
+						"InventoryType": "Technology"
+					},
+					"Id": "^SHIPLAS1",
+					"Amount": 100,
+					"MaxAmount": 100,
+					"DamageFactor": 0.0,
+					"FullyInstalled": true,
+					"AddedAutomatically": false,
+					"Index": {
+						"X": 4,
+						"Y": 0
+					}
+				},
+				{
+					"Type": {
+						"InventoryType": "Technology"
+					},
+					"Id": "^SHIP_TELEPORT",
+					"Amount": 0,
+					"MaxAmount": 100,
+					"DamageFactor": 0.0,
+					"FullyInstalled": true,
+					"AddedAutomatically": false,
+					"Index": {
+						"X": 5,
+						"Y": 0
+					}
+				}
+			],
+			"ValidSlotIndices": [
+				{
+					"X": 0,
+					"Y": 0
+				},
+				{
+					"X": 1,
+					"Y": 0
+				},
+				{
+					"X": 2,
+					"Y": 0
+				},
+				{
+					"X": 3,
+					"Y": 0
+				},
+				{
+					"X": 4,
+					"Y": 0
+				},
+				{
+					"X": 5,
+					"Y": 0
+				},
+				{
+					"X": 6,
+					"Y": 0
+				},
+				{
+					"X": 0,
+					"Y": 1
+				},
+				{
+					"X": 1,
+					"Y": 1
+				},
+				{
+					"X": 2,
+					"Y": 1
+				},
+				{
+					"X": 3,
+					"Y": 1
+				},
+				{
+					"X": 4,
+					"Y": 1
+				},
+				{
+					"X": 5,
+					"Y": 1
+				},
+				{
+					"X": 6,
+					"Y": 1
+				},
+				{
+					"X": 3,
+					"Y": 2
+				},
+				{
+					"X": 4,
+					"Y": 2
+				},
+				{
+					"X": 5,
+					"Y": 2
+				},
+				{
+					"X": 6,
+					"Y": 2
+				}
+			],
+			"Class": {
+				"InventoryClass": "S"
+			},
+			"StackSizeGroup": {
+				"InventoryStackSizeGroup": "Default"
+			},
+			"BaseStatValues": [
+				{
+					"BaseStatID": "^SHIP_DAMAGE",
+					"Value": 77.06786346435547
+				},
+				{
+					"BaseStatID": "^SHIP_SHIELD",
+					"Value": 24.301799774169923
+				},
+				{
+					"BaseStatID": "^SHIP_HYPERDRIVE",
+					"Value": 0.0
+				},
+				{
+					"BaseStatID": "^SHIP_AGILE",
+					"Value": 42.13533020019531
+				}
+			],
+			"SpecialSlots": [
+				{
+					"Type": {
+						"InventorySpecialSlotType": "TechBonus"
+					},
+					"Index": {
+						"X": 3,
+						"Y": 0
+					}
+				},
+				{
+					"Type": {
+						"InventorySpecialSlotType": "TechBonus"
+					},
+					"Index": {
+						"X": 9,
+						"Y": 2
+					}
+				},
+				{
+					"Type": {
+						"InventorySpecialSlotType": "TechBonus"
+					},
+					"Index": {
+						"X": 4,
+						"Y": 2
+					}
+				},
+				{
+					"Type": {
+						"InventorySpecialSlotType": "TechBonus"
+					},
+					"Index": {
+						"X": 3,
+						"Y": 2
+					}
+				}
+			],
+			"Width": 7,
+			"Height": 3,
+			"IsCool": false,
+			"Name": "",
+			"Version": 1,
+			"NumSlotsFromTech": 0
+		},
+		"InventoryLayout": {
+			"Slots": 28,
+			"Seed": [
+				true,
+				"0x1"
+			],
+			"Level": 1
+		},
+		"Location": 0,
+		"Position": [
+			0.0,
+			0.0,
+			0.0,
+			-1.0
+		],
+		"Direction": [
+			0.0,
+			0.0,
+			0.0,
+			-1.0
+		],
+		"VehicleCargo": []
+	},
+	"CharacterCustomisationData": {
+		"SelectedPreset": "^",
+		"CustomData": {
+			"DescriptorGroups": [],
+			"PaletteID": "^",
+			"Colours": [],
+			"TextureOptions": [],
+			"BoneScales": [],
+			"Scale": 1.0
+		}
+	},
+	"UsesLegacyColours": false
+}

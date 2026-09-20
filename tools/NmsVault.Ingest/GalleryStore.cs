@@ -240,6 +240,15 @@ public sealed class GalleryStore(string root)
         if (block.Contains("AlternativeNames")) meta = meta with { AlternativeNames = Strings(block.GetArray("AlternativeNames")) };
         if (block.Contains("Tags")) meta = meta with { Tags = Strings(block.GetArray("Tags")) };
 
+        // Read, not just written, because the gallery is rebuilt from this folder: without it
+        // every item is dated the moment the build ran, and dated again on the next build.
+        if (block.GetString("DateAdded") is { Length: > 0 } added
+            && DateTimeOffset.TryParse(added, System.Globalization.CultureInfo.InvariantCulture,
+                                       System.Globalization.DateTimeStyles.RoundtripKind, out var when))
+        {
+            meta = meta with { DateAdded = when };
+        }
+
         return meta;
     }
 
@@ -255,6 +264,44 @@ public sealed class GalleryStore(string root)
             if (array.Get(i)?.ToString() is { Length: > 0 } value) read.Add(value);
 
         return read;
+    }
+
+    /// <summary>The favicon, which lives in the image folder but is not an item's picture.</summary>
+    private const string FaviconName = "favicon.webp";
+
+    /// <summary>
+    /// Removes every stored item, its pictures and the index, leaving the extracted game data.
+    /// </summary>
+    /// <remarks>
+    /// A rebuild has to start from nothing, or an item deleted from the source folder lingers
+    /// in the gallery forever - the index is built from what is on disk, not from what was
+    /// just read. Only the item pictures go with it. <c>img/tech</c>, <c>img/class</c> and the
+    /// favicon come out of the game's own files rather than out of the source folder, take an
+    /// NMSE checkout to produce, and are committed precisely so that a build does not need one.
+    /// </remarks>
+    /// <returns>How many stored items were removed.</returns>
+    public int Clear()
+    {
+        int removed = 0;
+
+        if (Directory.Exists(ItemsDirectory))
+            foreach (string file in Directory.EnumerateFiles(ItemsDirectory, "*.json"))
+            {
+                File.Delete(file);
+                removed++;
+            }
+
+        // An item's pictures sit directly in img/, and everything extracted from the game is
+        // either in a subfolder of it or is the favicon - so the top level, minus that one
+        // file, is exactly what a build owns and may throw away.
+        if (Directory.Exists(ImagesDirectory))
+            foreach (string file in Directory.EnumerateFiles(ImagesDirectory, "*.webp"))
+                if (!Path.GetFileName(file).Equals(FaviconName, StringComparison.OrdinalIgnoreCase))
+                    File.Delete(file);
+
+        if (File.Exists(IndexPath)) File.Delete(IndexPath);
+
+        return removed;
     }
 
     /// <summary>

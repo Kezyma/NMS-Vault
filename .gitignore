@@ -6,8 +6,10 @@ obj/
 .idea/
 *.swp
 
-# Gallery items are the real content and will be committed once they exist. What is
-# here now is ingested from the test fixtures during development, so it is ignored.
+# The gallery is generated, not written. Everything it is made of lives in data/ - the
+# export, the pictures beside it and the metadata file beside it - and the web project
+# rebuilds this folder from there before it builds itself. Committing the output as well
+# would mean two copies of the same thing, one of which goes stale silently.
 src/NmsVault.Web/wwwroot/gallery/items/
 src/NmsVault.Web/wwwroot/gallery/index.json
 src/NmsVault.Web/wwwroot/gallery/img/*

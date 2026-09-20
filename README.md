@@ -79,17 +79,40 @@ dotnet test
 
 ### Adding to the gallery
 
+Put the export in [data/](data/), under `Starships`, `Multitools` or `Companions`, and build.
+
+Everything about an item lives beside the export, under the same name: a picture as
+`<name>.jpg` (further ones numbered from two), and its gallery fields as `<name>.json` —
+copy [docs/item-template.json](docs/item-template.json) and fill it in. There is no separate
+import step: the web project rebuilds the gallery from `data/` before it builds itself, so a
+correction to a backup, a caption or a picture takes effect on the next build.
+
+To rebuild it without building the site:
+
 ```bash
-dotnet run --project tools/NmsVault.Ingest -- add --file "<export>"
+dotnet run --project tools/NmsVault.Ingest -- build --from data
 ```
 
-Everything about an item lives beside the backup it came from, under the same name: a picture
-as `<name>.jpg` (further ones numbered from two), and its gallery fields as `<name>.json` —
-copy [docs/item-template.json](docs/item-template.json) and fill it in. Both are read again by
-`reimport`, so correcting a backup, a caption or a picture is the same command:
+The gallery it writes under `src/NmsVault.Web/wwwroot/gallery` is generated output and is not
+committed. [data/README.md](data/README.md) has the layout and the two fields that are pinned
+there rather than derived — `Id`, because two ships are called Rasamama S36, and `DateAdded`,
+because a rebuild would otherwise date everything to the moment it ran.
+
+### Publishing
+
+A push to `main` builds, tests and publishes to GitHub Pages; a pull request builds and tests
+only. To rehearse the whole of that locally before pushing:
 
 ```bash
-dotnet run --project tools/NmsVault.Ingest -- reimport --from "<backups folder>"
+build-site.cmd
+```
+
+One thing it cannot do for itself is re-read the game. The technology icons, class badges and
+favicon are extracted from an NMSE checkout, which no runner has, and are committed for that
+reason. After a game update:
+
+```bash
+dotnet run --project tools/NmsVault.Ingest -- extract-tech --nmse "<NMSE>/Resources"
 ```
 
 ### Running the gallery

@@ -14,6 +14,9 @@
     <!-- Image work uses SkiaSharp, not System.Drawing: same reason the shared projects avoid
          it, and the extractor should not need a different answer from the browser. -->
     <PackageReference Include="SkiaSharp" />
+    <!-- Native Skia for Linux, which the main package does not carry. The gallery is built on
+         a Linux runner, so without this the deployment fails where the desktop build does not. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
   </ItemGroup>
 
   <ItemGroup>

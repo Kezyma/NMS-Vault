@@ -24,6 +24,12 @@
 
   <ItemGroup Label="Tooling">
     <PackageVersion Include="SkiaSharp" Version="4.151.1" />
+    <!--
+      The SkiaSharp package carries native binaries for Windows and macOS but not for Linux, so
+      the ingest tool throws DllNotFoundException there - and the gallery is built on a Linux
+      runner. MIT, like SkiaSharp itself.
+    -->
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.151.1" />
     <PackageVersion Include="System.CommandLine" Version="2.0.11" />
   </ItemGroup>
 

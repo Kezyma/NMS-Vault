@@ -1,0 +1,288 @@
+{
+	"Layout": {
+		"Slots": 18,
+		"Seed": [
+			true,
+			"0xFF33308A268DE488"
+		],
+		"Level": 1
+	},
+	"Store": {
+		"Slots": [
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^SCANBINOC1",
+				"Amount": 0,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 0,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^SCAN1",
+				"Amount": 0,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 1,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^RAILGUN",
+				"Amount": 50,
+				"MaxAmount": 50,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 2,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^UT_RAIL",
+				"Amount": 50,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 3,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^LASER",
+				"Amount": 200,
+				"MaxAmount": 200,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 4,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventoryType": "Technology"
+				},
+				"Id": "^SCOPE",
+				"Amount": 0,
+				"MaxAmount": 100,
+				"DamageFactor": 0.0,
+				"FullyInstalled": true,
+				"AddedAutomatically": false,
+				"Index": {
+					"X": 5,
+					"Y": 0
+				}
+			}
+		],
+		"ValidSlotIndices": [
+			{
+				"X": 0,
+				"Y": 0
+			},
+			{
+				"X": 1,
+				"Y": 0
+			},
+			{
+				"X": 2,
+				"Y": 0
+			},
+			{
+				"X": 3,
+				"Y": 0
+			},
+			{
+				"X": 4,
+				"Y": 0
+			},
+			{
+				"X": 5,
+				"Y": 0
+			},
+			{
+				"X": 6,
+				"Y": 0
+			},
+			{
+				"X": 7,
+				"Y": 0
+			},
+			{
+				"X": 1,
+				"Y": 1
+			},
+			{
+				"X": 2,
+				"Y": 1
+			},
+			{
+				"X": 3,
+				"Y": 1
+			},
+			{
+				"X": 0,
+				"Y": 2
+			},
+			{
+				"X": 1,
+				"Y": 2
+			},
+			{
+				"X": 2,
+				"Y": 2
+			},
+			{
+				"X": 3,
+				"Y": 2
+			},
+			{
+				"X": 4,
+				"Y": 2
+			},
+			{
+				"X": 5,
+				"Y": 2
+			},
+			{
+				"X": 6,
+				"Y": 2
+			},
+			{
+				"X": 7,
+				"Y": 2
+			}
+		],
+		"Class": {
+			"InventoryClass": "S"
+		},
+		"StackSizeGroup": {
+			"InventoryStackSizeGroup": "Default"
+		},
+		"BaseStatValues": [
+			{
+				"BaseStatID": "^WEAPON_DAMAGE",
+				"Value": 19.45497703552246
+			},
+			{
+				"BaseStatID": "^WEAPON_MINING",
+				"Value": 0.0
+			},
+			{
+				"BaseStatID": "^WEAPON_SCAN",
+				"Value": 16.731483459472658
+			}
+		],
+		"SpecialSlots": [
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 6,
+					"Y": 2
+				}
+			},
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 2,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 6,
+					"Y": 0
+				}
+			},
+			{
+				"Type": {
+					"InventorySpecialSlotType": "TechBonus"
+				},
+				"Index": {
+					"X": 1,
+					"Y": 1
+				}
+			}
+		],
+		"Width": 8,
+		"Height": 3,
+		"IsCool": false,
+		"Name": "",
+		"Version": 1,
+		"NumSlotsFromTech": 0
+	},
+	"ScreenData": {
+		"ScreenScale": 0.029999999329447748,
+		"ScreenOffset": [
+			0.019999999552965165,
+			0.11999999731779099,
+			-0.10000000149011612
+		],
+		"ScreenRotation": [
+			0.0,
+			1.0,
+			0.0,
+			1.9198620319366456
+		]
+	},
+	"Seed": [
+		true,
+		"0xFF33308A268DE488"
+	],
+	"CustomisationData": {
+		"DescriptorGroups": [],
+		"PaletteID": "^",
+		"Colours": [],
+		"TextureOptions": [],
+		"BoneScales": [],
+		"Scale": 1.0
+	},
+	"Name": "Infinite Neon Mark XXII",
+	"IsLarge": true,
+	"PrimaryMode": 5,
+	"SecondaryMode": 8,
+	"UseLegacyColours": false,
+	"Resource": {
+		"Filename": "MODELS/COMMON/WEAPONS/MULTITOOL/SWITCHMULTITOOL.SCENE.MBIN",
+		"Seed": [
+			false,
+			"0x0"
+		],
+		"ProceduralTexture": {
+			"Samplers": []
+		},
+		"AltId": ""
+	}
+}

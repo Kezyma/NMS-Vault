@@ -18,6 +18,55 @@
     <ProjectReference Include="..\NmsVault.Core\NmsVault.Core.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <!--
+      Built by the target below rather than referenced. A Blazor app is self-contained and a
+      self-contained project may not reference a plain executable at all, ReferenceOutputAssembly
+      or not - so the dependency is expressed as a build step instead of as a reference.
+    -->
+    <IngestProject>$(MSBuildThisFileDirectory)..\..\tools\NmsVault.Ingest\NmsVault.Ingest.csproj</IngestProject>
+
+    <!-- The exports, pictures and metadata files the gallery is built from. -->
+    <VaultData>$(MSBuildThisFileDirectory)..\..\data</VaultData>
+
+    <VaultGallery>$(MSBuildThisFileDirectory)wwwroot\gallery</VaultGallery>
+
+    <!--
+      The tool that was just built, run directly. "dotnet run" would start a second build of a
+      project this build is already building, and the two would race for the same files.
+    -->
+    <IngestTool>$(MSBuildThisFileDirectory)..\..\Build\bin\NmsVault.Ingest\$(Configuration)\net10.0\nmsvault-ingest.dll</IngestTool>
+
+    <!-- Set false to build against whatever is already in the gallery folder. -->
+    <BuildGallery Condition="'$(BuildGallery)' == ''">true</BuildGallery>
+  </PropertyGroup>
+
+  <!--
+    The gallery is generated rather than committed, so it has to be built before the site is.
+    Doing it here rather than only in the workflow means the site somebody builds is the site the
+    workflow publishes, and that editing anything under data/ is enough to see it.
+
+    Before the build, because what it writes are static web assets and the build has to find them
+    already on disk.
+
+    What it writes is gitignored. What it does not write - img/tech, img/class and the favicon -
+    is committed, because producing those needs an NMSE checkout that no runner has.
+  -->
+  <Target Name="BuildGallery" BeforeTargets="BeforeBuild"
+          Condition="'$(BuildGallery)' == 'true' And Exists('$(VaultData)')">
+
+    <MSBuild Projects="$(IngestProject)" Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+
+    <Error Condition="!Exists('$(IngestTool)')"
+           Text="The ingest tool did not appear at $(IngestTool), so the gallery cannot be built. Pass -p:BuildGallery=false to build the site against the gallery as it stands." />
+
+    <Message Importance="high" Text="Building the gallery from $(VaultData)" />
+
+    <Exec Command="dotnet &quot;$(IngestTool)&quot; build --from &quot;$(VaultData)&quot; --gallery &quot;$(VaultGallery)&quot;"
+          StandardOutputImportance="low" />
+  </Target>
+
   <!--
     Where the site is served from. GitHub Pages serves a project page under the repository
     name, so every asset would otherwise resolve against the domain root and the page would

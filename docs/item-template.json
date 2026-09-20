@@ -14,8 +14,8 @@
     "only thing that ever set it. Pictures are the other way round - the files beside the",
     "export are the pictures, so removing one removes it.",
     "",
-    "Three fields are not here because the tool fills them: SchemaVersion, DateAdded, and",
-    "Source, which records the export this was read from. Images are not here either - a",
+    "Two fields are not here because the tool fills them: SchemaVersion, and Source, which",
+    "records the export this was read from. Images are not here either - a",
     "picture is a file stored beside the export, named the same way this file is, with further",
     "pictures numbered from two ('... Iron Vulture-2.jpg').",
     "",
@@ -30,6 +30,7 @@
   "Tags": [],
   "Author": "",
   "GameVersion": "",
+  "DateAdded": "",
 
   "$fields": {
     "Id": [
@@ -69,6 +70,13 @@
     "GameVersion": [
       "The game version it was captured from - \"7.03\". Worth recording: payload shapes drift",
       "between updates, and an old capture may not import cleanly into a much newer save."
+    ],
+    "DateAdded": [
+      "When the item joined the gallery, as \"2026-09-19T09:33:11+00:00\".",
+      "Written here rather than stamped at import because the gallery is rebuilt from nothing",
+      "on every build - left to the tool, every item would carry the time the build ran.",
+      "Leave empty on something new and the tool fills it in once; copy it into this file",
+      "afterwards to keep it."
     ]
   }
 }

@@ -29,6 +29,7 @@ public static class Program
         var root = new RootCommand("Builds and checks the NMS-Vault gallery.")
         {
             AddCommand(gallery),
+            BuildCommand(gallery),
             InspectCommand(),
             ValidateCommand(gallery),
             UpdateCommand(gallery),
@@ -141,6 +142,144 @@ public static class Program
         ReportLosses(item, mapper);
         Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
         return 0;
+    }
+
+    // --- build --------------------------------------------------------
+
+    /// <summary>
+    /// The extensions a build treats as an export. Everything else beside one is a picture,
+    /// a metadata file, or nothing to do with us.
+    /// </summary>
+    /// <remarks>
+    /// An explicit list rather than "anything not a picture", so a README or a stray download
+    /// in the folder is passed over quietly instead of being reported as a file that failed
+    /// to import.
+    /// </remarks>
+    private static readonly string[] ExportExtensions =
+        [".nmsship", ".nmstool", ".nmspet", ".nmsfrig", ".shp", ".mlt", ".cmp", ".sh0", ".wp0", ".pet"];
+
+    private static Command BuildCommand(Option<DirectoryInfo> gallery)
+    {
+        var from = new Option<DirectoryInfo>("--from")
+        {
+            Description = "The folder of exports to build from.",
+            Required = true,
+        };
+
+        var command = new Command("build",
+            "Rebuild the whole gallery from a folder of exports, replacing everything already in it.")
+        { from, gallery };
+
+        command.SetAction(result => Build(
+            new GalleryStore(result.GetValue(gallery)!.FullName), result.GetValue(from)!));
+
+        return command;
+    }
+
+    /// <summary>
+    /// Builds the whole gallery from a folder, from nothing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is what a deployment runs. <c>add</c> puts one item in and <c>reimport</c> refreshes
+    /// items that are already there; neither can produce a gallery on a machine that has none,
+    /// which is every machine a workflow runs on.
+    /// </para>
+    /// <para>
+    /// Everything it needs is in the folder: the export, the pictures beside it, and the
+    /// metadata file beside it. Nothing is read from the gallery it is about to replace, so
+    /// the same folder gives the same gallery wherever it is built - which is the whole reason
+    /// the ids and the dates are written in those files rather than made up here.
+    /// </para>
+    /// </remarks>
+    private static int Build(GalleryStore store, DirectoryInfo from)
+    {
+        if (!from.Exists)
+        {
+            Console.Error.WriteLine($"error: '{from.FullName}' does not exist.");
+            return 1;
+        }
+
+        var all = from.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+
+        var exports = all
+            .Where(f => ExportExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
+            .OrderBy(f => f.FullName, StringComparer.Ordinal)
+            .ToList();
+
+        if (exports.Count == 0)
+        {
+            Console.Error.WriteLine($"error: nothing under '{from.FullName}' looks like an export.");
+            return 1;
+        }
+
+        ReportOrphanedMetadata(all);
+
+        int cleared = store.Clear();
+        if (cleared > 0) Console.WriteLine($"  cleared {cleared} stored item(s)");
+
+        var mapper = JsonNameMapper.LoadEmbedded();
+
+        // Two exports that resolve to one id would otherwise take it in turns, and which of
+        // them won would depend on the order the file system handed them over.
+        var taken = new Dictionary<string, string>(StringComparer.Ordinal);
+        int built = 0, failed = 0;
+
+        foreach (var export in exports)
+        {
+            try
+            {
+                var meta = GalleryStore.ApplyMetadataBeside(
+                    new VaultMetadata { Id = "", DisplayName = "" }, export.FullName);
+
+                string displayName = meta.DisplayName is { Length: > 0 } written
+                    ? written
+                    : Path.GetFileNameWithoutExtension(export.Name);
+
+                string slug = meta.Id is { Length: > 0 } chosen ? chosen : Slug.From(displayName);
+
+                if (taken.TryGetValue(slug, out string? already))
+                {
+                    Console.Error.WriteLine(
+                        $"  {export.Name}: '{slug}' is already taken by '{already}'. Give one of them an Id in the file beside it.");
+                    failed++;
+                    continue;
+                }
+
+                var pictures = GalleryStore.PicturesBeside(export.FullName);
+
+                meta = meta with
+                {
+                    Id = slug,
+                    DisplayName = displayName,
+                    DateAdded = meta.DateAdded ?? DateTimeOffset.UtcNow,
+                    Source = export.Name,
+                    Images = [.. pictures.Select((path, i) => store.AddImage(path, slug, i))],
+                };
+
+                var item = new VaultImporter(mapper).Import(File.ReadAllBytes(export.FullName), meta, export.Name);
+
+                store.Write(item);
+                taken[slug] = export.Name;
+                built++;
+
+                string shown = pictures.Count == 1 ? "1 picture" : $"{pictures.Count} pictures";
+                Console.WriteLine($"  {slug}: {item.Kind} from {export.Name} ({shown})");
+            }
+            catch (Exception ex) when (ex is ImportException or InvalidDataException or InvalidOperationException)
+            {
+                Console.Error.WriteLine($"  {export.Name}: {ex.Message}");
+                failed++;
+            }
+        }
+
+        Console.WriteLine($"  {built} built, {failed} failed");
+
+        // Written even when something failed, so what did build is still browsable - but the
+        // exit code still says the build did not do what it was asked to.
+        Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
+
+        return failed > 0 ? 1 : 0;
     }
 
     // --- update -------------------------------------------------------
