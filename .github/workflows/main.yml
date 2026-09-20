@@ -79,6 +79,16 @@ jobs:
           fi
 
           echo "index.html asks for $asked, which is there."
+
+          # The loader then asks for this one by name, flatly - there is no boot manifest and no
+          # import map, so nothing can redirect it to a hashed file the way the dev server does.
+          # Fingerprinting it produced a site that loaded its shell and never started.
+          if [ ! -f "$root/_framework/dotnet.js" ]; then
+            echo "::error::_framework/dotnet.js was not published under that name, so the platform would never start."
+            ls "$root/_framework" | grep -E '^dotnet' || echo "  no dotnet script at all"
+            exit 1
+          fi
+
           echo "Publishing $(find "$root" -type f | wc -l) file(s), $(du -sh "$root" | cut -f1)."
 
       # Without this, Pages runs the output through Jekyll, which drops every folder whose name

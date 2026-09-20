@@ -87,6 +87,15 @@ powershell -NoProfile -Command ^
   "Write-Host \"index.html asks for $asked, which is there.\""
 if errorlevel 1 goto :failed
 
+rem  The loader asks for this one by name, flatly - nothing can redirect it to a hashed file the
+rem  way the dev server does, so fingerprinting it gives a site that loads and never starts.
+if not exist "%PAGES%\wwwroot\_framework\dotnet.js" (
+    echo.
+    echo FAILED: _framework\dotnet.js was not published under that name. The platform would never start.
+    dir /b "%PAGES%\wwwroot\_framework\dotnet*"
+    goto :failed
+)
+
 rem  A generated gallery that generated nothing is a build that quietly did nothing.
 if not exist "%PAGES%\wwwroot\gallery\index.json" (
     echo.

@@ -3,10 +3,25 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <!--
-      Blazor's generated index.html carries an asset-fingerprint placeholder; this lets the
-      publish step rewrite it rather than shipping the placeholder text.
+      index.html names the Blazor script through a fingerprint placeholder; this substitutes
+      the real name rather than shipping the placeholder text.
     -->
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+
+    <!--
+      The runtime files keep their plain names.
+
+      Publish would otherwise rename dotnet.js to dotnet.<hash>.js, and the loader asks for
+      "dotnet.js" flatly - no boot manifest is published and index.html carries no import map,
+      so the only thing that can reconcile the two is a server that reads the static web assets
+      manifest and serves the hashed file under the plain route. The dev server does. GitHub
+      Pages serves files off a disk and cannot, so the app loaded its shell, failed to start
+      the platform, and showed its loading message forever.
+
+      Only these are affected. The assemblies stay fingerprinted, because the loader reads
+      their real names from the boot configuration inside dotnet.js rather than guessing.
+    -->
+    <WasmFingerprintAssets>false</WasmFingerprintAssets>
   </PropertyGroup>
 
   <ItemGroup>
