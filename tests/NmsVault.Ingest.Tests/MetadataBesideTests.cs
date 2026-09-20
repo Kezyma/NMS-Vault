@@ -207,6 +207,22 @@ public class MetadataBesideTests : IDisposable
     }
 
     [Fact]
+    public void AMistypedNameIsSimplyNotFound()
+    {
+        // The reason reimport calls out a metadata file that sits beside no export. Nothing
+        // here throws or warns on its own - the file is looked for under the export's name and
+        // is not there, so the export is read with whatever it had. A page of fields filled in
+        // under the wrong name would otherwise vanish without a word.
+        string export = Path.Combine(_folder, "[EXP-13-R] Iron Vulture.nmsship");
+        File.WriteAllText(export, "{}");
+        File.WriteAllText(Path.Combine(_folder, "Iron Vulture.json"), """{ "Summary": "Missed." }""");
+
+        var read = GalleryStore.ApplyMetadataBeside(Stored, export);
+
+        Assert.Equal("A hauler.", read.Summary);
+    }
+
+    [Fact]
     public void PicturesAndMetadataAreFoundBySeparateRules()
     {
         // A .json beside an export is metadata, never a picture; the picture extensions do not

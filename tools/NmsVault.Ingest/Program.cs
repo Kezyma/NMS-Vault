@@ -298,6 +298,8 @@ public static class Program
                 if (byName.TryGetValue(source, out var found)) jobs.Add((item.Meta.Id, found));
                 else Console.WriteLine($"  skipped {item.Meta.Id}: '{source}' is not in that folder");
             }
+
+            ReportOrphanedMetadata(byName.Values);
         }
 
         int changed = 0, failed = 0;
@@ -369,6 +371,33 @@ public static class Program
         if (changed > 0) Console.WriteLine($"  index rebuilt: {store.RebuildIndex()} item(s)");
 
         return failed > 0 ? 1 : 0;
+    }
+
+    /// <summary>
+    /// Names any metadata file that is not beside an export.
+    /// </summary>
+    /// <remarks>
+    /// A file whose name does not match an export is read by nothing, and says so to nobody -
+    /// which is the whole failure: someone fills in a page of fields, mistypes the name by a
+    /// bracket, re-imports, and sees a run that reports no errors and changes nothing.
+    /// </remarks>
+    private static void ReportOrphanedMetadata(IEnumerable<FileInfo> files)
+    {
+        var all = files.ToList();
+
+        // Beside means a file of the same name with some other extension - the export itself.
+        var stems = all
+            .Where(f => !f.Extension.Equals(GalleryStore.MetadataExtension, StringComparison.OrdinalIgnoreCase))
+            .Select(f => Path.Combine(f.DirectoryName ?? "", Path.GetFileNameWithoutExtension(f.Name)))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var orphan in all
+            .Where(f => f.Extension.Equals(GalleryStore.MetadataExtension, StringComparison.OrdinalIgnoreCase))
+            .Where(f => !stems.Contains(Path.Combine(f.DirectoryName ?? "", Path.GetFileNameWithoutExtension(f.Name))))
+            .OrderBy(f => f.Name, StringComparer.Ordinal))
+        {
+            Console.WriteLine($"  note: '{orphan.Name}' sits beside no export, so nothing reads it");
+        }
     }
 
     private static bool IsSource(VaultItem item, string fileName)
