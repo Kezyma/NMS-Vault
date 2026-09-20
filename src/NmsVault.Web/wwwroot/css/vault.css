@@ -300,11 +300,16 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 /*
    A panel over the world rather than a tile on a page: translucent, square, hairlined, and
    edged in gold when it is the one being looked at.
+
+   No backdrop-filter, though it was the obvious way to say "over the world". An element with
+   one becomes the containing block for every fixed-positioned descendant, and the download
+   menu is fixed - so blurring the card silently moved its menu to somewhere card-relative and
+   off the bottom of it. The translucent fill already does the work; the blur only bought three
+   pixels of softening on a background that is nearly flat anyway.
 */
 .item-card {
     display: flex;
     flex-direction: column;
-    backdrop-filter: blur(3px);
     /*
        A grid item's automatic minimum is its min-content width, and a line of summary text
        set not to wrap has a min-content width of the whole sentence. Without this the track

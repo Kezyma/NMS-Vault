@@ -77,6 +77,11 @@ export function saveFile(fileName, base64, mimeType) {
  *
  * Measured after the panel is already in the document, so its real height is known and it can be
  * flipped above the control when there is no room below.
+ *
+ * The coordinates are viewport coordinates, so nothing between the panel and the document may
+ * carry a transform, a filter, a backdrop-filter or a perspective: any of those makes that
+ * element the containing block for a fixed-positioned descendant, and the panel then lands at
+ * these numbers measured from the wrong corner.
  */
 export function anchorPanel(panel, control) {
     const margin = 8;
