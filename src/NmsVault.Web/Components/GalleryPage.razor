@@ -67,14 +67,15 @@ else
     }
     else if (_asTable)
     {
-        <ItemTable Rows="Shown" Sorts="_sorts" Sort="_sort" SortChanged="SortPicked" OnInfo="Open" />
+        <ItemTable Rows="Shown" Sorts="_sorts" Sort="_sort" SortChanged="SortPicked"
+                   OnInfo="Open" OnEnlarge="Enlarge" />
     }
     else
     {
         <div class="card-grid">
             @foreach (var row in Shown)
             {
-                <ItemCard Row="row" OnInfo="Open" @key="row.Id" />
+                <ItemCard Row="row" OnInfo="Open" OnEnlarge="Enlarge" @key="row.Id" />
             }
         </div>
     }
@@ -82,6 +83,12 @@ else
     @if (_open is { } open)
     {
         <ItemModal Row="open" OnClose="CloseItem" @key="open.Id" />
+    }
+
+    @if (_enlarged is { } large)
+    {
+        <ImageLightbox Images="large.Row.Images" Name="@large.Row.DisplayName" At="large.At"
+                       OnClose="ClosePictures" @key="large.Row.Id" />
     }
 }
 
@@ -104,6 +111,9 @@ else
     // One modal for the page. A modal per card would be seventeen dialogs in the document,
     // sixteen of them holding a fetch nobody asked for.
     private GalleryRow? _open;
+
+    // The same, for the pictures. Which item and which of its pictures was clicked.
+    private (GalleryRow Row, int At)? _enlarged;
 
     // Memoised against the list it was built from, so narrowing and ordering happen once
     // per change rather than once per render.
@@ -166,4 +176,8 @@ else
     private void Open(GalleryRow row) => _open = row;
 
     private void CloseItem() => _open = null;
+
+    private void Enlarge((GalleryRow Row, int At) picked) => _enlarged = picked;
+
+    private void ClosePictures() => _enlarged = null;
 }

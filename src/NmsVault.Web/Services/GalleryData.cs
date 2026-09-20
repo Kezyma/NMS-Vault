@@ -75,8 +75,16 @@ public sealed record GalleryRow
     /// </summary>
     public string Summary { get; init; } = "";
 
-    /// <summary>Gallery-relative path to the card image, if there is one.</summary>
-    public string? Image { get; init; }
+    /// <summary>
+    /// The item's pictures, gallery-relative, best first. Empty when it has none.
+    /// </summary>
+    public IReadOnlyList<string> Images { get; init; } = [];
+
+    /// <summary>
+    /// The one picture that stands for the item - its thumbnail in the table, and the first
+    /// the card shows. Null when it has no pictures.
+    /// </summary>
+    public string? Image => Images.Count > 0 ? Images[0] : null;
 
     /// <summary>Contributor credit.</summary>
     public string? Author { get; init; }
@@ -106,7 +114,7 @@ public sealed record GalleryRow
             Tags = ReadList(entry.GetArray("Tags")),
             AlternativeNames = ReadList(entry.GetArray("AlternativeNames")),
             Summary = entry.GetString("Summary") ?? "",
-            Image = entry.GetString("Image"),
+            Images = ReadList(entry.GetArray("Images")),
             Author = entry.GetString("Author"),
             GameVersion = entry.GetString("GameVersion"),
         };

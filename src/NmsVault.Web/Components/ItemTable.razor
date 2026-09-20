@@ -55,9 +55,25 @@
             {
                 <tr @key="row.Id">
                     <td class="col-art">
+                        @*
+                            A thumbnail this size settles which row you are looking at and
+                            nothing else, so it opens the pictures full size. No carousel in
+                            the cell itself - arrows at 48 pixels across would be a target
+                            nobody can hit, and the larger view pages through them anyway.
+                        *@
                         @if (row.Image is { } image)
                         {
-                            <img src="@($"gallery/{image}")" alt="" loading="lazy" />
+                            <button type="button" class="art" @onclick="() => Enlarge(row)"
+                                    title="@($"See {row.DisplayName} larger")"
+                                    aria-label="@($"See {row.DisplayName} larger")">
+                                <img src="@($"gallery/{image}")" alt="" loading="lazy" />
+
+                                @if (row.Images.Count > 1)
+                                {
+                                    @* Says there is more here than the one picture showing. *@
+                                    <span class="more" aria-hidden="true">@row.Images.Count</span>
+                                }
+                            </button>
                         }
                     </td>
 
@@ -143,6 +159,15 @@
     /// <summary>Raised when the reader asks to see a whole item.</summary>
     [Parameter]
     public EventCallback<GalleryRow> OnInfo { get; set; }
+
+    /// <summary>
+    /// Raised with the item when the reader asks to see its pictures larger. Always from the
+    /// first, because the cell shows only the first.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(GalleryRow Row, int At)> OnEnlarge { get; set; }
+
+    private Task Enlarge(GalleryRow row) => OnEnlarge.InvokeAsync((row, 0));
 
     private IReadOnlyList<string> StatColumns =>
         Rows.Count == 0 ? [] : [.. Rows[0].Stats.Select(s => s.Key)];

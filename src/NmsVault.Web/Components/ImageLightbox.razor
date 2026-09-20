@@ -1,0 +1,93 @@
+@inject IJSRuntime Js
+@implements IAsyncDisposable
+
+@*
+    One item's pictures, as large as the window allows.
+
+    The card and the table both show a picture at about the size of a postage stamp, which is
+    enough to tell two ships apart and not enough to look at one. This is the same carousel
+    with the page given over to it.
+
+    It holds no data of its own: the pictures come from the manifest the card was drawn from,
+    so opening this fetches nothing.
+*@
+
+<div class="vault-modal lightbox" role="dialog" aria-modal="true" aria-label="@($"Pictures of {Name}")"
+     tabindex="-1" @ref="_shell" @onkeydown="OnKey" @onclick="Close">
+
+    <figure class="pane" @onclick:stopPropagation="true">
+        <ImageCarousel Images="Images" Name="@Name" At="At" Loading="eager" />
+
+        <figcaption>
+            <span class="name">@Name</span>
+            @if (Images.Count > 1)
+            {
+                <span class="dim">@Images.Count pictures</span>
+            }
+        </figcaption>
+    </figure>
+
+    @*
+        Outside the pane, so it sits against the darkened page rather than over the picture.
+        Clicking anywhere else closes it too; this is for the reader who looks for a button.
+    *@
+    <button type="button" class="shut" title="Close" aria-label="Close" @onclick="Close">
+        <Icon Name="close" Size="20" />
+    </button>
+</div>
+
+@code {
+    /// <summary>The pictures, gallery-relative, best first. Never empty.</summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<string> Images { get; set; }
+
+    /// <summary>What is being shown.</summary>
+    [Parameter, EditorRequired]
+    public required string Name { get; set; }
+
+    /// <summary>Which picture to open on - the one that was clicked.</summary>
+    [Parameter]
+    public int At { get; set; }
+
+    /// <summary>Raised when the reader closes it.</summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private ElementReference _shell;
+    private IJSObjectReference? _module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) { return; }
+
+        // Takes the keyboard, so Escape and the arrow keys arrive here rather than at
+        // whatever was focused on the page behind.
+        await _shell.FocusAsync().ConfigureAwait(true);
+
+        _module = await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+        await _module.InvokeVoidAsync("lockPageScroll", true).ConfigureAwait(true);
+    }
+
+    private Task OnKey(KeyboardEventArgs e) => e.Key == "Escape" ? Close() : Task.CompletedTask;
+
+    private Task Close() => OnClose.InvokeAsync();
+
+    /// <summary>Gives the page back its scrollbar.</summary>
+    /// <returns>A task that completes once it has.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null) { return; }
+
+        try
+        {
+            await _module.InvokeVoidAsync("lockPageScroll", false).ConfigureAwait(false);
+            await _module.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page is going away, which is the only thing unlocking its scrollbar was for.
+        }
+
+        _module = null;
+    }
+}

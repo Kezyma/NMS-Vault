@@ -4,9 +4,15 @@
 
 <article class="item-card">
     <div class="card-art">
-        @if (Row.Image is { } image)
+        @*
+            A carousel rather than the first picture and nothing else: a ship photographed
+            from outside and again from its stats panel is two pictures worth seeing, and
+            opening the item to find that out is a click to learn there was something to see.
+        *@
+        @if (Row.Images.Count > 0)
         {
-            <img src="@($"gallery/{image}")" alt="" loading="lazy" />
+            <ImageCarousel Images="Row.Images" Name="@Row.DisplayName" Compact="true"
+                           OnPick="Enlarge" />
         }
         else
         {
@@ -104,5 +110,13 @@
     [Parameter]
     public EventCallback<GalleryRow> OnInfo { get; set; }
 
+    /// <summary>
+    /// Raised with the item and the picture being shown when the reader asks to see it larger.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(GalleryRow Row, int At)> OnEnlarge { get; set; }
+
     private string Initial => Row.DisplayName.Length > 0 ? Row.DisplayName[..1].ToUpperInvariant() : "?";
+
+    private Task Enlarge(int at) => OnEnlarge.InvokeAsync((Row, at));
 }

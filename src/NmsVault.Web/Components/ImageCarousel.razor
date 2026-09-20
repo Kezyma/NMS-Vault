@@ -2,25 +2,54 @@
     The item's pictures, one at a time.
 
     Sixteen by nine and fitted rather than filled, the same as the card, so a picture is the
-    same picture in both places. Nothing here crops.
+    same picture wherever it is drawn. Nothing here crops.
 
     With one picture there is nothing to page through, so the controls are not drawn at all -
-    an arrow that cannot do anything is worse than no arrow.
+    an arrow that cannot do anything is worse than no arrow. The picture itself still opens
+    the larger view, because one picture is as worth seeing large as three.
 *@
 
-<div class="carousel @(Images.Count > 1 ? null : "single")" @onkeydown="OnKey" tabindex="0"
+<div class="carousel @(Compact ? "compact" : null) @(Images.Count > 1 ? null : "single")"
+     @onkeydown="OnKey" tabindex="0"
      aria-roledescription="carousel" aria-label="@($"Pictures of {Name}")">
-    <div class="frame">
-        <img src="@($"gallery/{Images[_at]}")" alt="@($"{Name}, picture {_at + 1} of {Images.Count}")" />
-    </div>
+
+    @if (OnPick.HasDelegate)
+    {
+        @*
+            A button rather than a click handler on the picture: this does something, so it
+            has to say so to a keyboard and to a screen reader, both of which a bare image
+            with an onclick tells nothing.
+        *@
+        <button type="button" class="frame open" title="@($"See {Name} larger")"
+                aria-label="@($"See {Name} larger, picture {_at + 1} of {Images.Count}")"
+                @onclick="Pick">
+            <img src="@($"gallery/{Images[_at]}")" alt="" loading="@Loading" />
+        </button>
+    }
+    else
+    {
+        <div class="frame">
+            <img src="@($"gallery/{Images[_at]}")" loading="@Loading"
+                 alt="@($"{Name}, picture {_at + 1} of {Images.Count}")" />
+        </div>
+    }
 
     @if (Images.Count > 1)
     {
+        @*
+            stopPropagation because the whole picture may be a button that opens the larger
+            view. Paging to the next picture and being thrown into the lightbox for it is not
+            what anybody meant by either click.
+        *@
         <button type="button" class="step back" title="Previous picture" aria-label="Previous picture"
-                @onclick="() => Step(-1)"><Icon Name="chevron-left" Size="18" /></button>
+                @onclick="() => Step(-1)" @onclick:stopPropagation="true">
+            <Icon Name="chevron-left" Size="@(Compact ? 14 : 18)" />
+        </button>
 
         <button type="button" class="step on" title="Next picture" aria-label="Next picture"
-                @onclick="() => Step(1)"><Icon Name="chevron-right" Size="18" /></button>
+                @onclick="() => Step(1)" @onclick:stopPropagation="true">
+            <Icon Name="chevron-right" Size="@(Compact ? 14 : 18)" />
+        </button>
 
         <div class="dots" role="tablist">
             @for (int i = 0; i < Images.Count; i++)
@@ -30,7 +59,7 @@
                 <button type="button" class="dot @(index == _at ? "at" : null)" @key="index"
                         role="tab" aria-selected="@(index == _at ? "true" : "false")"
                         title="@($"Picture {index + 1}")" aria-label="@($"Picture {index + 1}")"
-                        @onclick="() => _at = index"></button>
+                        @onclick="() => Show(index)" @onclick:stopPropagation="true"></button>
             }
         </div>
     }
@@ -45,13 +74,39 @@
     [Parameter, EditorRequired]
     public required string Name { get; set; }
 
+    /// <summary>
+    /// Smaller controls, for a carousel the size of a card rather than of a dialog.
+    /// </summary>
+    [Parameter]
+    public bool Compact { get; set; }
+
+    /// <summary>
+    /// Raised with the picture being shown when the reader asks to see it larger. Left unset,
+    /// the picture is not clickable at all.
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnPick { get; set; }
+
+    /// <summary>
+    /// Which picture to show first, and the one reported to <see cref="OnPick"/>.
+    /// </summary>
+    [Parameter]
+    public int At { get; set; }
+
+    /// <summary>
+    /// Whether the browser may defer the picture. Lazy on a card in a long list; eager in a
+    /// view opened to see the picture, where deferring it shows an empty frame instead.
+    /// </summary>
+    [Parameter]
+    public string Loading { get; set; } = "lazy";
+
     private int _at;
 
     protected override void OnParametersSet()
     {
         // A different item can arrive in the same component instance, and its third picture
         // may not exist.
-        if (_at >= Images.Count) { _at = 0; }
+        _at = At >= 0 && At < Images.Count ? At : 0;
     }
 
     /// <summary>
@@ -59,6 +114,10 @@
     /// page and a last one, and stopping at the end just makes the arrow look broken.
     /// </summary>
     private void Step(int by) => _at = (_at + by + Images.Count) % Images.Count;
+
+    private void Show(int index) => _at = index;
+
+    private Task Pick() => OnPick.InvokeAsync(_at);
 
     private void OnKey(KeyboardEventArgs e)
     {

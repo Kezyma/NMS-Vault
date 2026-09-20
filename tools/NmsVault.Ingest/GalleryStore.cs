@@ -86,7 +86,10 @@ public sealed class GalleryStore(string root)
             // The card line goes in the manifest; the full text does not, because the only
             // place it is shown is the item's own view, and that fetches the document anyway.
             if (item.Meta.Summary.Length > 0) entry.Set("Summary", item.Meta.Summary);
-            if (item.Meta.Images.Count > 0) entry.Set("Image", item.Meta.Images[0]);
+            // Every picture, not just the first. The card pages through them in place, so the
+            // manifest has to carry the whole set - fetching each item document to find out
+            // whether it has a second picture is the thing this file exists to avoid.
+            if (item.Meta.Images.Count > 0) entry.Set("Images", ToArray(item.Meta.Images));
             if (item.Meta.Tags.Count > 0) entry.Set("Tags", ToArray(item.Meta.Tags));
             if (item.Meta.AlternativeNames.Count > 0)
                 entry.Set("AlternativeNames", ToArray(item.Meta.AlternativeNames));
