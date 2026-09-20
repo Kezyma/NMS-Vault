@@ -16,16 +16,29 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NmsVault.Core\NmsVault.Core.csproj" />
+
+    <!--
+      Referenced so that restoring and building this project restores and builds the tool too.
+      Nothing is linked and nothing is copied - the target below runs it as a program. Doing it
+      with an <MSBuild> task instead looked tidier and was wrong: a task builds what it is
+      pointed at but nothing restores it, so a clean checkout failed with NETSDK1004 on a
+      project the developer never asked for.
+    -->
+    <ProjectReference Include="..\..\tools\NmsVault.Ingest\NmsVault.Ingest.csproj"
+                      ReferenceOutputAssembly="false" ExcludeAssets="all" Private="false" />
   </ItemGroup>
 
   <PropertyGroup>
     <!--
-      Built by the target below rather than referenced. A Blazor app is self-contained and a
-      self-contained project may not reference a plain executable at all, ReferenceOutputAssembly
-      or not - so the dependency is expressed as a build step instead of as a reference.
+      A Blazor app counts as self-contained, and the SDK refuses to let one reference a
+      framework-dependent executable in case it ends up shipped inside it. Nothing is shipped
+      here: ReferenceOutputAssembly and ExcludeAssets above mean the reference carries no
+      assets at all and exists only to order the build.
     -->
-    <IngestProject>$(MSBuildThisFileDirectory)..\..\tools\NmsVault.Ingest\NmsVault.Ingest.csproj</IngestProject>
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+  </PropertyGroup>
 
+  <PropertyGroup>
     <!-- The exports, pictures and metadata files the gallery is built from. -->
     <VaultData>$(MSBuildThisFileDirectory)..\..\data</VaultData>
 
@@ -46,20 +59,20 @@
     Doing it here rather than only in the workflow means the site somebody builds is the site the
     workflow publishes, and that editing anything under data/ is enough to see it.
 
-    Before the build, because what it writes are static web assets and the build has to find them
-    already on disk.
+    After the project references are built, because the tool is one of them and has to exist
+    before it can be run - and before the static web assets are gathered, because what it writes
+    are static web assets and the build has to find them already on disk.
 
     What it writes is gitignored. What it does not write - img/tech, img/class and the favicon -
     is committed, because producing those needs an NMSE checkout that no runner has.
   -->
-  <Target Name="BuildGallery" BeforeTargets="BeforeBuild"
+  <Target Name="BuildGallery"
+          AfterTargets="ResolveProjectReferences"
+          BeforeTargets="ResolveStaticWebAssetsInputs;GetCopyToOutputDirectoryItems"
           Condition="'$(BuildGallery)' == 'true' And Exists('$(VaultData)')">
 
-    <MSBuild Projects="$(IngestProject)" Targets="Build"
-             Properties="Configuration=$(Configuration)" />
-
     <Error Condition="!Exists('$(IngestTool)')"
-           Text="The ingest tool did not appear at $(IngestTool), so the gallery cannot be built. Pass -p:BuildGallery=false to build the site against the gallery as it stands." />
+           Text="The ingest tool is not at $(IngestTool), so the gallery cannot be built. Pass -p:BuildGallery=false to build the site against the gallery as it stands." />
 
     <Message Importance="high" Text="Building the gallery from $(VaultData)" />
 
