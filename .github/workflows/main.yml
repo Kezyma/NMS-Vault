@@ -52,6 +52,26 @@ jobs:
       - name: Publish
         run: dotnet publish src/NmsVault.Web --configuration Release --output artifacts/pages
 
+      # _framework is the application: the runtime, the assemblies and the boot manifest. The
+      # page loads without it and sits on "Loading the vault..." forever, because the script
+      # that would replace it 404s. Everything else can be present and correct and the site
+      # still be nothing but its loading screen, which is how this got deployed once already.
+      - name: Check the application was published
+        run: |
+          if [ ! -f artifacts/pages/wwwroot/_framework/blazor.webassembly.js ]; then
+            echo "::error::No _framework/blazor.webassembly.js in the published site; the page would never start."
+            echo "Published tree:"
+            find artifacts/pages -maxdepth 3 | sort | head -60
+            exit 1
+          fi
+
+          echo "_framework holds $(find artifacts/pages/wwwroot/_framework -type f | wc -l) file(s), $(du -sh artifacts/pages/wwwroot/_framework | cut -f1)."
+
+      - name: Show what is about to be uploaded
+        run: |
+          echo "Total: $(find artifacts/pages/wwwroot -type f | wc -l) file(s), $(du -sh artifacts/pages/wwwroot | cut -f1)."
+          find artifacts/pages/wwwroot -maxdepth 1 | sort
+
       # Without this, Pages runs the output through Jekyll, which drops every folder whose name
       # begins with an underscore - _framework among them, which is the whole application. The
       # symptom is a blank page with nothing in the console to explain it.
