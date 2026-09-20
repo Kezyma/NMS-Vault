@@ -676,6 +676,8 @@ public static class Program
                               $"{outcome.ClassIcons} class badges ({outcome.Bytes / 1024.0 / 1024.0:0.0} MB)");
             if (outcome.IconsMissing > 0)
                 Console.WriteLine($"  {outcome.IconsMissing} icon(s) named but not found in the source");
+            if (!outcome.Favicon)
+                Console.WriteLine("  no favicon written: the S class badge was not in the source");
             return 0;
         });
 
