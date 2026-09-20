@@ -229,7 +229,9 @@ public static class TechExtractor
                               .Replace(".png", "", StringComparison.Ordinal)
                               .ToLowerInvariant();
 
-            bytes += Downscale(source, Path.Combine(outDir, name + ".webp"));
+            // Trimmed, unlike the technology icons: a class badge is a tall shield drawn
+            // inside a square frame, and most of that frame is nothing.
+            bytes += Downscale(source, Path.Combine(outDir, name + ".webp"), trim: true);
             written++;
         }
 
@@ -237,13 +239,34 @@ public static class TechExtractor
         return (written, bytes);
     }
 
-    private static long Downscale(string source, string target)
+    /// <summary>
+    /// Re-encodes an icon at display size.
+    /// </summary>
+    /// <param name="source">The source PNG.</param>
+    /// <param name="target">Where to write the WebP.</param>
+    /// <param name="trim">
+    /// Whether to cut the transparent margin off first, and keep the shape of what is left
+    /// rather than squaring it. False for a technology icon, which fills its frame; true for
+    /// a class badge, which does not.
+    /// </param>
+    /// <returns>The bytes written.</returns>
+    private static long Downscale(string source, string target, bool trim = false)
     {
         using var original = SKBitmap.Decode(source)
             ?? throw new InvalidDataException("not a readable image");
 
-        var info = new SKImageInfo(IconSize, IconSize, SKColorType.Rgba8888, SKAlphaType.Premul);
-        using var resized = original.Resize(info, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
+        using var cropped = trim ? Trim(original) : null;
+        var bitmap = cropped ?? original;
+
+        // A trimmed badge keeps its proportions; an icon that filled a square stays square.
+        double scale = (double)IconSize / Math.Max(bitmap.Width, bitmap.Height);
+        var info = new SKImageInfo(
+            trim ? (int)Math.Round(bitmap.Width * scale) : IconSize,
+            trim ? (int)Math.Round(bitmap.Height * scale) : IconSize,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul);
+
+        using var resized = bitmap.Resize(info, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
             ?? throw new InvalidDataException("could not be resized");
 
         using var image = SKImage.FromBitmap(resized);
@@ -252,5 +275,49 @@ public static class TechExtractor
         data.SaveTo(output);
 
         return data.Size;
+    }
+
+    /// <summary>
+    /// The picture with its transparent border cut away, or null when there is nothing to cut.
+    /// </summary>
+    /// <remarks>
+    /// The game's class badges are a shield about 36 by 56 sitting in a 64 by 64 frame, and
+    /// not centred in it either - so drawn at a given size they come out smaller than anything
+    /// beside them and a little off to one side. Cutting the frame away at extraction is the
+    /// fix; compensating in a stylesheet would mean a magic negative margin per badge.
+    /// </remarks>
+    private static SKBitmap? Trim(SKBitmap source)
+    {
+        const byte Threshold = 8;   // below this an edge pixel is noise, not the drawing
+
+        int left = source.Width, top = source.Height, right = -1, bottom = -1;
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                if (source.GetPixel(x, y).Alpha < Threshold) continue;
+
+                if (x < left) left = x;
+                if (x > right) right = x;
+                if (y < top) top = y;
+                if (y > bottom) bottom = y;
+            }
+        }
+
+        // Nothing drawn at all, or drawn edge to edge: leave it alone either way.
+        if (right < left || bottom < top) return null;
+        if (left == 0 && top == 0 && right == source.Width - 1 && bottom == source.Height - 1) return null;
+
+        // Pixel for pixel at this stage - the resize afterwards is what scales it, and doing
+        // it in one step here would resample twice.
+        var cut = new SKBitmap(right - left + 1, bottom - top + 1, SKColorType.Rgba8888, SKAlphaType.Premul);
+        if (!source.ExtractSubset(cut, new SKRectI(left, top, right + 1, bottom + 1)))
+        {
+            cut.Dispose();
+            return null;
+        }
+
+        return cut;
     }
 }

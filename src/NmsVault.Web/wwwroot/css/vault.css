@@ -361,7 +361,7 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 .card-name {
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
+    gap: var(--space-xs);
     flex: 1;
     min-width: 0;
     margin: 0;
@@ -735,14 +735,22 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
    thing anyone reads a ship by, so it leads the line rather than sitting apart from it.
 */
 .class-badge { display: inline-flex; align-items: center; flex: none; line-height: 0; }
-.class-badge img { width: 22px; height: 22px; }
 
+/*
+   Sized by height, with the width following. The badge is a shield about two thirds as wide
+   as it is tall, and the extractor now cuts the transparent frame off it - so a height is a
+   real height rather than a box the drawing floats around inside, and forcing it square would
+   squash it.
+*/
+.class-badge img { height: 28px; width: auto; }
+
+/* The fallback when a badge is missing. Shaped like the badge it stands in for. */
 .class-letter {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 19px;
+    height: 28px;
     border: 1px solid currentColor;
     border-radius: var(--radius-sm);
     font-size: var(--text-xs);
@@ -824,7 +832,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .item-table .col-name { font-weight: 600; white-space: nowrap; }
 .item-table .col-class { width: 44px; }
 .item-table .col-class .class-badge { position: static; }
-.item-table .col-class .class-badge img { width: 24px; height: 24px; }
+.item-table .col-class .class-badge img { height: 24px; width: auto; }
 .item-table .col-stat, .item-table .col-num { text-align: right; font-family: var(--font-mono); }
 .item-table code { color: var(--tech); }
 
@@ -998,7 +1006,7 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 .item-modal > .sheet .head h2 {
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
+    gap: var(--space-xs);
     flex: 1;
     min-width: 0;
     margin: 0;
