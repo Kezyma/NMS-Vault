@@ -1,7 +1,9 @@
+using System.Security.Cryptography;
 using System.Text;
 using NmsVault.Core;
 using NmsVault.Core.Derived;
 using NmsVault.Json;
+using SkiaSharp;
 
 namespace NmsVault.Ingest;
 
@@ -104,20 +106,187 @@ public sealed class GalleryStore(string root)
         return count;
     }
 
+    /// <summary>The extensions an item picture may arrive as, best format first.</summary>
+    private static readonly string[] PictureExtensions = [".webp", ".png", ".jpg", ".jpeg"];
+
+    /// <summary>What a hand-written metadata file beside an export is called.</summary>
+    public const string MetadataExtension = ".json";
+
     /// <summary>
-    /// Copies an image alongside the gallery and returns its gallery-relative path.
-    /// Deliberately a copy with no resizing: image processing needs a graphics library, and
-    /// the browser downscales for display anyway. Resize before ingesting if size matters.
+    /// The longest edge a stored picture is allowed. A capture is 3840 across and the widest
+    /// it is ever drawn is the item view, at about 700 - but it is worth keeping enough to
+    /// look right on a dense screen, and worth not keeping ten times that.
     /// </summary>
+    private const int PictureEdge = 1600;
+
+    /// <summary>WebP quality. Indistinguishable here and roughly a fifth the size of the JPEG.</summary>
+    private const int PictureQuality = 82;
+
+    /// <summary>
+    /// Stores an image beside the gallery and returns its gallery-relative path.
+    /// </summary>
+    /// <remarks>
+    /// Re-encoded to WebP and bounded rather than copied. A capture out of the game is a
+    /// 4K JPEG of about a megabyte, and a gallery of a few hundred of those is most of what
+    /// a reader would download to look at a page of cards.
+    /// </remarks>
+    /// <param name="sourcePath">The picture to store.</param>
+    /// <param name="id">The item it belongs to.</param>
+    /// <param name="ordinal">Its position, zero first.</param>
+    /// <returns>The gallery-relative URL, fingerprinted so a replacement is a new URL.</returns>
     public string AddImage(string sourcePath, string id, int ordinal)
     {
         Directory.CreateDirectory(ImagesDirectory);
 
-        string extension = Path.GetExtension(sourcePath);
-        string fileName = ordinal == 0 ? $"{id}{extension}" : $"{id}-{ordinal + 1}{extension}";
-        File.Copy(sourcePath, Path.Combine(ImagesDirectory, fileName), overwrite: true);
+        string fileName = ordinal == 0 ? $"{id}.webp" : $"{id}-{ordinal + 1}.webp";
+        string target = Path.Combine(ImagesDirectory, fileName);
 
-        return $"img/{fileName}";
+        using var source = SKBitmap.Decode(sourcePath)
+            ?? throw new InvalidDataException($"'{Path.GetFileName(sourcePath)}' is not an image this can read.");
+
+        using var bitmap = Fit(source);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Webp, PictureQuality);
+        using (var file = File.Create(target))
+            data.SaveTo(file);
+
+        return $"img/{fileName}?v={Fingerprint(data.ToArray())}";
+    }
+
+    /// <summary>
+    /// A short content fingerprint, appended to a stored picture's URL.
+    /// </summary>
+    /// <remarks>
+    /// A stored picture is named after the item, not after the file it came from, so replacing
+    /// one leaves the URL exactly as it was and a browser that already has the old picture
+    /// never asks for the new one. Tying the URL to the content instead means a replaced
+    /// picture is simply a different URL, so nothing anywhere has to be told to expire -
+    /// which matters most on Pages, behind a CDN that caches far harder than a dev server.
+    /// Eight hex characters is four billion to one against a collision between two pictures
+    /// of the same ship, and the whole string is only ever compared, never decoded.
+    /// </remarks>
+    private static string Fingerprint(byte[] content) =>
+        Convert.ToHexStringLower(SHA256.HashData(content))[..8];
+
+    /// <summary>Shrinks to the longest-edge bound, keeping the shape. Never enlarges.</summary>
+    private static SKBitmap Fit(SKBitmap source)
+    {
+        int longest = Math.Max(source.Width, source.Height);
+        if (longest <= PictureEdge) return source.Copy();
+
+        double scale = (double)PictureEdge / longest;
+        var info = new SKImageInfo(
+            (int)Math.Round(source.Width * scale),
+            (int)Math.Round(source.Height * scale),
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul);
+
+        return source.Resize(info, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
+            ?? source.Copy();
+    }
+
+    /// <summary>
+    /// Applies the metadata written beside an export, where there is any.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A hand-written block of an item's own fields, stored under the export's name with a
+    /// <c>.json</c> extension - so <c>[EXP-13-R] Iron Vulture.json</c> beside
+    /// <c>[EXP-13-R] Iron Vulture.nmsship</c>. The same arrangement pictures use: everything
+    /// about an item lives beside the backup it came from, and is re-read when that is.
+    /// See <c>docs/item-template.json</c>.
+    /// </para>
+    /// <para>
+    /// Only the keys present are applied, so a field can be left out rather than filled in -
+    /// and a field written as empty is an instruction to clear it, which is how something set
+    /// earlier is removed. A block wrapped under <c>Vault</c> is accepted as well as a bare
+    /// one, so a block copied out of a stored item works as the template does.
+    /// </para>
+    /// </remarks>
+    /// <param name="meta">What to start from.</param>
+    /// <param name="exportPath">The export to look beside.</param>
+    /// <returns>The metadata with the file applied, or unchanged when there is no file.</returns>
+    /// <exception cref="InvalidDataException">If the file is not readable JSON.</exception>
+    public static VaultMetadata ApplyMetadataBeside(VaultMetadata meta, string exportPath)
+    {
+        string path = Path.ChangeExtension(exportPath, ".json");
+        if (!File.Exists(path)) return meta;
+
+        byte[] bytes = File.ReadAllBytes(path);
+
+        // A file typed on Windows arrives with a byte order mark as often as not, and the
+        // parser reads bytes as Latin-1 - so those three turn into three characters in front
+        // of the opening brace and it refuses the lot. Skipped rather than parsed.
+        if (bytes is [0xEF, 0xBB, 0xBF, ..]) bytes = bytes[3..];
+
+        JsonObject document;
+        try
+        {
+            document = JsonObject.FromBytes(bytes);
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidDataException)
+        {
+            throw new InvalidDataException($"'{Path.GetFileName(path)}' is not readable JSON: {ex.Message}", ex);
+        }
+
+        var block = document.GetObject(VaultItem.VaultKey) ?? document;
+
+        if (block.GetString("Id") is { Length: > 0 } id) meta = meta with { Id = Slug.From(id) };
+        if (block.GetString("DisplayName") is { Length: > 0 } name) meta = meta with { DisplayName = name };
+        if (block.Contains("Summary")) meta = meta with { Summary = block.GetString("Summary") ?? "" };
+        if (block.Contains("Description")) meta = meta with { Description = block.GetString("Description") ?? "" };
+        if (block.Contains("Author")) meta = meta with { Author = Blank(block.GetString("Author")) };
+        if (block.Contains("GameVersion")) meta = meta with { GameVersion = Blank(block.GetString("GameVersion")) };
+        if (block.Contains("AlternativeNames")) meta = meta with { AlternativeNames = Strings(block.GetArray("AlternativeNames")) };
+        if (block.Contains("Tags")) meta = meta with { Tags = Strings(block.GetArray("Tags")) };
+
+        return meta;
+    }
+
+    /// <summary>An empty string means "nothing here", not the empty string.</summary>
+    private static string? Blank(string? value) => value is { Length: > 0 } ? value : null;
+
+    private static IReadOnlyList<string> Strings(JsonArray? array)
+    {
+        if (array is null) return [];
+
+        var read = new List<string>(array.Length);
+        for (int i = 0; i < array.Length; i++)
+            if (array.Get(i)?.ToString() is { Length: > 0 } value) read.Add(value);
+
+        return read;
+    }
+
+    /// <summary>
+    /// The pictures stored beside an export, which is where an item's pictures live.
+    /// </summary>
+    /// <remarks>
+    /// A capture sits next to the backup it is of, under the same name - so
+    /// <c>[START] Radiant Pillar BC1.jpg</c> belongs to
+    /// <c>[START] Radiant Pillar BC1.nmsship</c>. Further pictures are numbered from two, as
+    /// <c>[START] Radiant Pillar BC1-2.jpg</c>, which is the same shape the gallery stores
+    /// them in.
+    /// </remarks>
+    /// <param name="exportPath">The export to look beside.</param>
+    /// <returns>Its pictures, first one first. Empty when there are none.</returns>
+    public static IReadOnlyList<string> PicturesBeside(string exportPath)
+    {
+        string? folder = Path.GetDirectoryName(exportPath);
+        if (folder is null) return [];
+
+        string stem = Path.GetFileNameWithoutExtension(exportPath);
+        var found = new List<string>();
+
+        for (int ordinal = 0; ; ordinal++)
+        {
+            string name = ordinal == 0 ? stem : $"{stem}-{ordinal + 1}";
+            string? picture = PictureExtensions
+                .Select(extension => Path.Combine(folder, name + extension))
+                .FirstOrDefault(File.Exists);
+
+            if (picture is null) return found;
+            found.Add(picture);
+        }
     }
 
     private static JsonArray ToArray(IReadOnlyList<string> values)

@@ -13,9 +13,14 @@ src/NmsVault.Web/wwwroot/gallery/index.json
 src/NmsVault.Web/wwwroot/gallery/img/*
 !src/NmsVault.Web/wwwroot/gallery/img/tech/
 !src/NmsVault.Web/wwwroot/gallery/img/class/
+!src/NmsVault.Web/wwwroot/gallery/img/favicon.webp
 
-# tech.json, img/tech and img/class are extraction output and ARE committed: extraction
-# needs an NMSE checkout, the Pages runner has none, and re-running it against the same
-# game version is byte-for-byte identical, so it adds nothing to history unless the game
-# moves. The class badges are not optional decoration - they are how the site shows a
-# class at all, and one of them is the favicon.
+# tech.json, img/tech, img/class and the favicon are extraction output and ARE committed:
+# extraction needs an NMSE checkout, the Pages runner has none, and re-running it against
+# the same game version is byte-for-byte identical, so it adds nothing to history unless
+# the game moves. The class badges are not optional decoration - they are how the site
+# shows a class at all. The favicon is the S badge again, but squared off rather than
+# trimmed to the shield, so it cannot simply be the published class badge.
+
+.claude/
+docs/

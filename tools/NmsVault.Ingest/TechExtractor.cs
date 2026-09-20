@@ -11,12 +11,14 @@ namespace NmsVault.Ingest;
 /// <param name="IconsWritten">How many icons were re-encoded.</param>
 /// <param name="IconsMissing">Icons named by an entry but absent from the source.</param>
 /// <param name="ClassIcons">How many class badges were written.</param>
+/// <param name="Favicon">Whether the square favicon was written.</param>
 /// <param name="Bytes">Total size of the written icons.</param>
 public readonly record struct TechExtractionResult(
     int Technologies,
     int IconsWritten,
     int IconsMissing,
     int ClassIcons,
+    bool Favicon,
     long Bytes);
 
 /// <summary>
@@ -59,6 +61,12 @@ public static class TechExtractor
         ["CLASSMINI.C.png", "CLASSMINI.B.png", "CLASSMINI.A.png", "CLASSMINI.S.png",
          "CLASSMINI.X.png", "CLASSMINI.SENTINEL.png"];
 
+    /// <summary>
+    /// The badge the site is identified by. S class, because a vault of saved ships is a
+    /// vault of the good ones.
+    /// </summary>
+    private const string FaviconIcon = "CLASSMINI.S.png";
+
     /// <summary>Icons are re-encoded to this size, which is ample for a slot in a grid.</summary>
     private const int IconSize = 64;
 
@@ -87,8 +95,10 @@ public static class TechExtractor
 
         var (written, missing, bytes) = WriteIcons(entries, imageDir, galleryRoot, log);
         var (classIcons, classBytes) = WriteClassIcons(imageDir, galleryRoot, log);
+        long faviconBytes = WriteFavicon(imageDir, galleryRoot, log);
 
-        return new TechExtractionResult(entries.Count, written, missing, classIcons, bytes + classBytes);
+        return new TechExtractionResult(
+            entries.Count, written, missing, classIcons, faviconBytes > 0, bytes + classBytes + faviconBytes);
     }
 
     private static List<TechEntry> ReadEntries(string jsonDir, Action<string> log)
@@ -229,7 +239,9 @@ public static class TechExtractor
                               .Replace(".png", "", StringComparison.Ordinal)
                               .ToLowerInvariant();
 
-            bytes += Downscale(source, Path.Combine(outDir, name + ".webp"));
+            // Trimmed, unlike the technology icons: a class badge is a tall shield drawn
+            // inside a square frame, and most of that frame is nothing.
+            bytes += Downscale(source, Path.Combine(outDir, name + ".webp"), trim: true);
             written++;
         }
 
@@ -237,13 +249,94 @@ public static class TechExtractor
         return (written, bytes);
     }
 
-    private static long Downscale(string source, string target)
+    /// <summary>
+    /// Writes the site's favicon: the S badge centred on a square.
+    /// </summary>
+    /// <remarks>
+    /// Pointing the favicon straight at the published class badge does not work. That badge is
+    /// trimmed to the shield, so it is taller than it is wide, and a browser draws a favicon
+    /// into a square slot by stretching whatever it is given to fit - which makes the S come
+    /// out wide and squat. Padding it back out to a square here keeps the shape the game drew.
+    /// </remarks>
+    /// <returns>The bytes written, or zero if the source badge was not there.</returns>
+    private static long WriteFavicon(string imageDir, string galleryRoot, Action<string> log)
+    {
+        string source = Path.Combine(imageDir, FaviconIcon);
+        if (!File.Exists(source)) { log($"  favicon source {FaviconIcon} not found"); return 0; }
+
+        using var original = SKBitmap.Decode(source)
+            ?? throw new InvalidDataException($"'{FaviconIcon}' is not a readable image");
+
+        // Trimmed first for the same reason the badges are: the shield sits off-centre in its
+        // frame, so padding the frame back out would keep it off-centre.
+        using var cropped = Trim(original);
+        var badge = cropped ?? original;
+
+        double scale = (double)IconSize / Math.Max(badge.Width, badge.Height);
+        var fitted = new SKImageInfo(
+            (int)Math.Round(badge.Width * scale),
+            (int)Math.Round(badge.Height * scale),
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul);
+
+        using var resized = badge.Resize(fitted, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
+            ?? throw new InvalidDataException($"'{FaviconIcon}' could not be resized");
+
+        using var square = new SKBitmap(
+            new SKImageInfo(IconSize, IconSize, SKColorType.Rgba8888, SKAlphaType.Premul));
+
+        using (var canvas = new SKCanvas(square))
+        using (var drawn = SKImage.FromBitmap(resized))
+        {
+            canvas.Clear(SKColors.Transparent);
+
+            // Drawn at its own size, so the sampling never gets a chance to matter.
+            canvas.DrawImage(
+                drawn,
+                new SKPoint((IconSize - fitted.Width) / 2f, (IconSize - fitted.Height) / 2f),
+                new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
+        }
+
+        string target = Path.Combine(galleryRoot, "img", "favicon.webp");
+        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+
+        using var image = SKImage.FromBitmap(square);
+        using var data = image.Encode(SKEncodedImageFormat.Webp, IconQuality);
+        using var output = File.Create(target);
+        data.SaveTo(output);
+
+        log($"  favicon ({fitted.Width}x{fitted.Height} badge on a {IconSize}x{IconSize} square)");
+        return data.Size;
+    }
+
+    /// <summary>
+    /// Re-encodes an icon at display size.
+    /// </summary>
+    /// <param name="source">The source PNG.</param>
+    /// <param name="target">Where to write the WebP.</param>
+    /// <param name="trim">
+    /// Whether to cut the transparent margin off first, and keep the shape of what is left
+    /// rather than squaring it. False for a technology icon, which fills its frame; true for
+    /// a class badge, which does not.
+    /// </param>
+    /// <returns>The bytes written.</returns>
+    private static long Downscale(string source, string target, bool trim = false)
     {
         using var original = SKBitmap.Decode(source)
             ?? throw new InvalidDataException("not a readable image");
 
-        var info = new SKImageInfo(IconSize, IconSize, SKColorType.Rgba8888, SKAlphaType.Premul);
-        using var resized = original.Resize(info, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
+        using var cropped = trim ? Trim(original) : null;
+        var bitmap = cropped ?? original;
+
+        // A trimmed badge keeps its proportions; an icon that filled a square stays square.
+        double scale = (double)IconSize / Math.Max(bitmap.Width, bitmap.Height);
+        var info = new SKImageInfo(
+            trim ? (int)Math.Round(bitmap.Width * scale) : IconSize,
+            trim ? (int)Math.Round(bitmap.Height * scale) : IconSize,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul);
+
+        using var resized = bitmap.Resize(info, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
             ?? throw new InvalidDataException("could not be resized");
 
         using var image = SKImage.FromBitmap(resized);
@@ -252,5 +345,49 @@ public static class TechExtractor
         data.SaveTo(output);
 
         return data.Size;
+    }
+
+    /// <summary>
+    /// The picture with its transparent border cut away, or null when there is nothing to cut.
+    /// </summary>
+    /// <remarks>
+    /// The game's class badges are a shield about 36 by 56 sitting in a 64 by 64 frame, and
+    /// not centred in it either - so drawn at a given size they come out smaller than anything
+    /// beside them and a little off to one side. Cutting the frame away at extraction is the
+    /// fix; compensating in a stylesheet would mean a magic negative margin per badge.
+    /// </remarks>
+    private static SKBitmap? Trim(SKBitmap source)
+    {
+        const byte Threshold = 8;   // below this an edge pixel is noise, not the drawing
+
+        int left = source.Width, top = source.Height, right = -1, bottom = -1;
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            for (int x = 0; x < source.Width; x++)
+            {
+                if (source.GetPixel(x, y).Alpha < Threshold) continue;
+
+                if (x < left) left = x;
+                if (x > right) right = x;
+                if (y < top) top = y;
+                if (y > bottom) bottom = y;
+            }
+        }
+
+        // Nothing drawn at all, or drawn edge to edge: leave it alone either way.
+        if (right < left || bottom < top) return null;
+        if (left == 0 && top == 0 && right == source.Width - 1 && bottom == source.Height - 1) return null;
+
+        // Pixel for pixel at this stage - the resize afterwards is what scales it, and doing
+        // it in one step here would resample twice.
+        var cut = new SKBitmap(right - left + 1, bottom - top + 1, SKColorType.Rgba8888, SKAlphaType.Premul);
+        if (!source.ExtractSubset(cut, new SKRectI(left, top, right + 1, bottom + 1)))
+        {
+            cut.Dispose();
+            return null;
+        }
+
+        return cut;
     }
 }

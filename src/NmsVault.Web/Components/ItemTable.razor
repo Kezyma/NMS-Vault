@@ -61,7 +61,13 @@
                         }
                     </td>
 
-                    <td class="col-name">@row.DisplayName</td>
+                    <td class="col-name">
+                        @row.DisplayName
+                        @if (row.AlternativeNames.Count > 0)
+                        {
+                            <span class="aka">@string.Join(", ", row.AlternativeNames)</span>
+                        }
+                    </td>
 
                     <td>
                         @row.Type

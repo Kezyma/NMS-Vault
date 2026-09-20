@@ -17,10 +17,17 @@
          tabindex="-1" @ref="_sheet" @onkeydown="OnKey" @onclick:stopPropagation="true">
 
         <header class="head">
-            <h2 id="@_titleId">
-                <ClassBadge Class="@Row.Class" />
-                <span class="name-text">@Row.DisplayName</span>
-            </h2>
+            <div class="titles">
+                <h2 id="@_titleId">
+                    <ClassBadge Class="@Row.Class" />
+                    <span class="name-text">@Row.DisplayName</span>
+                </h2>
+
+                @if (Row.AlternativeNames.Count > 0)
+                {
+                    <p class="aka">@string.Join(", ", Row.AlternativeNames)</p>
+                }
+            </div>
 
             <button type="button" class="shut" title="Close" aria-label="Close" @onclick="Close">
                 <Icon Name="close" Size="18" />

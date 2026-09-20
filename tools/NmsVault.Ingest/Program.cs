@@ -33,6 +33,7 @@ public static class Program
             ValidateCommand(gallery),
             UpdateCommand(gallery),
             ReimportCommand(gallery),
+            ConvertCommand(),
             ReindexCommand(gallery),
             ExtractTechCommand(gallery),
         };
@@ -51,7 +52,7 @@ public static class Program
         var description = new Option<string?>("--description") { Description = "Full text, shown when the item is opened." };
         var tags = new Option<string?>("--tags") { Description = "Comma-separated filter tags." };
         var altNames = new Option<string?>("--alt-names") { Description = "Comma-separated alternative names, for search." };
-        var images = new Option<string?>("--images") { Description = "Comma-separated image paths, best first." };
+        var images = new Option<string?>("--images") { Description = "Comma-separated image paths. Defaults to the pictures stored beside the export." };
         var author = new Option<string?>("--author") { Description = "Contributor credit." };
         var gameVersion = new Option<string?>("--game-version") { Description = "Game version captured from, e.g. 7.03." };
         var force = new Option<bool>("--force") { Description = "Replace an item that already exists." };
@@ -90,8 +91,15 @@ public static class Program
         Console.WriteLine($"  detected: {detected.Format} / {detected.Kind} / {detected.Keys} keys ({detected.Certainty})");
         Console.WriteLine($"    reason: {detected.Reason}");
 
-        string displayName = name ?? Path.GetFileNameWithoutExtension(source.Name);
-        string slug = id ?? Slug.From(displayName);
+        // What is written beside the export, then what was typed - a flag is a deliberate
+        // override of a file that is otherwise the item's own record of itself.
+        var beside = GalleryStore.ApplyMetadataBeside(
+            new VaultMetadata { Id = "", DisplayName = "" }, source.FullName);
+
+        string displayName = name
+            ?? (beside.DisplayName is { Length: > 0 } written ? written : Path.GetFileNameWithoutExtension(source.Name));
+
+        string slug = id ?? (beside.Id is { Length: > 0 } chosen ? chosen : Slug.From(displayName));
 
         if (store.Exists(slug) && !force)
         {
@@ -99,22 +107,26 @@ public static class Program
             return 1;
         }
 
-        var meta = new VaultMetadata
+        var meta = beside with
         {
             Id = slug,
             DisplayName = displayName,
-            Summary = summary ?? "",
-            Description = description ?? "",
-            AlternativeNames = altNames,
-            Tags = tags,
-            Author = author,
+            Summary = summary ?? beside.Summary,
+            Description = description ?? beside.Description,
+            AlternativeNames = altNames.Count > 0 ? altNames : beside.AlternativeNames,
+            Tags = tags.Count > 0 ? tags : beside.Tags,
+            Author = author ?? beside.Author,
             DateAdded = DateTimeOffset.UtcNow,
-            GameVersion = gameVersion,
+            GameVersion = gameVersion ?? beside.GameVersion,
             Source = source.Name,
             Images = [],
         };
 
         var item = new VaultImporter(mapper).Import(bytes, meta, source.Name);
+
+        // Beside the export unless told otherwise: a capture is kept next to the backup it is
+        // of, under the same name, so an item's pictures arrive with it.
+        if (images.Count == 0) images = GalleryStore.PicturesBeside(source.FullName);
 
         if (images.Count > 0)
         {
@@ -229,10 +241,18 @@ public static class Program
     /// Replaces stored payloads from their source exports, leaving the gallery metadata alone.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The verb exists because the two halves of an item have different lifetimes. The payload
-    /// comes from a backup and gets corrected when the backup does; the display name, summary,
-    /// tags and pictures are work done here and must survive that. Adding the file again with
-    /// --force would replace both.
+    /// comes from a backup and gets corrected when the backup does; the display name, summary
+    /// and tags are work done here and must survive that. Adding the file again with --force
+    /// would replace both.
+    /// </para>
+    /// <para>
+    /// Pictures side with the payload rather than with the metadata, because they live beside
+    /// the export and are re-read from there. An item whose export has no picture beside it
+    /// ends up with none - which is how a picture is removed, and why one set by hand with
+    /// <c>update --images</c> does not survive a re-import.
+    /// </para>
     /// </remarks>
     private static int Reimport(GalleryStore store, FileInfo? file, string? id, DirectoryInfo? from)
     {
@@ -279,6 +299,8 @@ public static class Program
                 if (byName.TryGetValue(source, out var found)) jobs.Add((item.Meta.Id, found));
                 else Console.WriteLine($"  skipped {item.Meta.Id}: '{source}' is not in that folder");
             }
+
+            ReportOrphanedMetadata(byName.Values);
         }
 
         int changed = 0, failed = 0;
@@ -295,11 +317,29 @@ public static class Program
             var before = VaultItem.FromBytes(File.ReadAllBytes(store.PathFor(target)), target);
             byte[] bytes = File.ReadAllBytes(export.FullName);
 
+            var pictures = GalleryStore.PicturesBeside(export.FullName);
+            var meta = before.Meta with
+            {
+                Source = export.Name,
+                Images = [.. pictures.Select((path, i) => store.AddImage(path, target, i))],
+            };
+
+            // Read again, so editing the file beside a ship and re-importing applies it.
+            try
+            {
+                meta = GalleryStore.ApplyMetadataBeside(meta, export.FullName) with { Id = target };
+            }
+            catch (InvalidDataException ex)
+            {
+                Console.Error.WriteLine($"  {target}: {ex.Message}");
+                failed++;
+                continue;
+            }
+
             VaultItem after;
             try
             {
-                after = new VaultImporter(mapper).Import(
-                    bytes, before.Meta with { Source = export.Name }, export.Name);
+                after = new VaultImporter(mapper).Import(bytes, meta, export.Name);
             }
             catch (Exception ex) when (ex is ImportException or InvalidDataException)
             {
@@ -334,6 +374,33 @@ public static class Program
         return failed > 0 ? 1 : 0;
     }
 
+    /// <summary>
+    /// Names any metadata file that is not beside an export.
+    /// </summary>
+    /// <remarks>
+    /// A file whose name does not match an export is read by nothing, and says so to nobody -
+    /// which is the whole failure: someone fills in a page of fields, mistypes the name by a
+    /// bracket, re-imports, and sees a run that reports no errors and changes nothing.
+    /// </remarks>
+    private static void ReportOrphanedMetadata(IEnumerable<FileInfo> files)
+    {
+        var all = files.ToList();
+
+        // Beside means a file of the same name with some other extension - the export itself.
+        var stems = all
+            .Where(f => !f.Extension.Equals(GalleryStore.MetadataExtension, StringComparison.OrdinalIgnoreCase))
+            .Select(f => Path.Combine(f.DirectoryName ?? "", Path.GetFileNameWithoutExtension(f.Name)))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var orphan in all
+            .Where(f => f.Extension.Equals(GalleryStore.MetadataExtension, StringComparison.OrdinalIgnoreCase))
+            .Where(f => !stems.Contains(Path.Combine(f.DirectoryName ?? "", Path.GetFileNameWithoutExtension(f.Name))))
+            .OrderBy(f => f.Name, StringComparer.Ordinal))
+        {
+            Console.WriteLine($"  note: '{orphan.Name}' sits beside no export, so nothing reads it");
+        }
+    }
+
     private static bool IsSource(VaultItem item, string fileName)
         => string.Equals(item.Meta.Source, fileName, StringComparison.OrdinalIgnoreCase);
 
@@ -348,6 +415,13 @@ public static class Program
         if (DescribeCustomisation(before) != DescribeCustomisation(after))
             notes.Add($"customisation {DescribeCustomisation(before)} -> {DescribeCustomisation(after)}");
 
+        if (before.Meta.Images.Count != after.Meta.Images.Count)
+            notes.Add($"pictures {before.Meta.Images.Count} -> {after.Meta.Images.Count}");
+        else if (!before.Meta.Images.SequenceEqual(after.Meta.Images, StringComparer.Ordinal))
+            notes.Add($"{after.Meta.Images.Count} picture(s) replaced");
+
+        if (Describe(before.Meta) != Describe(after.Meta)) notes.Add("metadata");
+
         var wasTech = ItemFacts.For(before).InstalledTech.Count;
         var nowTech = ItemFacts.For(after).InstalledTech.Count;
         if (wasTech != nowTech) notes.Add($"technology {wasTech} -> {nowTech}");
@@ -356,6 +430,95 @@ public static class Program
     }
 
     private static string Say(bool? value) => value is null ? "not stated" : value.Value ? "true" : "false";
+
+    /// <summary>
+    /// The metadata a person wrote, as one string, so a change to any of it can be noticed.
+    /// Leaves out what the tool sets itself, which changes on every run and means nothing.
+    /// </summary>
+    private static string Describe(VaultMetadata meta) => string.Join('',
+        meta.DisplayName, meta.Summary, meta.Description, meta.Author ?? "", meta.GameVersion ?? "",
+        string.Join(',', meta.AlternativeNames), string.Join(',', meta.Tags));
+
+    // --- convert ------------------------------------------------------
+
+    private static Command ConvertCommand()
+    {
+        var file = new Option<FileInfo>("--file") { Description = "The export to read.", Required = true };
+        var to = new Option<EditorId>("--to") { Description = "Which editor to write for.", Required = true };
+        var output = new Option<FileInfo?>("--out") { Description = "Where to write it. Defaults to beside the source." };
+        var name = new Option<string?>("--name") { Description = "Name to write inside formats that carry one." };
+
+        var command = new Command("convert",
+            "Read one export and write it out in another editor's format. Touches no gallery.")
+        { file, to, output, name };
+
+        command.SetAction(result => Convert(
+            result.GetValue(file)!, result.GetValue(to), result.GetValue(output), result.GetValue(name)));
+
+        return command;
+    }
+
+    /// <summary>
+    /// Converts a single file, without storing anything.
+    /// </summary>
+    /// <remarks>
+    /// The gallery is the reason this project exists, but the conversion underneath it is
+    /// useful on its own - somebody with an old backup and a current editor wants one file
+    /// turned into another, not a gallery.
+    /// </remarks>
+    private static int Convert(FileInfo source, EditorId to, FileInfo? output, string? name)
+    {
+        var mapper = JsonNameMapper.LoadEmbedded();
+        byte[] bytes = File.ReadAllBytes(source.FullName);
+
+        var detected = FormatDetector.Detect(bytes, mapper, source.Name);
+        Console.WriteLine($"  read:    {detected.Format} / {detected.Kind} / {detected.Keys} keys ({detected.Certainty})");
+        Console.WriteLine($"    reason: {detected.Reason}");
+
+        if (detected.Format == SourceFormat.Unknown)
+        {
+            Console.Error.WriteLine("error: that file is not a format this recognises.");
+            return 1;
+        }
+
+        VaultItem item;
+        try
+        {
+            item = new VaultImporter(mapper).Import(bytes, new VaultMetadata
+            {
+                Id = "convert",
+                DisplayName = name ?? Path.GetFileNameWithoutExtension(source.Name),
+            }, source.Name);
+        }
+        catch (Exception ex) when (ex is ImportException or InvalidDataException or InvalidOperationException)
+        {
+            Console.Error.WriteLine($"error: {ex.Message}");
+            return 1;
+        }
+
+        var adapter = Adapters(mapper).First(a => a.Editor == to);
+        var extension = adapter.Extension(item.Kind);
+
+        if (!extension.HasValue)
+        {
+            Console.Error.WriteLine($"error: {adapter.DisplayName} {extension.Alternative.Reason}");
+            return 1;
+        }
+
+        // Said before the file is written, not after: the point of saying it is to give
+        // somebody the chance to not write it.
+        foreach (string loss in adapter.LossesFor(item))
+            Console.WriteLine($"  loses:   {loss}");
+
+        var written = adapter.Export(item);
+        string target = output?.FullName
+            ?? Path.Combine(source.DirectoryName ?? ".", Path.GetFileNameWithoutExtension(source.Name) + extension.Value);
+
+        File.WriteAllBytes(target, written.Content);
+
+        Console.WriteLine($"  written: {target} ({written.Content.Length:n0} bytes, {adapter.DisplayName})");
+        return 0;
+    }
 
     // --- inspect ------------------------------------------------------
 
@@ -515,6 +678,8 @@ public static class Program
                               $"{outcome.ClassIcons} class badges ({outcome.Bytes / 1024.0 / 1024.0:0.0} MB)");
             if (outcome.IconsMissing > 0)
                 Console.WriteLine($"  {outcome.IconsMissing} icon(s) named but not found in the source");
+            if (!outcome.Favicon)
+                Console.WriteLine("  no favicon written: the S class badge was not in the source");
             return 0;
         });
 
