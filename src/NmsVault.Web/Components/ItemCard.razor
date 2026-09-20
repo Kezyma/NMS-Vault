@@ -21,10 +21,23 @@
             picture down by its own height on every card on the page.
         *@
         <div class="card-head">
-            <h2 class="card-name">
-                <ClassBadge Class="@Row.Class" />
-                <span class="name-text">@Row.DisplayName</span>
-            </h2>
+            <div class="titles">
+                <h2 class="card-name">
+                    <ClassBadge Class="@Row.Class" />
+                    <span class="name-text">@Row.DisplayName</span>
+                </h2>
+
+                @*
+                    What else the thing is called, tucked under the name rather than beside it:
+                    an in-game name that differs from the one the gallery lists it under, or a
+                    nickname people search for. Italic so it reads as a gloss on the name above
+                    and not as a second name of equal standing.
+                *@
+                @if (Row.AlternativeNames.Count > 0)
+                {
+                    <p class="aka">@string.Join(", ", Row.AlternativeNames)</p>
+                }
+            </div>
 
             <div class="actions">
                 <button type="button" class="info icon" title="@($"More about {Row.DisplayName}")"
