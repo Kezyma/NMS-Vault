@@ -417,6 +417,8 @@ public static class Program
 
         if (before.Meta.Images.Count != after.Meta.Images.Count)
             notes.Add($"pictures {before.Meta.Images.Count} -> {after.Meta.Images.Count}");
+        else if (!before.Meta.Images.SequenceEqual(after.Meta.Images, StringComparer.Ordinal))
+            notes.Add($"{after.Meta.Images.Count} picture(s) replaced");
 
         if (Describe(before.Meta) != Describe(after.Meta)) notes.Add("metadata");
 

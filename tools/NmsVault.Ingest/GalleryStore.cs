@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using NmsVault.Core;
 using NmsVault.Core.Derived;
@@ -132,7 +133,7 @@ public sealed class GalleryStore(string root)
     /// <param name="sourcePath">The picture to store.</param>
     /// <param name="id">The item it belongs to.</param>
     /// <param name="ordinal">Its position, zero first.</param>
-    /// <returns>The gallery-relative path.</returns>
+    /// <returns>The gallery-relative URL, fingerprinted so a replacement is a new URL.</returns>
     public string AddImage(string sourcePath, string id, int ordinal)
     {
         Directory.CreateDirectory(ImagesDirectory);
@@ -146,11 +147,26 @@ public sealed class GalleryStore(string root)
         using var bitmap = Fit(source);
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Webp, PictureQuality);
-        using var file = File.Create(target);
-        data.SaveTo(file);
+        using (var file = File.Create(target))
+            data.SaveTo(file);
 
-        return $"img/{fileName}";
+        return $"img/{fileName}?v={Fingerprint(data.ToArray())}";
     }
+
+    /// <summary>
+    /// A short content fingerprint, appended to a stored picture's URL.
+    /// </summary>
+    /// <remarks>
+    /// A stored picture is named after the item, not after the file it came from, so replacing
+    /// one leaves the URL exactly as it was and a browser that already has the old picture
+    /// never asks for the new one. Tying the URL to the content instead means a replaced
+    /// picture is simply a different URL, so nothing anywhere has to be told to expire -
+    /// which matters most on Pages, behind a CDN that caches far harder than a dev server.
+    /// Eight hex characters is four billion to one against a collision between two pictures
+    /// of the same ship, and the whole string is only ever compared, never decoded.
+    /// </remarks>
+    private static string Fingerprint(byte[] content) =>
+        Convert.ToHexStringLower(SHA256.HashData(content))[..8];
 
     /// <summary>Shrinks to the longest-edge bound, keeping the shape. Never enlarges.</summary>
     private static SKBitmap Fit(SKBitmap source)
