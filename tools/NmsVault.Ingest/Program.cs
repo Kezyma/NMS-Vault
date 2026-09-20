@@ -90,8 +90,15 @@ public static class Program
         Console.WriteLine($"  detected: {detected.Format} / {detected.Kind} / {detected.Keys} keys ({detected.Certainty})");
         Console.WriteLine($"    reason: {detected.Reason}");
 
-        string displayName = name ?? Path.GetFileNameWithoutExtension(source.Name);
-        string slug = id ?? Slug.From(displayName);
+        // What is written beside the export, then what was typed - a flag is a deliberate
+        // override of a file that is otherwise the item's own record of itself.
+        var beside = GalleryStore.ApplyMetadataBeside(
+            new VaultMetadata { Id = "", DisplayName = "" }, source.FullName);
+
+        string displayName = name
+            ?? (beside.DisplayName is { Length: > 0 } written ? written : Path.GetFileNameWithoutExtension(source.Name));
+
+        string slug = id ?? (beside.Id is { Length: > 0 } chosen ? chosen : Slug.From(displayName));
 
         if (store.Exists(slug) && !force)
         {
@@ -99,17 +106,17 @@ public static class Program
             return 1;
         }
 
-        var meta = new VaultMetadata
+        var meta = beside with
         {
             Id = slug,
             DisplayName = displayName,
-            Summary = summary ?? "",
-            Description = description ?? "",
-            AlternativeNames = altNames,
-            Tags = tags,
-            Author = author,
+            Summary = summary ?? beside.Summary,
+            Description = description ?? beside.Description,
+            AlternativeNames = altNames.Count > 0 ? altNames : beside.AlternativeNames,
+            Tags = tags.Count > 0 ? tags : beside.Tags,
+            Author = author ?? beside.Author,
             DateAdded = DateTimeOffset.UtcNow,
-            GameVersion = gameVersion,
+            GameVersion = gameVersion ?? beside.GameVersion,
             Source = source.Name,
             Images = [],
         };
@@ -314,6 +321,18 @@ public static class Program
                 Images = [.. pictures.Select((path, i) => store.AddImage(path, target, i))],
             };
 
+            // Read again, so editing the file beside a ship and re-importing applies it.
+            try
+            {
+                meta = GalleryStore.ApplyMetadataBeside(meta, export.FullName) with { Id = target };
+            }
+            catch (InvalidDataException ex)
+            {
+                Console.Error.WriteLine($"  {target}: {ex.Message}");
+                failed++;
+                continue;
+            }
+
             VaultItem after;
             try
             {
@@ -369,6 +388,8 @@ public static class Program
         if (before.Meta.Images.Count != after.Meta.Images.Count)
             notes.Add($"pictures {before.Meta.Images.Count} -> {after.Meta.Images.Count}");
 
+        if (Describe(before.Meta) != Describe(after.Meta)) notes.Add("metadata");
+
         var wasTech = ItemFacts.For(before).InstalledTech.Count;
         var nowTech = ItemFacts.For(after).InstalledTech.Count;
         if (wasTech != nowTech) notes.Add($"technology {wasTech} -> {nowTech}");
@@ -377,6 +398,14 @@ public static class Program
     }
 
     private static string Say(bool? value) => value is null ? "not stated" : value.Value ? "true" : "false";
+
+    /// <summary>
+    /// The metadata a person wrote, as one string, so a change to any of it can be noticed.
+    /// Leaves out what the tool sets itself, which changes on every run and means nothing.
+    /// </summary>
+    private static string Describe(VaultMetadata meta) => string.Join('',
+        meta.DisplayName, meta.Summary, meta.Description, meta.Author ?? "", meta.GameVersion ?? "",
+        string.Join(',', meta.AlternativeNames), string.Join(',', meta.Tags));
 
     // --- inspect ------------------------------------------------------
 

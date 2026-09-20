@@ -108,6 +108,9 @@ public sealed class GalleryStore(string root)
     /// <summary>The extensions an item picture may arrive as, best format first.</summary>
     private static readonly string[] PictureExtensions = [".webp", ".png", ".jpg", ".jpeg"];
 
+    /// <summary>What a hand-written metadata file beside an export is called.</summary>
+    public const string MetadataExtension = ".json";
+
     /// <summary>
     /// The longest edge a stored picture is allowed. A capture is 3840 across and the widest
     /// it is ever drawn is the item view, at about 700 - but it is worth keeping enough to
@@ -164,6 +167,78 @@ public sealed class GalleryStore(string root)
 
         return source.Resize(info, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
             ?? source.Copy();
+    }
+
+    /// <summary>
+    /// Applies the metadata written beside an export, where there is any.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A hand-written block of an item's own fields, stored under the export's name with a
+    /// <c>.json</c> extension - so <c>[EXP-13-R] Iron Vulture.json</c> beside
+    /// <c>[EXP-13-R] Iron Vulture.nmsship</c>. The same arrangement pictures use: everything
+    /// about an item lives beside the backup it came from, and is re-read when that is.
+    /// See <c>docs/item-template.json</c>.
+    /// </para>
+    /// <para>
+    /// Only the keys present are applied, so a field can be left out rather than filled in -
+    /// and a field written as empty is an instruction to clear it, which is how something set
+    /// earlier is removed. A block wrapped under <c>Vault</c> is accepted as well as a bare
+    /// one, so a block copied out of a stored item works as the template does.
+    /// </para>
+    /// </remarks>
+    /// <param name="meta">What to start from.</param>
+    /// <param name="exportPath">The export to look beside.</param>
+    /// <returns>The metadata with the file applied, or unchanged when there is no file.</returns>
+    /// <exception cref="InvalidDataException">If the file is not readable JSON.</exception>
+    public static VaultMetadata ApplyMetadataBeside(VaultMetadata meta, string exportPath)
+    {
+        string path = Path.ChangeExtension(exportPath, ".json");
+        if (!File.Exists(path)) return meta;
+
+        byte[] bytes = File.ReadAllBytes(path);
+
+        // A file typed on Windows arrives with a byte order mark as often as not, and the
+        // parser reads bytes as Latin-1 - so those three turn into three characters in front
+        // of the opening brace and it refuses the lot. Skipped rather than parsed.
+        if (bytes is [0xEF, 0xBB, 0xBF, ..]) bytes = bytes[3..];
+
+        JsonObject document;
+        try
+        {
+            document = JsonObject.FromBytes(bytes);
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidDataException)
+        {
+            throw new InvalidDataException($"'{Path.GetFileName(path)}' is not readable JSON: {ex.Message}", ex);
+        }
+
+        var block = document.GetObject(VaultItem.VaultKey) ?? document;
+
+        if (block.GetString("Id") is { Length: > 0 } id) meta = meta with { Id = Slug.From(id) };
+        if (block.GetString("DisplayName") is { Length: > 0 } name) meta = meta with { DisplayName = name };
+        if (block.Contains("Summary")) meta = meta with { Summary = block.GetString("Summary") ?? "" };
+        if (block.Contains("Description")) meta = meta with { Description = block.GetString("Description") ?? "" };
+        if (block.Contains("Author")) meta = meta with { Author = Blank(block.GetString("Author")) };
+        if (block.Contains("GameVersion")) meta = meta with { GameVersion = Blank(block.GetString("GameVersion")) };
+        if (block.Contains("AlternativeNames")) meta = meta with { AlternativeNames = Strings(block.GetArray("AlternativeNames")) };
+        if (block.Contains("Tags")) meta = meta with { Tags = Strings(block.GetArray("Tags")) };
+
+        return meta;
+    }
+
+    /// <summary>An empty string means "nothing here", not the empty string.</summary>
+    private static string? Blank(string? value) => value is { Length: > 0 } ? value : null;
+
+    private static IReadOnlyList<string> Strings(JsonArray? array)
+    {
+        if (array is null) return [];
+
+        var read = new List<string>(array.Length);
+        for (int i = 0; i < array.Length; i++)
+            if (array.Get(i)?.ToString() is { Length: > 0 } value) read.Add(value);
+
+        return read;
     }
 
     /// <summary>

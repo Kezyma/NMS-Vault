@@ -77,6 +77,21 @@ dotnet test
 
 > **Requires:** [.NET 10 SDK][dotnet]
 
+### Adding to the gallery
+
+```bash
+dotnet run --project tools/NmsVault.Ingest -- add --file "<export>"
+```
+
+Everything about an item lives beside the backup it came from, under the same name: a picture
+as `<name>.jpg` (further ones numbered from two), and its gallery fields as `<name>.json` —
+copy [docs/item-template.json](docs/item-template.json) and fill it in. Both are read again by
+`reimport`, so correcting a backup, a caption or a picture is the same command:
+
+```bash
+dotnet run --project tools/NmsVault.Ingest -- reimport --from "<backups folder>"
+```
+
 ### Running the gallery
 
 ```bash

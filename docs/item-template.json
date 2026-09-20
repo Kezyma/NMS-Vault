@@ -1,0 +1,74 @@
+{
+  "$comment": [
+    "A gallery item's metadata, for filling in by hand.",
+    "",
+    "Copy this next to the export it describes, under the same name with a .json extension -",
+    "so '[EXP-13-R] Iron Vulture.json' beside '[EXP-13-R] Iron Vulture.nmsship'. The ingest",
+    "tool reads it on add and again on reimport, which is the same arrangement pictures use:",
+    "everything about an item lives beside the backup it came from.",
+    "",
+    "Every field is optional. Only the keys present are applied, so an unwanted one can be",
+    "deleted outright rather than left empty - and a field left as \"\" or [] is read as an",
+    "instruction to clear it, which is how something set earlier gets removed. Deleting the",
+    "whole file changes nothing, though: it says what to set, and does not claim to be the",
+    "only thing that ever set it. Pictures are the other way round - the files beside the",
+    "export are the pictures, so removing one removes it.",
+    "",
+    "Three fields are not here because the tool fills them: SchemaVersion, DateAdded, and",
+    "Source, which records the export this was read from. Images are not here either - a",
+    "picture is a file stored beside the export, named the same way this file is, with further",
+    "pictures numbered from two ('... Iron Vulture-2.jpg').",
+    "",
+    "This comment is ignored, so it can stay in a filled-in copy or be deleted."
+  ],
+
+  "Id": "",
+  "DisplayName": "",
+  "AlternativeNames": [],
+  "Summary": "",
+  "Description": "",
+  "Tags": [],
+  "Author": "",
+  "GameVersion": "",
+
+  "$fields": {
+    "Id": [
+      "The permalink slug: lowercase, hyphenated, no spaces - 'iron-vulture'.",
+      "Stable forever once published, because it is the item's address.",
+      "Leave empty to have one made from the display name. Set it by hand when two items",
+      "would otherwise slug alike, as the two ships called Rasamama S36 do."
+    ],
+    "DisplayName": [
+      "What the gallery lists it under. Need not match the name in game - that can go in",
+      "AlternativeNames instead. Leave empty to use the export's file name."
+    ],
+    "AlternativeNames": [
+      "Other names it is known by, shown in italics under the display name and matched by",
+      "search. The in-game name where it differs, a community nickname, the platform a",
+      "pre-order ship came from.",
+      "Example: [\"Prime Vector\", \"PS4 pre-order fighter\"]"
+    ],
+    "Summary": [
+      "One line, shown on the card. Cut with an ellipsis if it does not fit, so put what",
+      "distinguishes the item first.",
+      "Example: \"A hauler carrying full custom parts, textures and a palette.\""
+    ],
+    "Description": [
+      "The full text, shown when the item is opened. Several paragraphs is fine: separate",
+      "them with a blank line, written as \\n\\n in JSON.",
+      "Example: \"First paragraph.\\n\\nSecond paragraph.\""
+    ],
+    "Tags": [
+      "Filter tags, offered as a heading in the bar above the list. Lowercase reads best,",
+      "and a tag only earns its place if more than one item will carry it.",
+      "Example: [\"expedition\", \"s-class\", \"living-ship\"]"
+    ],
+    "Author": [
+      "Who contributed it, if they want the credit. Shown at the foot of the item."
+    ],
+    "GameVersion": [
+      "The game version it was captured from - \"7.03\". Worth recording: payload shapes drift",
+      "between updates, and an old capture may not import cleanly into a much newer save."
+    ]
+  }
+}
