@@ -1,5 +1,6 @@
 @inject ExportService Exports
 @inject TechData TechSource
+@inject PetData PetSource
 @inject IJSRuntime Js
 @implements IAsyncDisposable
 
@@ -101,13 +102,51 @@
                     <h3>Nature</h3>
 
                     <p class="marks">
+                        @*
+                            What it fights as. A species override decides it where there is one -
+                            a Bonecat is tropical on a radioactive world - and the biome decides
+                            it otherwise.
+                        *@
+                        @if (_affinity is { } affinity)
+                        {
+                            <span class="chip affinity" title="Pet battle affinity">
+                                @if (affinity.Icon is { Length: > 0 } glyph)
+                                {
+                                    @* Removes itself if the glyph has not been extracted yet,
+                                       so the name still reads rather than sitting beside a
+                                       broken image. *@
+                                    <img src="@($"gallery/img/affinity/{glyph}")" alt="" loading="lazy"
+                                         onerror="this.remove()" />
+                                }
+                                <span>@affinity.Name</span>
+                            </span>
+                        }
                         <span class="chip">@(creature.IsPredator ? "Predator" : "Not a predator")</span>
                         <span class="chip">@(creature.HasFur ? "Furred" : "Unfurred")</span>
+
+                        @*
+                            Whether the egg was edited before it hatched. This is what the
+                            difference between "hatched" and "tamed" actually is, and until now
+                            the only place it was said was by hand, in a summary.
+                        *@
+                        <span class="chip">@(creature.EggModified ? "Egg modified" : "Egg unmodified")</span>
                         @if (creature.SpeciesId is { Length: > 0 } species)
                         {
                             <span class="chip mono">@species</span>
                         }
                     </p>
+
+                    @if (creature.CustomName is { Length: > 0 } given)
+                    {
+                        @* What its owner called it, which need not be what the gallery lists it under. *@
+                        <p class="given">Named <em>@given</em> by its owner</p>
+                    }
+
+                    @if (creature.UniverseAddress is { Length: > 0 } address)
+                    {
+                        @* The only thing in the payload that says where the creature is from. *@
+                        <p class="dim from">Found at <code>@address</code></p>
+                    }
 
                 </div>
 
@@ -151,14 +190,31 @@
                     <div class="moves">
                         <h3>Battle moves</h3>
 
-                        @* The game's own ids. Their readable names live in the language files,
-                           which are not extracted - see docs. *@
-                        <p class="marks">
-                            @foreach (string move in creature.BattleMoves)
+                        @*
+                            A move's name depends on the creature's affinity as much as on the
+                            move: the same ATTACK is Lash on a tropical creature and Freeze on a
+                            frost one. Unresolved ones fall back to the id, which is what every
+                            move used to show.
+                        *@
+                        <ul class="move-list">
+                            @foreach (string id in creature.BattleMoves)
                             {
-                                <span class="chip mono">@move</span>
+                                var move = _pets.Move(id, _affinity);
+
+                                <li @key="id" title="@move.Description">
+                                    @if (move.Icon is { Length: > 0 } glyph)
+                                    {
+                                        <img src="@($"gallery/img/move/{glyph}")" alt="" loading="lazy"
+                                             onerror="this.remove()" />
+                                    }
+                                    <span class="name">@move.Name</span>
+                                    @if (move.Target is { Length: > 0 } target)
+                                    {
+                                        <span class="dim">@target</span>
+                                    }
+                                </li>
                             }
-                        </p>
+                        </ul>
                     </div>
                 }
 
@@ -232,6 +288,8 @@
     private IJSObjectReference? _module;
     private VaultItem? _item;
     private TechIndex _tech = TechIndex.Empty;
+    private PetIndex _pets = PetIndex.Empty;
+    private PetAffinity? _affinity;
     private NamedInventory? _inventory;
     private CompanionFacts? _creature;
     private IReadOnlyList<string> _images = [];
@@ -271,6 +329,11 @@
             // token, and TechData only catches HttpRequestException and JsonException - so a
             // close during a cold tech.json load threw straight into Blazor's error bar.
             _tech = await TechSource.IndexAsync(_leaving.Token).ConfigureAwait(true);
+
+            // Only for a creature. A page of ships has no use for it, and it is a separate
+            // fetch.
+            if (Row.Kind == EntityKind.Companion)
+                _pets = await PetSource.IndexAsync(_leaving.Token).ConfigureAwait(true);
             _item = await Exports.ItemAsync(Row.Id, _leaving.Token).ConfigureAwait(true);
         }
         catch (HttpRequestException)
@@ -291,6 +354,10 @@
         _creature = _item.Kind == EntityKind.Companion
             ? CompanionFacts.For(_item.Payload, _item.AccessorySlots)
             : null;
+
+        _affinity = _creature is null
+            ? null
+            : _pets.Affinity(_creature.SpeciesId, _creature.Biome);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

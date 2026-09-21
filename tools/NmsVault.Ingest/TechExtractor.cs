@@ -320,7 +320,7 @@ public static class TechExtractor
     /// a class badge, which does not.
     /// </param>
     /// <returns>The bytes written.</returns>
-    private static long Downscale(string source, string target, bool trim = false)
+    internal static long Downscale(string source, string target, bool trim = false)
     {
         using var original = SKBitmap.Decode(source)
             ?? throw new InvalidDataException("not a readable image");

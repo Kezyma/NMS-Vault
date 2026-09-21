@@ -207,7 +207,15 @@ public static class SeedReader
 
         Pair(seeds, pet, "CreatureSeed", "Creature");
         Pair(seeds, pet, "ColourBaseSeed", "Colour");
-        Pair(seeds, pet, "BoneScaleSeed", "Bone scale");
+
+        // Bone scale repeats the creature seed on every ordinary creature - checked across nine
+        // of them - so it is shown only when it says something the line above does not.
+        string? creature = seeds.FirstOrDefault(s => s.Label == "Creature").Value;
+        var bone = new List<LabelledSeed>(1);
+        Pair(bone, pet, "BoneScaleSeed", "Bone scale");
+
+        if (bone.Count > 0 && !string.Equals(bone[0].Value, creature, StringComparison.OrdinalIgnoreCase))
+            seeds.AddRange(bone);
 
         return seeds;
     }
@@ -232,13 +240,51 @@ public static class SeedReader
         return seeds;
     }
 
-    /// <summary>Adds a paired seed, if its flag says it holds anything.</summary>
+    /// <summary>
+    /// Adds a paired seed, when it holds a real one.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The occupancy flag alone is not enough. A unique model - the way Golden Vector is a
+    /// unique ship - carries the flag set over a placeholder value: our one companion holds
+    /// <c>[true, "0x1"]</c> and an old Fiend holds <c>[true, "0x0"]</c>. Printing those as
+    /// seeds says something false about the creature, so the value is tested as well.
+    /// </para>
+    /// <para>
+    /// The flag is also accepted as the number 1, not only as the boolean. Requiring a boolean
+    /// dropped a real seed from any file that wrote it the other way.
+    /// </para>
+    /// </remarks>
     private static void Pair(List<LabelledSeed> into, JsonObject pet, string key, string label)
     {
         var pair = pet.GetArray(key);
-        if (pair is null || pair.Length < 2 || pair.Get(0) is not true) return;
+        if (pair is null || pair.Length < 2 || !Occupied(pair.Get(0))) return;
 
-        if (Read(pair) is { } value) into.Add(new LabelledSeed(label, value));
+        if (Read(pair) is { } value && !IsPlaceholder(value))
+            into.Add(new LabelledSeed(label, value));
+    }
+
+    /// <summary>Whether a seed pair's first element says the slot holds something.</summary>
+    private static bool Occupied(object? flag) => flag switch
+    {
+        bool b => b,
+        int i => i != 0,
+        long l => l != 0,
+        _ => false,
+    };
+
+    /// <summary>
+    /// Whether a seed value is the game's stand-in rather than a real one.
+    /// </summary>
+    /// <remarks>
+    /// Zero and one, in any width of hex. Every genuine seed observed is a full sixteen digits.
+    /// </remarks>
+    private static bool IsPlaceholder(string value)
+    {
+        string digits = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
+
+        return digits.Length == 0
+            || digits.TrimStart('0') is "" or "1";
     }
 
     /// <summary>

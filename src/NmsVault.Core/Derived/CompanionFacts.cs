@@ -38,6 +38,9 @@ public readonly record struct CompanionValue(string Label, double Value);
 /// <param name="BattleMoves">Its pet battle moves, as the game's ids without their carets.</param>
 /// <param name="AccessorySlots">How many accessory slots it has.</param>
 /// <param name="AccessoriesWorn">How many of them hold something.</param>
+/// <param name="UniverseAddress">Where it came from, as the game's packed address. Null if absent.</param>
+/// <param name="EggModified">Whether its egg was edited in the Sequencer before it hatched.</param>
+/// <param name="CustomName">The name its owner gave it, or null.</param>
 public sealed record CompanionFacts(
     string CreatureType,
     string? Biome,
@@ -51,7 +54,10 @@ public sealed record CompanionFacts(
     IReadOnlyList<LabelledSeed> Seeds,
     IReadOnlyList<string> BattleMoves,
     int AccessorySlots,
-    int AccessoriesWorn)
+    int AccessoriesWorn,
+    string? UniverseAddress,
+    bool EggModified,
+    string? CustomName)
 {
     /// <summary>What the three <c>Traits</c> entries mean, in order.</summary>
     /// <remarks>NMSE's own labels - see its CompanionPanel, which writes to these positions.</remarks>
@@ -86,7 +92,18 @@ public sealed record CompanionFacts(
             SeedReader.ForCompanion(pet),
             Moves(pet.GetArray("PetBattlerMoves")),
             accessories?.Length ?? 0,
-            Worn(accessories));
+            Worn(accessories),
+
+            // Where it came from. The only thing in the payload that says so, and it decodes
+            // to a galaxy, a system and a planet.
+            Blank(pet.GetString("UA")),
+
+            // Whether the egg was edited in the Sequencer, which is what "hatched" rather than
+            // "tamed" actually means.
+            pet.Get("EggModified") is true,
+
+            // What its owner called it, as opposed to what the gallery lists it under.
+            Blank(pet.GetString("CustomName")));
     }
 
     /// <summary>
@@ -147,6 +164,9 @@ public sealed record CompanionFacts(
 
         return worn;
     }
+
+    /// <summary>An empty string means the payload does not say, not that it says nothing.</summary>
+    private static string? Blank(string? value) => value is { Length: > 0 } ? value : null;
 
     private static double Number(object? value) => value switch
     {

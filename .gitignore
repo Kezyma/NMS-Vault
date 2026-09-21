@@ -16,6 +16,8 @@ src/NmsVault.Web/wwwroot/gallery/img/*
 !src/NmsVault.Web/wwwroot/gallery/img/tech/
 !src/NmsVault.Web/wwwroot/gallery/img/class/
 !src/NmsVault.Web/wwwroot/gallery/img/favicon.webp
+!src/NmsVault.Web/wwwroot/gallery/img/affinity/
+!src/NmsVault.Web/wwwroot/gallery/img/move/
 
 # tech.json, img/tech, img/class and the favicon are extraction output and ARE committed:
 # extraction needs an NMSE checkout, the Pages runner has none, and re-running it against

@@ -37,6 +37,7 @@ public static class Program
             ConvertCommand(),
             ReindexCommand(gallery),
             ExtractTechCommand(gallery),
+            ExtractPetsCommand(gallery),
         };
 
         return root.Parse(args).Invoke();
@@ -657,6 +658,55 @@ public static class Program
 
         Console.WriteLine($"  written: {target} ({written.Content.Length:n0} bytes, {adapter.DisplayName})");
         return 0;
+    }
+
+    // --- extract-pets -------------------------------------------------
+
+    private static Command ExtractPetsCommand(Option<DirectoryInfo> gallery)
+    {
+        var nmse = new Option<DirectoryInfo>("--nmse")
+        {
+            Description = "Path to NMSE's Resources folder.",
+            Required = true,
+        };
+
+        var icons = new Option<DirectoryInfo?>("--icons")
+        {
+            Description = "A folder of PNGs extracted from NMSARC.TexUI.pak, for the affinity and move glyphs.",
+        };
+
+        var command = new Command("extract-pets",
+            "Build the companion lookup - affinities, battle moves and their names - from NMSE's resources.")
+        { nmse, icons, gallery };
+
+        command.SetAction(result =>
+        {
+            string target = result.GetValue(gallery)!.FullName;
+            Console.WriteLine($"extracting companion data into {target}");
+
+            var outcome = PetExtractor.Extract(
+                result.GetValue(nmse)!.FullName, target,
+                result.GetValue(icons)?.FullName, line => Console.WriteLine(line));
+
+            Console.WriteLine($"  {outcome.Affinities} affinities, {outcome.Moves} moves, " +
+                              $"{outcome.Species} forced species, {outcome.Names} move names");
+
+            // Expected, not a fault: the Normal affinity has names for only a handful of moves,
+            // because no real creature has it - a species whose forced affinity is Normal falls
+            // back to its biome. Reported so a genuine gap would still show.
+            if (outcome.Unresolved > 0)
+                Console.WriteLine($"  {outcome.Unresolved} move-and-affinity pairs have no name");
+
+            if (outcome.Icons > 0)
+                Console.WriteLine($"  {outcome.Icons} glyph(s) written");
+
+            if (outcome.IconsMissing > 0)
+                Console.WriteLine($"  {outcome.IconsMissing} glyph(s) missing from the icon folder");
+
+            return 0;
+        });
+
+        return command;
     }
 
     // --- inspect ------------------------------------------------------

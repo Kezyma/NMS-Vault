@@ -1,0 +1,1090 @@
+{
+	"SchemaVersion": 1,
+	"Affinities": [
+		{
+			"Id": "Normal",
+			"Name": "PHYSICAL",
+			"Stub": "NONE"
+		},
+		{
+			"Id": "Lush",
+			"Name": "TROPICAL",
+			"Stub": "LUSH",
+			"Icon": "lush.webp"
+		},
+		{
+			"Id": "Cold",
+			"Name": "FROST",
+			"Stub": "COLD",
+			"Icon": "cold.webp"
+		},
+		{
+			"Id": "Fire",
+			"Name": "FIRE",
+			"Stub": "HOT",
+			"Icon": "fire.webp"
+		},
+		{
+			"Id": "Toxic",
+			"Name": "TOXIC",
+			"Stub": "TOX",
+			"Icon": "toxic.webp"
+		},
+		{
+			"Id": "Barren",
+			"Name": "DESERT",
+			"Stub": "DUST",
+			"Icon": "barren.webp"
+		},
+		{
+			"Id": "Radioactive",
+			"Name": "RADIOACTIVE",
+			"Stub": "RAD",
+			"Icon": "radioactive.webp"
+		},
+		{
+			"Id": "Weird",
+			"Name": "ANOMALOUS",
+			"Stub": "ODD",
+			"Icon": "weird.webp"
+		},
+		{
+			"Id": "Mech",
+			"Name": "MECHANICAL",
+			"Stub": "MECH",
+			"Icon": "mech.webp"
+		}
+	],
+	"BiomeAffinities": {
+		"Lush": "Lush",
+		"Toxic": "Toxic",
+		"Scorched": "Fire",
+		"Radioactive": "Radioactive",
+		"Frozen": "Cold",
+		"Barren": "Barren",
+		"Dead": "Barren",
+		"Weird": "Weird",
+		"Red": "Weird",
+		"Green": "Weird",
+		"Blue": "Weird",
+		"Test": "Lush",
+		"Swamp": "Toxic",
+		"Lava": "Fire",
+		"Waterworld": "Weird",
+		"GasGiant": "Weird",
+		"All": "Lush"
+	},
+	"ForcedAffinities": {
+		"FLYINGSNAKE": "Barren",
+		"ROBOTANTELOPE": "Mech",
+		"PLANTCAT": "Lush",
+		"BONECAT": "Lush",
+		"WALKINGBUILDING": "Mech",
+		"FIEND": "Toxic",
+		"BUGFIEND": "Toxic",
+		"SCUTTLER_PET": "Toxic",
+		"LAND_JELLYFISH": "Weird",
+		"ROBO_PET": "Mech",
+		"HOVER_PET": "Mech",
+		"PURPLE_WEIRD": "Weird",
+		"BONECOW": "Lush",
+		"ROBO_RODENT": "Mech",
+		"WALKER_CRAB": "Mech",
+		"FISHBOWL_PET3": "Mech",
+		"LANDSQUID_PET": "Weird",
+		"SPIDERQUAD_PET": "Mech",
+		"HORROR_PET": "Toxic",
+		"QUAD_PET": "Mech"
+	},
+	"Moves": [
+		{
+			"Id": "ATTACK_NORM",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Basic non-typed attack",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Uses Pet Affinity to deal direct damage",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_HOT",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Deals direct damage of specific affinity",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_COLD",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Deals direct damage of specific affinity",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_LUSH",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Deals direct damage of specific affinity",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_DUST",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Deals direct damage of specific affinity",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_TOX",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Deals direct damage of specific affinity",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_RAD",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Deals direct damage of specific affinity",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_WEIRD",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Deals direct damage of specific affinity",
+			"Names": {
+				"Normal": "Swipe",
+				"Lush": "Lash",
+				"Cold": "Freeze",
+				"Fire": "Burn",
+				"Toxic": "Sting",
+				"Barren": "Landslide",
+				"Radioactive": "Alpha Strike",
+				"Weird": "Phase Beam",
+				"Mech": "Laser Cannon"
+			}
+		},
+		{
+			"Id": "ATTACK_WILD",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Inaccurate swing",
+			"Names": {
+				"Normal": "Wild Charge",
+				"Lush": "Apex Predator",
+				"Cold": "Frostshock",
+				"Fire": "Wildfire",
+				"Toxic": "Acid Spray",
+				"Barren": "Pound",
+				"Radioactive": "Gamma Burst",
+				"Weird": "Starfall",
+				"Mech": "Shockbolt"
+			}
+		},
+		{
+			"Id": "AFF_WILD",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Inaccurate swing",
+			"Names": {
+				"Normal": "Wild Charge",
+				"Lush": "Apex Predator",
+				"Cold": "Frostshock",
+				"Fire": "Wildfire",
+				"Toxic": "Acid Spray",
+				"Barren": "Pound",
+				"Radioactive": "Gamma Burst",
+				"Weird": "Starfall",
+				"Mech": "Shockbolt"
+			}
+		},
+		{
+			"Id": "BARRAGE_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Shoot 3 affinity attack projectiles",
+			"Names": {
+				"Lush": "Thunderstorm",
+				"Cold": "Flurry",
+				"Fire": "Firestorm",
+				"Toxic": "Corrosive Jet",
+				"Barren": "Mudslide",
+				"Radioactive": "Irradiate",
+				"Weird": "Supernova",
+				"Mech": "Arcstorm"
+			}
+		},
+		{
+			"Id": "RAMP_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Affinity attack that gets stronger the move you use it",
+			"Names": {
+				"Lush": "Rampage",
+				"Cold": "Howling Wind",
+				"Fire": "Pillar of Flame",
+				"Toxic": "Envenom",
+				"Barren": "Relentless",
+				"Radioactive": "Chain Reaction",
+				"Weird": "Leviathan Beam",
+				"Mech": "Electron-Storm"
+			}
+		},
+		{
+			"Id": "AFF_SPEED_ME",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Affinity attack that gets stronger the more speed you have",
+			"Names": {
+				"Lush": "Thunderstorm",
+				"Cold": "Flurry",
+				"Fire": "Firestorm",
+				"Toxic": "Corrosive Jet",
+				"Barren": "Mudslide",
+				"Radioactive": "Irradiate",
+				"Weird": "Supernova",
+				"Mech": "Arcstorm"
+			}
+		},
+		{
+			"Id": "AFF_SPEED_THEM",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Affinity attack that gets stronger the more speed you have",
+			"Names": {
+				"Lush": "Thunderstorm",
+				"Cold": "Flurry",
+				"Fire": "Firestorm",
+				"Toxic": "Corrosive Jet",
+				"Barren": "Mudslide",
+				"Radioactive": "Irradiate",
+				"Weird": "Supernova",
+				"Mech": "Arcstorm"
+			}
+		},
+		{
+			"Id": "MULTI_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Multi-round affinity attack",
+			"Names": {
+				"Lush": "Rampage",
+				"Cold": "Howling Wind",
+				"Fire": "Pillar of Flame",
+				"Toxic": "Envenom",
+				"Barren": "Relentless",
+				"Radioactive": "Chain Reaction",
+				"Weird": "Leviathan Beam",
+				"Mech": "Electron-Storm"
+			}
+		},
+		{
+			"Id": "CHARGEUP_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "wait and then attack",
+			"Names": {
+				"Lush": "Bubbling Rage",
+				"Cold": "Absolute Zero",
+				"Fire": "Solar Flare",
+				"Toxic": "Outbreak",
+				"Barren": "Sandstorm",
+				"Radioactive": "Containment Breach",
+				"Weird": "Resonate",
+				"Mech": "Aeron Protocol"
+			}
+		},
+		{
+			"Id": "CHARGEUP_BUFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "wait and then attack",
+			"Names": {
+				"Lush": "Bubbling Rage",
+				"Cold": "Absolute Zero",
+				"Fire": "Solar Flare",
+				"Toxic": "Outbreak",
+				"Barren": "Sandstorm",
+				"Radioactive": "Containment Breach",
+				"Weird": "Resonate",
+				"Mech": "Aeron Protocol"
+			}
+		},
+		{
+			"Id": "DOT_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Apply an affinity dot",
+			"Names": {
+				"Lush": "Throw Spores",
+				"Cold": "Frostbite",
+				"Fire": "Ignite",
+				"Toxic": "Necrosis",
+				"Barren": "Wither",
+				"Radioactive": "Slow Decay",
+				"Weird": "Crumble",
+				"Mech": "Delta Wave Corruption"
+			}
+		},
+		{
+			"Id": "DELAY_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Uses Pet Affinity to deal after after x turns",
+			"Names": {
+				"Lush": "Bug Bomb",
+				"Cold": "Fractal Pain",
+				"Fire": "Magma Bomb",
+				"Toxic": "Inject Larvae",
+				"Barren": "Boulder",
+				"Radioactive": "Nuclear Blast",
+				"Weird": "Boundary Failure",
+				"Mech": "Detonate"
+			}
+		},
+		{
+			"Id": "DOT_BOMB",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Apply a dot that explodes later",
+			"Names": {
+				"Lush": "Solar Ray",
+				"Cold": "Deep Freeze",
+				"Fire": "White Hot",
+				"Toxic": "Fester",
+				"Barren": "Cactus Flesh",
+				"Radioactive": "Supercritical",
+				"Weird": "Tick Tock",
+				"Mech": "Neutron Bomb"
+			}
+		},
+		{
+			"Id": "DONT_TOUCH",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Apply a debuff that explodes if dispelled",
+			"Names": {
+				"Lush": "Nagging Itch",
+				"Cold": "Permafrost",
+				"Fire": "Parch",
+				"Toxic": "Gelatinous Mass",
+				"Barren": "Burning Lungs",
+				"Radioactive": "Genemelt",
+				"Weird": "PR_10",
+				"Mech": "Overload"
+			}
+		},
+		{
+			"Id": "ATTACK_DOT_NORM",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Do an attack, apply a DoT",
+			"Names": {
+				"Normal": "Serrated Claws",
+				"Lush": "Barbed Lash",
+				"Cold": "Snowfall",
+				"Fire": "Immolate",
+				"Toxic": "Toxic Spit",
+				"Barren": "Rockfall",
+				"Radioactive": "Half-Life",
+				"Weird": "Void Egg",
+				"Mech": "Biological Suppression"
+			}
+		},
+		{
+			"Id": "ATTACK_DOT_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Do an attack, apply an affinity dot",
+			"Names": {
+				"Normal": "Serrated Claws",
+				"Lush": "Barbed Lash",
+				"Cold": "Snowfall",
+				"Fire": "Immolate",
+				"Toxic": "Toxic Spit",
+				"Barren": "Rockfall",
+				"Radioactive": "Half-Life",
+				"Weird": "Void Egg",
+				"Mech": "Biological Suppression"
+			}
+		},
+		{
+			"Id": "SELF_HEAL",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Simple heal on self",
+			"Names": {
+				"Lush": "Restoration",
+				"Cold": "Transfusion",
+				"Fire": "Cauterise",
+				"Toxic": "Wallow",
+				"Barren": "Oasis",
+				"Radioactive": "Knit Flesh",
+				"Weird": "Fractal Growth",
+				"Mech": "Repair"
+			}
+		},
+		{
+			"Id": "SELF_HOT",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Simple HoT on self",
+			"Names": {
+				"Lush": "Regrowth",
+				"Cold": "Icy Veins",
+				"Fire": "Inner Fire",
+				"Toxic": "Regenerate Blood",
+				"Barren": "Fresh Breeze",
+				"Radioactive": "Transfuse",
+				"Weird": "Harmonise",
+				"Mech": "Living Metal"
+			}
+		},
+		{
+			"Id": "DELAY_HEAL",
+			"Icon": "heal.webp",
+			"Target": "your creature",
+			"Description": "Heal self after X turns",
+			"Names": {
+				"Lush": "Lifeblood",
+				"Cold": "Glacial Energy",
+				"Fire": "Await the Dawn",
+				"Toxic": "Produce Larvae",
+				"Barren": "Nightfall",
+				"Radioactive": "Cellular Fusion",
+				"Weird": "Tap Leyline",
+				"Mech": "Matter Transfer"
+			}
+		},
+		{
+			"Id": "SELF_SHIELD",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Simple shield on self",
+			"Names": {
+				"Lush": "Ironbark",
+				"Cold": "Crystal Barrier",
+				"Fire": "Firewall",
+				"Toxic": "Impenetrable Slime",
+				"Barren": "Stonewall",
+				"Radioactive": "Plasma Shield",
+				"Weird": "Cocoon",
+				"Mech": "Barricade"
+			}
+		},
+		{
+			"Id": "SELF_REFLECT",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Reflect damage shield on self",
+			"Names": {
+				"Lush": "Spiny Carapace",
+				"Cold": "Prismatic Shield",
+				"Fire": "Mirrorlight",
+				"Toxic": "Caustic Skin",
+				"Barren": "Mirage",
+				"Radioactive": "Forcefield",
+				"Weird": "Skin of Glass",
+				"Mech": "Magnetosphere"
+			}
+		},
+		{
+			"Id": "SELF_ABSORB",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Absorb damage shield on self",
+			"Names": {
+				"Lush": "Siphon",
+				"Cold": "Supercooled",
+				"Fire": "Thermal Transfer",
+				"Toxic": "Mucal Field",
+				"Barren": "Consuming Echo",
+				"Radioactive": "Absorb Energy",
+				"Weird": "Atlas Touched",
+				"Mech": "Dynamo"
+			}
+		},
+		{
+			"Id": "FULL_REFLECT",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Damage-limited shield that fully reflects incoming damage",
+			"Names": {
+				"Lush": "Spiny Carapace",
+				"Cold": "Prismatic Shield",
+				"Fire": "Mirrorlight",
+				"Toxic": "Caustic Skin",
+				"Barren": "Mirage",
+				"Radioactive": "Forcefield",
+				"Weird": "Skin of Glass",
+				"Mech": "Magnetosphere"
+			}
+		},
+		{
+			"Id": "FULL_SHIELD",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Damage-limited shield that fully blocks incoming damage",
+			"Names": {
+				"Lush": "Ironbark",
+				"Cold": "Crystal Barrier",
+				"Fire": "Firewall",
+				"Toxic": "Impenetrable Slime",
+				"Barren": "Stonewall",
+				"Radioactive": "Plasma Shield",
+				"Weird": "Cocoon",
+				"Mech": "Barricade"
+			}
+		},
+		{
+			"Id": "FULL_ABSORB",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Damage-limited shield that fully absorbs incoming damage",
+			"Names": {
+				"Lush": "Siphon",
+				"Cold": "Supercooled",
+				"Fire": "Thermal Transfer",
+				"Toxic": "Mucal Field",
+				"Barren": "Consuming Echo",
+				"Radioactive": "Absorb Energy",
+				"Weird": "Atlas Touched",
+				"Mech": "Dynamo"
+			}
+		},
+		{
+			"Id": "SELF_DISPEL",
+			"Icon": "heal.webp",
+			"Target": "your creature",
+			"Description": "Remove debuffs from self",
+			"Names": {
+				"Lush": "Purify",
+				"Cold": "Fresh Snow",
+				"Fire": "Cleansing Fire",
+				"Toxic": "Sterilise",
+				"Barren": "Bleached Bones",
+				"Radioactive": "Transmute",
+				"Weird": "Anomaly Ward",
+				"Mech": "Debugging Agent"
+			}
+		},
+		{
+			"Id": "SELF_RESET_CD",
+			"Icon": "cooldown.webp",
+			"Target": "your creature",
+			"Description": "Reset cooldowns",
+			"Names": {
+				"Lush": "Recharge",
+				"Cold": "Refresh",
+				"Fire": "Phoenix Feather",
+				"Toxic": "Self-Consumption",
+				"Barren": "Shed Skin",
+				"Radioactive": "Hydra",
+				"Weird": "Iteration Reset",
+				"Mech": "Protocol Override"
+			}
+		},
+		{
+			"Id": "HOSTILE_DISPEL",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Remove buffs from enemy",
+			"Names": {
+				"Lush": "Purge",
+				"Cold": "Sleet",
+				"Fire": "Purged by Fire",
+				"Toxic": "Acid Wash",
+				"Barren": "Desert Wind",
+				"Radioactive": "Genetic Collapse",
+				"Weird": "Mindwipe",
+				"Mech": "Data Harvest"
+			}
+		},
+		{
+			"Id": "HOSTILE_DISPL_N",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Remove debuffs from enemy",
+			"Names": {
+				"Lush": "Purge",
+				"Cold": "Sleet",
+				"Fire": "Purged by Fire",
+				"Toxic": "Acid Wash",
+				"Barren": "Desert Wind",
+				"Radioactive": "Genetic Collapse",
+				"Weird": "Mindwipe",
+				"Mech": "Data Harvest"
+			}
+		},
+		{
+			"Id": "DEBUFF_DAMAGE",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "reduce enemy damage",
+			"Names": {
+				"Lush": "Declaw",
+				"Cold": "Freezing Fog",
+				"Fire": "Baked",
+				"Toxic": "Morass",
+				"Barren": "Haunting Wail",
+				"Radioactive": "Corrupting Touch",
+				"Weird": "Consume Sentience",
+				"Mech": "Safety Valve"
+			}
+		},
+		{
+			"Id": "DEBUFF_DEF",
+			"Icon": "power.webp",
+			"Target": "the opposing creature",
+			"Description": "reduce enemy damage",
+			"Names": {
+				"Lush": "Leafmold",
+				"Cold": "Cold Feet",
+				"Fire": "Dehydrate",
+				"Toxic": "Enslime",
+				"Barren": "Blind",
+				"Radioactive": "Catastrophe",
+				"Weird": "Bewilder",
+				"Mech": "X-Ray Blast"
+			}
+		},
+		{
+			"Id": "DEBUFF_ACCURACY",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "reduce enemy hit chance",
+			"Names": {
+				"Lush": "Throw Dust",
+				"Cold": "Snowblind",
+				"Fire": "Heatblind",
+				"Toxic": "Sticky Ooze",
+				"Barren": "Quicksand",
+				"Radioactive": "Lose Focus",
+				"Weird": "Haunt",
+				"Mech": "Anomaly Suppression"
+			}
+		},
+		{
+			"Id": "DEBUFF_DAM_ACC",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "reduce enemy accuracy + damage",
+			"Names": {
+				"Lush": "Leafmold",
+				"Cold": "Cold Feet",
+				"Fire": "Dehydrate",
+				"Toxic": "Enslime",
+				"Barren": "Blind",
+				"Radioactive": "Catastrophe",
+				"Weird": "Bewilder",
+				"Mech": "X-Ray Blast"
+			}
+		},
+		{
+			"Id": "BUFF_DAMAGE",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Buff damage dealt",
+			"Names": {
+				"Lush": "Growth Hormone",
+				"Cold": "Frostbloom",
+				"Fire": "Flameclaw",
+				"Toxic": "Biological Horror",
+				"Barren": "Swell Up",
+				"Radioactive": "Gene Cleaver",
+				"Weird": "Drink the Water",
+				"Mech": "Supercharge"
+			}
+		},
+		{
+			"Id": "BUFF_ACCURACY",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Buff accuracy",
+			"Names": {
+				"Lush": "Hawkeye",
+				"Cold": "Sharpened Vision",
+				"Fire": "Fire Eater",
+				"Toxic": "Precision Delivery",
+				"Barren": "Viper's Fangs",
+				"Radioactive": "Deadeye",
+				"Weird": "Quicksilver",
+				"Mech": "Overclock"
+			}
+		},
+		{
+			"Id": "BUFF_CRIT",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Buff crit chance",
+			"Names": {
+				"Lush": "Precision",
+				"Cold": "Indium Heart",
+				"Fire": "Consume Phosphorus",
+				"Toxic": "Limb Breaker",
+				"Barren": "Cold-Blooded",
+				"Radioactive": "Temporary Eyes",
+				"Weird": "Aeron's Blessing",
+				"Mech": "Spring-Loaded"
+			}
+		},
+		{
+			"Id": "BUFF_SPEED",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Buff agility",
+			"Names": {
+				"Lush": "Butterfly Wings",
+				"Cold": "Well Insulated",
+				"Fire": "Shimmer",
+				"Toxic": "Scuttle",
+				"Barren": "Shifting Sands",
+				"Radioactive": "Twisted Helix",
+				"Weird": "Polyrhythm",
+				"Mech": "Dislocation"
+			}
+		},
+		{
+			"Id": "BUFF_DODGE",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "Buff dodge chance",
+			"Names": {
+				"Lush": "Butterfly Wings",
+				"Cold": "Well Insulated",
+				"Fire": "Shimmer",
+				"Toxic": "Scuttle",
+				"Barren": "Shifting Sands",
+				"Radioactive": "Twisted Helix",
+				"Weird": "Polyrhythm",
+				"Mech": "Dislocation"
+			}
+		},
+		{
+			"Id": "ATTACK_SELFDOT",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "big impact attack, but dot self",
+			"Names": {
+				"Lush": "Plague",
+				"Cold": "Cold Snap",
+				"Fire": "Eruption",
+				"Toxic": "Parasitic Growth",
+				"Barren": "Curse of Bones",
+				"Radioactive": "Contaminate",
+				"Weird": "Dark Energy",
+				"Mech": "Dereference Reality"
+			}
+		},
+		{
+			"Id": "ATTACK_BOTH",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "attack you and the enemy",
+			"Names": {
+				"Lush": "Cyclone",
+				"Cold": "Hailstorm",
+				"Fire": "Thermal Runaway",
+				"Toxic": "Fetid Cloud",
+				"Barren": "Undermine",
+				"Radioactive": "Free Radical",
+				"Weird": "Gravity Overload",
+				"Mech": "EMP Pulse"
+			}
+		},
+		{
+			"Id": "ENRAGE_CRIT",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "big hit but buff their crit",
+			"Names": {
+				"Lush": "Enraging Blow",
+				"Cold": "Voidfrost",
+				"Fire": "Flashpoint",
+				"Toxic": "Infect",
+				"Barren": "Sulphurous Touch",
+				"Radioactive": "Fallout",
+				"Weird": "Crimson Rage",
+				"Mech": "Dissonance"
+			}
+		},
+		{
+			"Id": "ENRAGE_DAMAGE",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "big hit but buff their damage",
+			"Names": {
+				"Lush": "Enraging Blow",
+				"Cold": "Voidfrost",
+				"Fire": "Flashpoint",
+				"Toxic": "Infect",
+				"Barren": "Sulphurous Touch",
+				"Radioactive": "Fallout",
+				"Weird": "Crimson Rage",
+				"Mech": "Dissonance"
+			}
+		},
+		{
+			"Id": "ENRAGE_HOT",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "big hit but leave a HoT",
+			"Names": {
+				"Lush": "Enraging Blow",
+				"Cold": "Voidfrost",
+				"Fire": "Flashpoint",
+				"Toxic": "Infect",
+				"Barren": "Sulphurous Touch",
+				"Radioactive": "Fallout",
+				"Weird": "Crimson Rage",
+				"Mech": "Dissonance"
+			}
+		},
+		{
+			"Id": "BURROW",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "100% chance to dodge",
+			"Names": {
+				"Lush": "Burrow",
+				"Cold": "Hibernate",
+				"Fire": "Evaporate",
+				"Toxic": "Limb Drop",
+				"Barren": "Fissure",
+				"Radioactive": "Shelter",
+				"Weird": "Wormhole",
+				"Mech": "Phase Shift"
+			}
+		},
+		{
+			"Id": "SPEED_UP",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "super speed boost next round",
+			"Names": {
+				"Lush": "Zephyr",
+				"Cold": "Antifreeze Blood",
+				"Fire": "Boiling Point",
+				"Toxic": "Hormone Sacs",
+				"Barren": "Blistering Speed",
+				"Radioactive": "Feedback Loop",
+				"Weird": "Frameshift",
+				"Mech": "Apply Oil"
+			}
+		},
+		{
+			"Id": "CHANGE_AFFINITY",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Change the enemy pet affinity",
+			"Names": {
+				"Lush": "Call of the Wild",
+				"Cold": "Deep Blue Void",
+				"Fire": "Called by the Sun",
+				"Toxic": "Swamp Thing",
+				"Barren": "Dessicate",
+				"Radioactive": "Mutate",
+				"Weird": "PR_0PR_5",
+				"Mech": "Clockwork Heart"
+			}
+		},
+		{
+			"Id": "STUN",
+			"Icon": "cooldown.webp",
+			"Target": "the opposing creature",
+			"Description": "Stuns an enemy creature",
+			"Names": {
+				"Lush": "Snaring Roots",
+				"Cold": "Icy Chains",
+				"Fire": "Heatstroke",
+				"Toxic": "Paralyse",
+				"Barren": "Petrify",
+				"Radioactive": "Stun",
+				"Weird": "Banish",
+				"Mech": "Containment Field"
+			}
+		},
+		{
+			"Id": "SACRIFICE_DAM",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "blow yourself up but buff your team",
+			"Names": {
+				"Lush": "Sacrifice",
+				"Cold": "Storm-born",
+				"Fire": "Phoenix Kiss",
+				"Toxic": "Recycle Flesh",
+				"Barren": "To Dust",
+				"Radioactive": "Next Generation",
+				"Weird": "Rebirth",
+				"Mech": "Self-Destruct"
+			}
+		},
+		{
+			"Id": "SACRIFICE_DEF",
+			"Icon": "attack.webp",
+			"Target": "your creature",
+			"Description": "blow yourself up but protect your team",
+			"Names": {
+				"Lush": "Sacrifice",
+				"Cold": "Storm-born",
+				"Fire": "Phoenix Kiss",
+				"Toxic": "Recycle Flesh",
+				"Barren": "To Dust",
+				"Radioactive": "Next Generation",
+				"Weird": "Rebirth",
+				"Mech": "Self-Destruct"
+			}
+		},
+		{
+			"Id": "REVIVE",
+			"Icon": "heal.webp",
+			"Target": "your creature",
+			"Description": "Revive someone on the bench - STUB REPLACEMENT",
+			"Names": {
+				"Lush": "Sacrifice",
+				"Cold": "Storm-born",
+				"Fire": "Phoenix Kiss",
+				"Toxic": "Recycle Flesh",
+				"Barren": "To Dust",
+				"Radioactive": "Next Generation",
+				"Weird": "Rebirth",
+				"Mech": "Self-Destruct"
+			}
+		},
+		{
+			"Id": "BM_DOT_AFF",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "Apply an affinity dot",
+			"Names": {
+				"Lush": "Throw Spores",
+				"Cold": "Frostbite",
+				"Fire": "Ignite",
+				"Toxic": "Necrosis",
+				"Barren": "Wither",
+				"Radioactive": "Slow Decay",
+				"Weird": "Crumble",
+				"Mech": "Delta Wave Corruption"
+			}
+		},
+		{
+			"Id": "BM_DEBUFF_ACC",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "reduce enemy hit chance",
+			"Names": {
+				"Lush": "Throw Dust",
+				"Cold": "Snowblind",
+				"Fire": "Heatblind",
+				"Toxic": "Sticky Ooze",
+				"Barren": "Quicksand",
+				"Radioactive": "Lose Focus",
+				"Weird": "Haunt",
+				"Mech": "Anomaly Suppression"
+			}
+		},
+		{
+			"Id": "BM_DEBUFF_DAM",
+			"Icon": "attack.webp",
+			"Target": "the opposing creature",
+			"Description": "reduce enemy damage",
+			"Names": {
+				"Lush": "Declaw",
+				"Cold": "Freezing Fog",
+				"Fire": "Baked",
+				"Toxic": "Morass",
+				"Barren": "Haunting Wail",
+				"Radioactive": "Corrupting Touch",
+				"Weird": "Consume Sentience",
+				"Mech": "Safety Valve"
+			}
+		}
+	]
+}

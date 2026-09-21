@@ -1310,6 +1310,62 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 .carousel.compact .dot { width: 6px; height: 6px; }
 
 
+/* ------------------------------------------------------------- companions */
+
+/*
+   The affinity a creature fights with, shown as the game shows it: its own glyph and its own
+   word for it, which is not the biome's word - a Lush creature is TROPICAL.
+*/
+.chip.affinity {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding-left: var(--space-xs);
+    border-color: var(--accent-dim);
+    color: var(--text);
+}
+
+.chip.affinity img { width: 18px; height: 18px; display: block; }
+
+.item-modal > .sheet .creature .given { margin: var(--space-md) 0 0; }
+.item-modal > .sheet .creature .given em { color: var(--text); font-style: italic; }
+.item-modal > .sheet .creature .from { margin: var(--space-xs) 0 0; font-size: var(--text-xs); }
+.item-modal > .sheet .creature .from code { font-family: var(--font-mono); color: var(--tech); }
+
+/*
+   Battle moves, one per line. Chips were fine for ids; a name, who it acts on and an icon is
+   more than fits on one, and there are never more than five.
+*/
+.move-list {
+    display: grid;
+    gap: var(--space-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.move-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(16, 28, 38, 0.3);
+    border-left: 2px solid var(--accent-dim);
+}
+
+.move-list img { width: 20px; height: 20px; flex: none; display: block; }
+
+.move-list .name { font-weight: 600; letter-spacing: 0.02em; }
+
+/* Pushed to the end, so the names line up and the target reads as a note on them. */
+.move-list .dim { margin-left: auto; font-size: var(--text-xs); text-align: right; }
+
+@media (max-width: 420px) {
+    .move-list li { flex-wrap: wrap; }
+    .move-list .dim { margin-left: 0; width: 100%; text-align: left; }
+}
+
+
 /* ---------------------------------------------------------------- lightbox */
 
 /*

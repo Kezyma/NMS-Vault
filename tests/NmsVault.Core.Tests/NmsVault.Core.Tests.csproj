@@ -21,6 +21,11 @@
   <!-- Real editor exports, copied next to the test assembly so tests can read them. -->
   <ItemGroup>
     <Content Include="..\fixtures\**\*" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- The companion lookup is extraction output, committed beside the gallery rather than in
+         the fixtures. The affinity tests read the real file so they cannot drift from it. -->
+    <Content Include="..\..\src\NmsVault.Web\wwwroot\gallery\pets.json"
+             LinkBase="gallery" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

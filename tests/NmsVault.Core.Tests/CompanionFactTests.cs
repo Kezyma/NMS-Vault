@@ -93,17 +93,70 @@ public class CompanionFactTests
     }
 
     [Fact]
-    public void EverySeedTheCreatureCarriesIsRead()
+    public void OnlyTheSeedsThatHoldSomethingAreRead()
     {
-        // Two plain hex strings that name the species, plus the paired seeds that describe how
-        // it looks - and only the pairs whose flag says they hold something.
+        // This creature is a unique model, the way Golden Vector is a unique ship, so its
+        // CreatureSeed and BoneScaleSeed are [true, "0x1"] - the flag is set over a
+        // placeholder. Reading the flag alone showed "0x1" twice under two labels and said
+        // something false about the creature.
         var seeds = Facts().Seeds;
 
-        Assert.Equal(["Species", "Genus", "Creature", "Bone scale"], seeds.Select(s => s.Label));
+        Assert.Equal(["Species", "Genus"], seeds.Select(s => s.Label));
         Assert.All(seeds, s => Assert.StartsWith("0x", s.Value, StringComparison.Ordinal));
+        Assert.All(seeds, s => Assert.True(s.Value.Length > 4, $"{s.Label} is a placeholder: {s.Value}"));
+    }
 
-        // ColourBaseSeed is [false, "0x0"] here, so it is absent rather than shown as zero.
-        Assert.DoesNotContain(seeds, s => s.Label == "Colour");
+    [Fact]
+    public void AnOrdinaryCreatureKeepsItsRealSeeds()
+    {
+        // The other side of the rule. An ordinary procedural creature carries real values in
+        // those same fields, and suppressing the field rather than the placeholder would have
+        // thrown them away.
+        var pet = Diplodocus().Payload.DeepClone();
+
+        var creature = new JsonArray();
+        creature.Add(true);
+        creature.Add("0xAAC941FCE76A0E56");
+        pet.Set("CreatureSeed", creature);
+
+        var seeds = SeedReader.ForCompanion(pet);
+
+        Assert.Contains(seeds, s => s.Label == "Creature" && s.Value == "0xAAC941FCE76A0E56");
+    }
+
+    [Fact]
+    public void BoneScaleIsNotShownWhenItRepeatsTheCreatureSeed()
+    {
+        // Every ordinary creature checked carries the same value in both. Showing it twice is
+        // showing one number under two names.
+        var pet = Diplodocus().Payload.DeepClone();
+
+        foreach (string key in (string[])["CreatureSeed", "BoneScaleSeed"])
+        {
+            var pair = new JsonArray();
+            pair.Add(true);
+            pair.Add("0x4BE6306289EA4D01");
+            pet.Set(key, pair);
+        }
+
+        var seeds = SeedReader.ForCompanion(pet);
+
+        Assert.Contains(seeds, s => s.Label == "Creature");
+        Assert.DoesNotContain(seeds, s => s.Label == "Bone scale");
+    }
+
+    [Fact]
+    public void AnOccupancyFlagWrittenAsANumberStillCounts()
+    {
+        // Requiring the boolean dropped a real seed from any file that wrote the flag as 1.
+        var pet = Diplodocus().Payload.DeepClone();
+
+        var pair = new JsonArray();
+        pair.Add(1);
+        pair.Add("0x25A7467C9C347919");
+        pet.Set("ColourBaseSeed", pair);
+
+        Assert.Contains(SeedReader.ForCompanion(pet), s => s.Label == "Colour");
     }
 
     [Fact]
