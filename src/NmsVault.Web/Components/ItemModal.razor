@@ -265,10 +265,12 @@
         // the rest of the pictures are in the document.
         _images = Row.Image is { } image ? [image] : [];
 
-        _tech = await TechSource.IndexAsync(_leaving.Token).ConfigureAwait(true);
-
         try
         {
+            // Inside the try with the item fetch, not above it. Closing the sheet cancels the
+            // token, and TechData only catches HttpRequestException and JsonException - so a
+            // close during a cold tech.json load threw straight into Blazor's error bar.
+            _tech = await TechSource.IndexAsync(_leaving.Token).ConfigureAwait(true);
             _item = await Exports.ItemAsync(Row.Id, _leaving.Token).ConfigureAwait(true);
         }
         catch (HttpRequestException)
@@ -278,6 +280,8 @@
         }
         catch (OperationCanceledException)
         {
+            // The sheet was closed while this was in flight. Nothing to report and nothing
+            // left to draw into.
             return;
         }
 
@@ -293,10 +297,14 @@
     {
         if (!firstRender) { return; }
 
-        // Takes the keyboard so Escape reaches the sheet and Tab stays inside it.
-        await _sheet.FocusAsync().ConfigureAwait(true);
-
         _module = await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+
+        // Before the sheet takes focus, so the trap can remember what had it and give it back
+        // on close. This is what makes aria-modal above true rather than a claim: inert takes
+        // the rest of the page out of tab order and out of the accessibility tree.
+        await _module.InvokeVoidAsync("trapFocus", _sheet).ConfigureAwait(true);
+
+        await _sheet.FocusAsync().ConfigureAwait(true);
         await _module.InvokeVoidAsync("lockPageScroll", true).ConfigureAwait(true);
     }
 
@@ -316,6 +324,7 @@
         try
         {
             await _module.InvokeVoidAsync("lockPageScroll", false).ConfigureAwait(false);
+            await _module.InvokeVoidAsync("releaseFocus").ConfigureAwait(false);
             await _module.DisposeAsync().ConfigureAwait(false);
         }
         catch (JSDisconnectedException)

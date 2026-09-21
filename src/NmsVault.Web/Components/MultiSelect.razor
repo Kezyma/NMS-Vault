@@ -14,7 +14,9 @@
     it finds this too; that script looks for .vault-combo.open and presses the .toggle inside.
 *@
 
-<div class="vault-combo vault-multi @(_open ? "open" : null)" @onkeydown="Dismiss">
+@* stopPropagation, so closing this list does not also close a dialog it sits inside. *@
+<div class="vault-combo vault-multi @(_open ? "open" : null)"
+     @onkeydown="Dismiss" @onkeydown:stopPropagation="true">
     @*
         The control is a row rather than one button, because what is in it is pressable: a chip
         naming something chosen is the obvious place to press to stop asking for it, and a button

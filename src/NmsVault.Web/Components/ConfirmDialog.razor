@@ -1,3 +1,6 @@
+@inject IJSRuntime Js
+@implements IAsyncDisposable
+
 @*
     A question that has to be answered before anything else happens.
 
@@ -64,13 +67,40 @@
     /// <returns>A task that completes once focus has moved.</returns>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await _sheet.FocusAsync().ConfigureAwait(true);
-        }
+        if (!firstRender) { return; }
+
+        _module = await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+
+        // This one opens from the download menu inside the item modal, so it traps on top of
+        // a trap. The stack in vault.js hands the outer one back when this closes rather than
+        // releasing the page.
+        await _module.InvokeVoidAsync("trapFocus", _sheet).ConfigureAwait(true);
+
+        await _sheet.FocusAsync().ConfigureAwait(true);
     }
 
     private Task OnKey(KeyboardEventArgs e) => e.Key == "Escape" ? Dismiss() : Task.CompletedTask;
 
+    private IJSObjectReference? _module;
+
     private Task Dismiss() => OnDismiss.InvokeAsync();
+
+    /// <summary>Hands the trap back to whatever was under this dialog.</summary>
+    /// <returns>A task that completes once it is released.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null) { return; }
+
+        try
+        {
+            await _module.InvokeVoidAsync("releaseFocus").ConfigureAwait(false);
+            await _module.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page is going away, which is the only thing releasing the trap was for.
+        }
+
+        _module = null;
+    }
 }

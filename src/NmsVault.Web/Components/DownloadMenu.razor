@@ -17,7 +17,13 @@
     outside it finds this too.
 *@
 
-<div class="vault-combo vault-download @(_open ? "open" : null)" @onkeydown="OnKey">
+@*
+    stopPropagation on the keydown: this menu opens inside the item modal, whose sheet closes
+    on Escape. Without it one press closed the menu and the dialog behind it, and left focus on
+    the body. ConfirmDialog already carries the same guard for the same reason.
+*@
+<div class="vault-combo vault-download @(_open ? "open" : null)"
+     @onkeydown="OnKey" @onkeydown:stopPropagation="true">
     <button type="button" class="download toggle @(Compact ? "icon" : null)"
             aria-expanded="@(_open ? "true" : "false")" aria-haspopup="menu"
             title="Download this in a save editor's format"
@@ -40,13 +46,18 @@
     {
         @* Placed by script, in viewport coordinates - see anchorPanel in vault.js. *@
         <div class="panel" role="menu" @ref="_panel">
-            @if (_options is null)
-            {
-                <p class="loading dim">Reading the item&hellip;</p>
-            }
-            else if (_failed is { Length: > 0 })
+            @*
+                The failure is tested first. The other way round the null check won, so a
+                failed fetch left _options null and the panel said "Reading the item..."
+                for ever.
+            *@
+            @if (_failed is { Length: > 0 })
             {
                 <p class="failed">@_failed</p>
+            }
+            else if (_options is null)
+            {
+                <p class="loading dim">Reading the item&hellip;</p>
             }
             else
             {
@@ -141,6 +152,11 @@
     {
         _open = !_open;
         if (!_open) { return; }
+
+        // Cleared on open, so a failure that has since been fixed - a publish that had not
+        // finished, a connection that has come back - does not keep showing its message for
+        // the rest of the session.
+        _failed = null;
 
         // Fetched on opening rather than with the card: a page of twenty ships would otherwise
         // pull twenty whole ship documents to draw twenty buttons nobody has pressed.

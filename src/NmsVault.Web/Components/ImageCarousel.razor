@@ -102,11 +102,29 @@
 
     private int _at;
 
+    // What the current position was chosen for. OnParametersSet runs on every parameter set,
+    // not only when the item changes, so these are how it tells the two apart.
+    private IReadOnlyList<string>? _shownFor;
+    private int _startedAt = -1;
+
     protected override void OnParametersSet()
     {
-        // A different item can arrive in the same component instance, and its third picture
-        // may not exist.
-        _at = At >= 0 && At < Images.Count ? At : 0;
+        // Reset only when the pictures change, or when the caller asks for a different one to
+        // start on. Resetting unconditionally meant paging a card to its second picture and
+        // then typing a single character in the search box snapped it back to the first: the
+        // gallery redraws every card on every keystroke, and @key keeps this instance alive
+        // across the redraw, so the reset was visible rather than harmless.
+        if (!ReferenceEquals(_shownFor, Images) || _startedAt != At)
+        {
+            _shownFor = Images;
+            _startedAt = At;
+            _at = At >= 0 && At < Images.Count ? At : 0;
+        }
+        else if (_at >= Images.Count)
+        {
+            // Same list instance, fewer pictures in it than when we last looked.
+            _at = 0;
+        }
     }
 
     /// <summary>
@@ -114,6 +132,25 @@
     /// page and a last one, and stopping at the end just makes the arrow look broken.
     /// </summary>
     private void Step(int by) => _at = (_at + by + Images.Count) % Images.Count;
+
+    /// <summary>
+    /// Moves a picture back or forward, for a parent that owns the keyboard.
+    /// </summary>
+    /// <remarks>
+    /// The lightbox takes focus on its shell so Escape reaches it, which means the arrow keys
+    /// never reach this component's own handler - it is a descendant. Rather than have the
+    /// reader Tab into the carousel first, which nothing tells them to do, the parent forwards
+    /// the key here. StateHasChanged because the call arrives from outside this component's
+    /// own event pipeline.
+    /// </remarks>
+    /// <param name="by">How many pictures to move, negative for back.</param>
+    public void MoveBy(int by)
+    {
+        if (Images.Count < 2) { return; }
+
+        Step(by);
+        StateHasChanged();
+    }
 
     private void Show(int index) => _at = index;
 

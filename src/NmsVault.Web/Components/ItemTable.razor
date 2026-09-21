@@ -11,7 +11,11 @@
     here either: a heading is sortable exactly when the page offers a sort of the same name.
 *@
 
-<div class="table-wrap">
+@*
+    A scrollable region, so it needs a name and a tab stop - otherwise the only way to reach the
+    columns off the right edge is to Tab through the buttons in every row.
+*@
+<div class="table-wrap" tabindex="0" role="region" aria-label="Items, as a table">
     <table class="item-table">
         <thead>
             <tr>

@@ -234,6 +234,43 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 
 .room:hover { color: var(--text); background: var(--bg-hover); text-decoration: none; }
 
+/*
+   On a phone the header is the widest thing on the page, and it was wider than the page: the
+   brand and three room names in a non-wrapping row came to 409px inside 375, so every page
+   scrolled sideways and "Stable" sat off the right edge where nothing could reach it.
+
+   That one overflow broke three other things, all of which this fixes with it:
+
+     - lockPageScroll measures the scrollbar as innerWidth minus clientWidth. With the document
+       overflowing that came to 34px, so opening any dialog padded the body by 34px - the exact
+       sideways jump the padding exists to prevent.
+     - every position:fixed overlay sizes to the document, so the lightbox and the item modal
+       were laid out 409px wide on a 375px screen, putting the close button, the next-picture
+       arrow and the caption off-screen.
+     - the two header rules underneath are drawn to the header's width, so they overhung too.
+
+   Two rows rather than a squeeze: the names are already as short as they get, and shrinking
+   the padding enough to fit three of them plus the brand leaves them touching.
+*/
+@media (max-width: 640px) {
+    .vault-header {
+        height: auto;
+        flex-wrap: wrap;
+        padding: var(--space-sm) var(--space-lg);
+        gap: var(--space-sm);
+    }
+
+    .rooms {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .room { padding: var(--space-sm) var(--space-md); }
+
+    /* The heavier bar is a fraction of the header width, which is now taller; keep it thin. */
+    .vault-header::after { width: min(280px, 60%); }
+}
+
 /* A solid block of gold with the text knocked out of it, as the game marks the open tab. */
 .room.active,
 .room.active:hover {
@@ -292,7 +329,9 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* min() on the track floor, or the grid is 300px wide inside a 288px column on a small
+       phone and the page scrolls sideways. */
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
     gap: var(--space-lg);
     margin-top: var(--space-lg);
 }
@@ -790,18 +829,36 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ---------------------------------------------------------------- table */
 
+/*
+   Scrolls on both axes, and owns them. overflow-x alone computes overflow-y to auto, which
+   makes this the scroll container for the table anyway - so the sticky heading below resolved
+   against a box that never scrolled vertically and slid away with the page. Giving it a height
+   makes that sticky real.
+
+   tabindex and role because a region that scrolls has to be reachable without a mouse. At phone
+   width the table is four times the viewport wide, and the only way to reach the far columns
+   was to Tab through the buttons in every row.
+*/
 .table-wrap {
-    overflow-x: auto;
+    /* A floor as well as a ceiling: the subtraction leaves only about 200px of table in a
+       short window, and a table worth scrolling needs more than three rows. */
+    max-height: max(22rem, calc(100dvh - 15rem));
+    overflow: auto;
+    overscroll-behavior: contain;
     background: var(--bg-panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
 }
+
+.table-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .item-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
 
 .item-table th {
     position: sticky;
     top: 0;
+    /* Above the pinned actions column, which is sticky too. */
+    z-index: 2;
     padding: var(--space-md) var(--space-lg);
     text-align: left;
     white-space: nowrap;

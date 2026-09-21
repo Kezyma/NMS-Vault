@@ -173,7 +173,12 @@ export function lockPageScroll(on) {
     locks = Math.max(0, locks + (on ? 1 : -1));
 
     if (locks === 1 && on) {
-        const bar = window.innerWidth - document.documentElement.clientWidth;
+        // Clamped. This is the standard way to measure the scrollbar, but it measures any
+        // horizontal overflow along with it - and when the header overflowed on a phone it
+        // read 34px, so opening a dialog shoved the page sideways by more than a scrollbar
+        // has ever been wide. The overflow is fixed; this makes the measurement unable to
+        // cause that again.
+        const bar = Math.min(Math.max(0, window.innerWidth - document.documentElement.clientWidth), 24);
         document.body.dataset.scrollLockPad = document.body.style.paddingRight;
         document.body.style.paddingRight = `${bar}px`;
         document.body.style.overflow = 'hidden';
@@ -181,5 +186,59 @@ export function lockPageScroll(on) {
         document.body.style.overflow = '';
         document.body.style.paddingRight = document.body.dataset.scrollLockPad || '';
         delete document.body.dataset.scrollLockPad;
+    }
+}
+
+
+// --- dialogs ---------------------------------------------------------------
+//
+// Three components declare aria-modal="true" and comment that Tab stays inside them. Nothing
+// implemented it: with the item modal open, sixty-five focusable elements behind it were still
+// reachable, and aria-modal told a screen reader the background was hidden while Tab walked
+// straight into it. That is worse than not claiming it at all.
+//
+// Done with the inert attribute rather than a keydown handler that cycles a list of focusable
+// elements. inert removes a subtree from tab order, from the accessibility tree and from
+// pointer events in one go, which is all three of the things aria-modal promises.
+//
+// A stack, because these nest: the confirm dialog opens from the download menu inside the item
+// modal, and closing it must hand the trap back rather than release everything.
+
+const trapped = [];
+
+export function trapFocus(dialog) {
+    if (!dialog) return;
+
+    const restoreTo = document.activeElement;
+    const inerted = [];
+
+    // Walk up from the dialog, marking everything that is not on its path to the root. The
+    // dialog is deep inside the page rather than a child of body, so there is no single
+    // sibling to hide.
+    for (let node = dialog; node && node !== document.documentElement; node = node.parentElement) {
+        const parent = node.parentElement;
+        if (!parent) break;
+
+        for (const sibling of parent.children) {
+            if (sibling !== node && !sibling.hasAttribute('inert')) {
+                sibling.setAttribute('inert', '');
+                inerted.push(sibling);
+            }
+        }
+    }
+
+    trapped.push({ inerted, restoreTo });
+}
+
+export function releaseFocus() {
+    const entry = trapped.pop();
+    if (!entry) return;
+
+    for (const element of entry.inerted) element.removeAttribute('inert');
+
+    // Back to whatever opened the dialog. Without this a reader who opened the twelfth card
+    // was returned to the top of the document, because focus fell to body when the sheet went.
+    if (entry.restoreTo && document.contains(entry.restoreTo)) {
+        try { entry.restoreTo.focus({ preventScroll: false }); } catch { /* gone from the page */ }
     }
 }

@@ -16,7 +16,7 @@
      tabindex="-1" @ref="_shell" @onkeydown="OnKey" @onclick="Close">
 
     <figure class="pane" @onclick:stopPropagation="true">
-        <ImageCarousel Images="Images" Name="@Name" At="At" Loading="eager" />
+        <ImageCarousel @ref="_carousel" Images="Images" Name="@Name" At="At" Loading="eager" />
 
         <figcaption>
             <span class="name">@Name</span>
@@ -54,21 +54,41 @@
     public EventCallback OnClose { get; set; }
 
     private ElementReference _shell;
+    private ImageCarousel? _carousel;
     private IJSObjectReference? _module;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) { return; }
 
+        _module = await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
+
+        // Before focus moves, so the trap remembers the picture that was clicked and returns
+        // focus to it on close.
+        await _module.InvokeVoidAsync("trapFocus", _shell).ConfigureAwait(true);
+
         // Takes the keyboard, so Escape and the arrow keys arrive here rather than at
         // whatever was focused on the page behind.
         await _shell.FocusAsync().ConfigureAwait(true);
-
-        _module = await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
         await _module.InvokeVoidAsync("lockPageScroll", true).ConfigureAwait(true);
     }
 
-    private Task OnKey(KeyboardEventArgs e) => e.Key == "Escape" ? Close() : Task.CompletedTask;
+    private Task OnKey(KeyboardEventArgs e)
+    {
+        // Focus is on the shell so Escape arrives here, which also means the arrows do - and
+        // the carousel's own handler, being a descendant, never sees them. Forwarded rather
+        // than left to a reader who would have to Tab into the carousel first, in a view whose
+        // entire purpose is paging through pictures.
+        switch (e.Key)
+        {
+            case "Escape": return Close();
+            case "ArrowLeft": _carousel?.MoveBy(-1); break;
+            case "ArrowRight": _carousel?.MoveBy(1); break;
+            case "Home": _carousel?.MoveBy(-Images.Count); break;
+        }
+
+        return Task.CompletedTask;
+    }
 
     private Task Close() => OnClose.InvokeAsync();
 
@@ -81,6 +101,7 @@
         try
         {
             await _module.InvokeVoidAsync("lockPageScroll", false).ConfigureAwait(false);
+            await _module.InvokeVoidAsync("releaseFocus").ConfigureAwait(false);
             await _module.DisposeAsync().ConfigureAwait(false);
         }
         catch (JSDisconnectedException)

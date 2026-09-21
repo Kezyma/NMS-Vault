@@ -16,8 +16,11 @@
 *@
 
 <div class="tech-grid-wrap">
+    @* Leaving the grid altogether lets a pinned popover go, so it cannot outlive the thing
+       it describes. *@
     <div class="tech-grid" style="@($"--cols:{Grid.Width}")" role="grid" @ref="_grid"
-         aria-label="@($"{Label} inventory, {Grid.Width} by {Grid.Height}")">
+         aria-label="@($"{Label} inventory, {Grid.Width} by {Grid.Height}")"
+         @onmouseleave="Leave">
         @for (int y = 0; y < Grid.Height; y++)
         {
             @for (int x = 0; x < Grid.Width; x++)
@@ -136,13 +139,28 @@
 
     private void Show(TechSlot slot)
     {
-        if (slot.State != SlotState.Filled || _pinned) { return; }
+        if (slot.State != SlotState.Filled) { return; }
+
+        // Pointing at or focusing a different cell moves the popover and gives up the pin.
+        // Returning early while pinned - which is what this used to do - meant one click
+        // froze the popover on that cell: hovering another did nothing, and so did tabbing
+        // to another, so a keyboard reader saw the wrong technology for every cell after.
+        if (_shown is { } current && current.X == slot.X && current.Y == slot.Y) { return; }
+
+        _pinned = false;
         _shown = slot;
     }
 
     private void Hide()
     {
         if (_pinned) { return; }
+        _shown = null;
+    }
+
+    /// <summary>Lets go of everything when the pointer leaves the grid.</summary>
+    private void Leave()
+    {
+        _pinned = false;
         _shown = null;
     }
 
@@ -154,6 +172,7 @@
     {
         if (slot.State != SlotState.Filled) { return; }
 
+        // The same cell again lets it go; a different cell moves the pin to it.
         if (_pinned && _shown is { } current && current.X == slot.X && current.Y == slot.Y)
         {
             _pinned = false;
