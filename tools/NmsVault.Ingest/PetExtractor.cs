@@ -105,17 +105,25 @@ public static class PetExtractor
     /// four move glyphs are not named after the style they serve: the Heal style is drawn by
     /// MOVE.HEALTH, and the Attack style by MOVE.PET.ATTACK.
     /// </para>
+    /// <para>
+    /// The affinities come from the STATS.PLANET family rather than BUFF.AFFINITY, which is
+    /// the other complete set. BUFF draws all eight as the same green shield, distinguished
+    /// only by the glyph inside, and green means "buffed into this affinity" rather than "is
+    /// this affinity". STATS gives each one its own colour - tropical teal, frost blue, fire
+    /// red, radioactive yellow, anomalous purple - which reads at chip size, and it is round,
+    /// which suits a chip. DEBUFF.AFFINITY is the same set in red and means the opposite.
+    /// </para>
     /// </remarks>
     private static readonly (string Source, string Folder, string Name)[] Icons =
     [
-        ("BUFF.AFFINITY.LUSH",        "affinity", "lush"),
-        ("BUFF.AFFINITY.COLD",        "affinity", "cold"),
-        ("BUFF.AFFINITY.FIRE",        "affinity", "fire"),
-        ("BUFF.AFFINITY.TOXIC",       "affinity", "toxic"),
-        ("BUFF.AFFINITY.BARREN",      "affinity", "barren"),
-        ("BUFF.AFFINITY.RADIOACTIVE", "affinity", "radioactive"),
-        ("BUFF.AFFINITY.WEIRD",       "affinity", "weird"),
-        ("BUFF.AFFINITY.MECH",        "affinity", "mech"),
+        ("STATS.PLANET.LUSH",        "affinity", "lush"),
+        ("STATS.PLANET.COLD",        "affinity", "cold"),
+        ("STATS.PLANET.FIRE",        "affinity", "fire"),
+        ("STATS.PLANET.TOXIC",       "affinity", "toxic"),
+        ("STATS.PLANET.BARREN",      "affinity", "barren"),
+        ("STATS.PLANET.RADIOACTIVE", "affinity", "radioactive"),
+        ("STATS.PLANET.WEIRD",       "affinity", "weird"),
+        ("STATS.PLANET.MECH",        "affinity", "mech"),
 
         ("MOVE.PET.ATTACK",           "move",     "attack"),
         ("MOVE.COOLDOWN",             "move",     "cooldown"),
