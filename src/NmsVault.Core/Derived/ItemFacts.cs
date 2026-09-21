@@ -97,11 +97,10 @@ public sealed record ItemFacts(
     /// pet object as plain words - <c>Passive</c>, <c>Lush</c> - so the two things anyone
     /// browses creatures by are already there.
     /// <para>
-    /// The numbers on the card are the ones settled at hatching - its size and the three
-    /// traits - rather than everything the payload holds. Trust and the moods drift with
-    /// play and say more about the last owner than about the creature, so they belong on the
-    /// item's own view rather than on something a reader is comparing at a glance. See
-    /// <see cref="CompanionFacts"/>, which reads the rest.
+    /// There are no numbers on the card. A creature carries nothing that ranks it against
+    /// another creature the way a ship's damage does - see <see cref="CompanionFacts.AsStats"/>,
+    /// which explains what used to be there and why none of it survived. What a reader browses
+    /// creatures by is its species, its climate and its affinity, which are words.
     /// </para>
     /// <para>
     /// What is not here at all is the battle classes: <c>PetBattlerCoreStatClassOverrides</c>
@@ -116,7 +115,12 @@ public sealed record ItemFacts(
         var creature = CompanionFacts.For(pet, accessories);
 
         return new ItemFacts(
-            creature.CreatureType,
+            // A fallback. What a creature's type really is - its species, the way a ship's is
+            // Fighter - needs the game's own strings, so the ingest resolves it and writes the
+            // name over this one. CreatureType is what is left when it cannot: Passive on half
+            // of them, and a body shape on the rest, which at least reads as English once the
+            // run-together words are split.
+            Words.Spaced(creature.CreatureType),
             IsModifiedResource: false,
             Family: "Companion",
             Class: null,

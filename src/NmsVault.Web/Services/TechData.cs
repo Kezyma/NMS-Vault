@@ -39,7 +39,11 @@ public sealed class TechData(HttpClient http)
             }
             catch (Exception ex) when (ex is HttpRequestException or JsonException)
             {
-                return _index = TechIndex.Empty;
+                // Returned without being cached, so the next caller tries again. Assigning it
+                // pinned the empty index for the whole session: one failed fetch while
+                // tech.json was being rewritten and every technology icon was gone until the
+                // page was reloaded.
+                return TechIndex.Empty;
             }
         }
         finally

@@ -148,8 +148,17 @@ Then <http://localhost:5210>.
 > and a running server keeps serving the manifest it started with - which names WebAssembly
 > files by a content hash the rebuild has just changed. The page then fails to start with
 > *"Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of"*,
-> because the file the manifest asks for is no longer there. Stopping and starting the server
-> fixes it; if it persists, the build output itself is half-replaced:
+> because the file the manifest asks for is no longer there.
+>
+> The same staleness has a second, quieter form. A server running across a gallery rebuild keeps
+> its startup map of pre-compressed assets, and those now point at nothing - so every item
+> document comes back **200 with an empty body** to anything that sends `Accept-Encoding`, which
+> every browser does. The site loads, the pages list, and opening any item says *"That item could
+> not be read."* `curl` will fetch the same file perfectly, because it does not ask for
+> compression; `curl -H "Accept-Encoding: gzip"` reproduces it.
+>
+> Stopping and starting the server fixes both; if it persists, the build output itself is
+> half-replaced:
 >
 > ```bash
 > rm -rf Build/bin/NmsVault.Web Build/obj/NmsVault.Web && dotnet build src/NmsVault.Web

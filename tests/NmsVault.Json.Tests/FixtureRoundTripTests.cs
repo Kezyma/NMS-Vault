@@ -33,7 +33,9 @@ public class FixtureRoundTripTests
         Assert.True(Directory.Exists(FixtureRoot), $"Fixture root missing: {FixtureRoot}");
         Assert.Equal(17, Directory.GetFiles(Path.Combine(FixtureRoot, "starships")).Length);
         Assert.Equal(12, Directory.GetFiles(Path.Combine(FixtureRoot, "multitools")).Length);
-        Assert.Single(Directory.GetFiles(Path.Combine(FixtureRoot, "companions")));
+        // One creature on its own, and one captured twice - as the egg and as what hatched
+        // out of it, which is the pair the download menu offers a choice between.
+        Assert.Equal(3, Directory.GetFiles(Path.Combine(FixtureRoot, "companions")).Length);
     }
 
     [Theory]

@@ -320,15 +320,15 @@
 		"Bands": [
 			{
 				"Class": "S",
-				"From": 75.0
+				"From": 81.0
 			},
 			{
 				"Class": "A",
-				"From": 50.0
+				"From": 67.0
 			},
 			{
 				"Class": "B",
-				"From": 25.0
+				"From": 34.0
 			},
 			{
 				"Class": "C",
@@ -337,570 +337,508 @@
 		],
 		"Rating": "%NUM%% (%CLASS%)"
 	},
-	"BattleStats": [
-		"Health",
-		"Agility",
-		"Combat Effectiveness"
-	],
+	"SpeciesNames": {
+		"BINOC_NEW_SPECIES": "NEW SPECIES! ( %AMOUNT%/%TOTAL% )",
+		"BUI_SPECIES": "species",
+		"EXP_SPECIES": "species",
+		"TRA_SPECIES": "species",
+		"UI_BONEPET_SPECIES": "Skeletal Companion",
+		"UI_DIPLO_PET_SPECIES": "Prehistoric Giant",
+		"UI_FIEND_NAME": "Burrowing Monstrosity",
+		"UI_FISHBOWL3_PET_SPECIES": "Liquid-Suspended Consciousness",
+		"UI_GLOWPET_SPECIES": "Bioluminescent Companion",
+		"UI_HERMITCRAB_PET_SPECIES": "Shellseeker",
+		"UI_HORROR_PET_SPECIES": "Abyssal Horror",
+		"UI_HOVERPET_SPECIES": "Mechanical Companion",
+		"UI_LANDSQUID_PET_SPECIES": "Spectral Anomaly",
+		"UI_MARKER_TAG_BUGFIEND": "Vile Broodling",
+		"UI_MARKER_TAG_BUGQUEEN": "Vile Queen",
+		"UI_MARKER_TAG_CREATURE": "Lifeform",
+		"UI_MARKER_TAG_FIEND": "Biological Horror",
+		"UI_MARKER_TAG_NORTH": "North",
+		"UI_MARKER_TAG_PRED": "Hostile Creature",
+		"UI_MARKER_TAG_SOUTH": "South",
+		"UI_MINIFIEND_SPECIES": "Scuttling Horror",
+		"UI_MINIROBO_SPECIES": "Hovering Valet",
+		"UI_PETQUAD_SPECIES": "Rewired Patrol Unit",
+		"UI_PETWORM_SPECIES": "Maggotling",
+		"UI_ROBO_RODENT_SPECIES": "Rodentia Machina",
+		"UI_SPIDERQUAD_PET_SPECIES": "Rewired Patrol Unit",
+		"WAR_SPECIES": "species"
+	},
 	"Species": {
 		"FISH": {
-			"MinScale": 0.59999999999999998,
-			"MaxScale": 1.2,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"FISHFLOCK": {
-			"MinScale": 0.10000000000000001,
-			"MaxScale": 0.40000000000000002,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SWIMCOW": {
-			"MinScale": 1.2,
-			"MaxScale": 1.3999999999999999,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare",
 			"NoBattle": true
 		},
 		"SWIMRODENT": {
-			"MinScale": 0.80000000000000004,
-			"MaxScale": 1.2,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare",
 			"NoBattle": true
 		},
 		"JELLYFISH": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon",
 			"NoBattle": true
 		},
 		"CRAB": {
-			"MinScale": 0.75,
-			"MaxScale": 2.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"SEASNAKE": {
-			"MinScale": 1.0,
-			"MaxScale": 2.0,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon",
 			"NoBattle": true
 		},
 		"SHARK": {
-			"MinScale": 2.0,
-			"MaxScale": 3.0,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"BIRD": {
-			"MinScale": 0.80000000000000004,
-			"MaxScale": 2.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"FLYINGSNAKE": {
-			"MinScale": 3.5,
-			"MaxScale": 4.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"FLYINGLIZARD": {
-			"MinScale": 1.0,
-			"MaxScale": 4.5,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"BUTTERFLY": {
-			"MinScale": 0.25,
-			"MaxScale": 0.40000000000000002,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon",
 			"NoBattle": true
 		},
 		"SMALLBIRD": {
-			"MinScale": 0.5,
-			"MaxScale": 0.90000000000000002,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon",
 			"NoBattle": true
 		},
 		"BUTTERFLOCK": {
-			"MinScale": 0.25,
-			"MaxScale": 0.40000000000000002,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon",
 			"NoBattle": true
 		},
 		"LARGEBUTTERFLY": {
-			"MinScale": 2.0,
-			"MaxScale": 3.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"FLYINGBEETLE": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 7.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"ANTELOPE": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"ROBOTANTELOPE": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "ROBO",
 			"Rarity": "Common"
 		},
 		"TRICERATOPS": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"RODENT": {
-			"MinScale": 1.3999999999999999,
-			"MaxScale": 2.5,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"MOLE": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "SuperRare",
 			"NoBattle": true
 		},
 		"COW": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"CAT": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 4.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"PLANTCAT": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 4.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"BONECAT": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 4.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"STRIDER": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"STRIDERGLOW": {
-			"MinScale": 4.0,
-			"MaxScale": 5.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"TREX": {
-			"MinScale": 0.59999999999999998,
-			"MaxScale": 5.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"TWOLEGANTELOPE": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 3.6000000000000001,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"SIXLEGCOW": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"SIXLEGCAT": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 4.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"GRUNT": {
-			"MinScale": 0.59999999999999998,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"BLOB": {
-			"MinScale": 0.20000000000000001,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"SPIDER": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"ARTHROPOD": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"WALKINGBUILDING": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"FLOATSPIDER": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"PROTOROLLER": {
-			"MinScale": 1.0,
-			"MaxScale": 5.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "SuperRare"
 		},
 		"PROTOFLYER": {
-			"MinScale": 1.0,
-			"MaxScale": 3.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"PROTODIGGER": {
-			"MinScale": 1.0,
-			"MaxScale": 5.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "SuperRare",
 			"NoBattle": true
 		},
 		"PLOUGH": {
-			"MinScale": 1.0,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "SuperRare",
 			"NoBattle": true
 		},
 		"DRILL": {
-			"MinScale": 1.0,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "SuperRare",
 			"NoBattle": true
 		},
 		"WEIRDROLL": {
-			"MinScale": 5.0,
-			"MaxScale": 5.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"WEIRDFLOAT": {
-			"MinScale": 3.0,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"WEIRDCRYSTAL": {
-			"MinScale": 3.0,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"WEIRDBUTTERFLY": {
-			"MinScale": 0.59999999999999998,
-			"MaxScale": 0.80000000000000004,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"FIEND": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"TraitSet": "Fiend"
 		},
 		"BUGFIEND": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"TraitSet": "Fiend"
 		},
 		"BUGQUEEN": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SCUTTLER": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SCUTTLER_PET": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"SLUG": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"MINIFIEND": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true,
 			"TraitSet": "Fiend"
 		},
 		"FIENDFISHSMALL": {
-			"MinScale": 0.5,
-			"MaxScale": 1.5,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true,
 			"TraitSet": "Fiend"
 		},
 		"FLOATER": {
-			"MinScale": 0.5,
-			"MaxScale": 1.5,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"MINIDRONE": {
-			"MinScale": 0.5,
-			"MaxScale": 1.5,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"FIENDFISHBIG": {
-			"MinScale": 0.80000000000000004,
-			"MaxScale": 8.0,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true,
 			"TraitSet": "Fiend"
 		},
 		"ROCKCREATURE": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SANDWORM": {
-			"MinScale": 50.0,
-			"MaxScale": 50.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SPACE_FLOATER": {
-			"MinScale": 0.5,
-			"MaxScale": 1.5,
 			"MoveArea": "Space",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"LAND_JELLYFISH": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"JELLYBOSS": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare",
 			"NoBattle": true
 		},
 		"JELLYBOSS_BROOD": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare",
 			"NoBattle": true
 		},
 		"ROBO_PET": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Air",
+			"EggType": "ROBO",
 			"Rarity": "Rare"
 		},
 		"HOVER_PET": {
-			"MinScale": 0.25,
-			"MaxScale": 0.25,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"LAND_SQUID": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare",
 			"NoBattle": true
 		},
 		"PURPLE_WEIRD": {
-			"MinScale": 1.5,
-			"MaxScale": 6.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"DEEPFISH": {
-			"MinScale": 0.59999999999999998,
-			"MaxScale": 1.2,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"DEEPFISHLARGE": {
-			"MinScale": 0.5,
-			"MaxScale": 0.5,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"DEEPFISHFLOCK": {
-			"MinScale": 0.10000000000000001,
-			"MaxScale": 0.20000000000000001,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"MANTA": {
-			"MinScale": 1.7,
-			"MaxScale": 3.3999999999999999,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"MANTAGLOW": {
-			"MinScale": 1.7,
-			"MaxScale": 3.3999999999999999,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SEAHORSE": {
-			"MinScale": 0.59999999999999998,
-			"MaxScale": 1.2,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SEAHORSEGLOW": {
-			"MinScale": 0.59999999999999998,
-			"MaxScale": 1.2,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"SQUID": {
-			"MinScale": 0.5,
-			"MaxScale": 4.0,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon",
 			"NoBattle": true
 		},
 		"HERMITCRAB": {
-			"MinScale": 0.75,
-			"MaxScale": 2.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"PRAWN": {
-			"MinScale": 0.20000000000000001,
-			"MaxScale": 1.0,
 			"MoveArea": "Water",
+			"EggType": "DEFAULT",
 			"Rarity": "Common",
 			"NoBattle": true
 		},
 		"BONECOW": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 3.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"ROBO_RODENT": {
-			"MinScale": 1.3999999999999999,
-			"MaxScale": 2.5,
 			"MoveArea": "Ground",
+			"EggType": "ROBO",
 			"Rarity": "Rare"
 		},
 		"WALKER_CRAB": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Common"
 		},
 		"FISHBOWL_PET3": {
-			"MinScale": 2.0,
-			"MaxScale": 2.0,
 			"MoveArea": "Ground",
+			"EggType": "ROBO",
 			"Rarity": "Common"
 		},
 		"LANDSQUID_PET": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"SPIDERQUAD_PET": {
-			"MinScale": 1.0,
-			"MaxScale": 1.0,
 			"MoveArea": "Ground",
+			"EggType": "ROBO",
 			"Rarity": "Common"
 		},
 		"HORROR_PET": {
-			"MinScale": 0.5,
-			"MaxScale": 0.5,
 			"MoveArea": "Air",
+			"EggType": "DEFAULT",
 			"Rarity": "Rare"
 		},
 		"DIPLO_PET": {
-			"MinScale": 0.40000000000000002,
-			"MaxScale": 12.0,
 			"MoveArea": "Ground",
+			"EggType": "DEFAULT",
 			"Rarity": "Uncommon"
 		},
 		"QUAD_PET": {
-			"MinScale": 1.1000000000000001,
-			"MaxScale": 1.1000000000000001,
 			"MoveArea": "Ground",
+			"EggType": "ROBO",
 			"Rarity": "Common",
 			"NoBattle": true
 		}

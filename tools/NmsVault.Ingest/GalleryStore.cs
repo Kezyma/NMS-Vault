@@ -94,6 +94,14 @@ public sealed class GalleryStore(string root)
 
                 if (Affinity(pets, creature) is { } affinity) entry.Set("Affinity", affinity);
                 if (Traits(pets, creature) is { } traits) entry.Set("Traits", traits);
+
+                // Written over the fallback ItemFacts left. A creature's type is its species -
+                // Prehistoric Giant, Burrowing Monstrosity - which the payload holds only as a
+                // loc id, so this is the one place with both the id and the strings behind it.
+                if (pets.SpeciesName(creature.SpeciesName) is { Length: > 0 } species)
+                    entry.Set("Type", species);
+
+                entry.Set("Nature", Nature(pets, creature));
             }
 
             // The card line goes in the manifest; the full text does not, because the only
@@ -321,6 +329,53 @@ public sealed class GalleryStore(string root)
     }
 
     /// <summary>
+    /// The suffix that marks a companion export as the egg rather than what hatched from it.
+    /// </summary>
+    /// <remarks>
+    /// A naming convention rather than anything in the file. An egg and its hatchling are the
+    /// same shape - same keys, same creature, species and genus seeds - so nothing inside
+    /// either one says which it is. <c>X_egg.nmspet</c> beside <c>X.nmspet</c> is what pairs
+    /// them, and the egg is folded into the creature rather than becoming an item of its own.
+    /// </remarks>
+    public const string EggSuffix = "_egg";
+
+    /// <summary>Whether an export is an egg rather than an item in its own right.</summary>
+    /// <param name="exportPath">The export to test.</param>
+    /// <returns>True when its name marks it as an egg.</returns>
+    public static bool IsEgg(string exportPath)
+        => Path.GetFileNameWithoutExtension(exportPath)
+            .EndsWith(EggSuffix, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The export an egg belongs to, whether or not it exists.</summary>
+    /// <param name="eggPath">The egg.</param>
+    /// <returns>The path its hatched form would have.</returns>
+    public static string Hatched(string eggPath)
+    {
+        string stem = Path.GetFileNameWithoutExtension(eggPath);
+
+        return Path.Combine(
+            Path.GetDirectoryName(eggPath) ?? "",
+            stem[..^EggSuffix.Length] + Path.GetExtension(eggPath));
+    }
+
+    /// <summary>
+    /// The egg stored beside an export, which is where a creature's unhatched form lives.
+    /// </summary>
+    /// <param name="exportPath">The export to look beside.</param>
+    /// <returns>Its egg, or null where the creature was captured on its own.</returns>
+    public static string? EggBeside(string exportPath)
+    {
+        // An egg has no egg of its own, and asking would name a file called X_egg_egg.
+        if (IsEgg(exportPath)) return null;
+
+        string egg = Path.Combine(
+            Path.GetDirectoryName(exportPath) ?? "",
+            Path.GetFileNameWithoutExtension(exportPath) + EggSuffix + Path.GetExtension(exportPath));
+
+        return File.Exists(egg) ? egg : null;
+    }
+
+    /// <summary>
     /// The pictures stored beside an export, which is where an item's pictures live.
     /// </summary>
     /// <remarks>
@@ -385,6 +440,41 @@ public sealed class GalleryStore(string root)
             if (trait.Word is { Length: > 0 } word) entry.Set("Word", word);
             written.Add(entry);
         }
+
+        return written;
+    }
+
+    /// <summary>
+    /// What a creature is like, resolved into the words both the card and the table show.
+    /// </summary>
+    /// <remarks>
+    /// Written here rather than worked out twice. Each of these is a named field with one value
+    /// - a climate, a rarity, a yes or a no - and the table needs them as much as the item's own
+    /// view does, so resolving once is what keeps a column and a row from disagreeing.
+    /// </remarks>
+    private static JsonObject Nature(PetIndex pets, CompanionFacts creature)
+    {
+        var written = new JsonObject();
+
+        // The game's word for the world it came from: a Lush one is Verdant, a Dead one Airless.
+        if (pets.Climate(creature.Biome) is { Length: > 0 } climate) written.Set("Climate", climate);
+
+        if (pets.Species(creature.SpeciesId) is { } species)
+        {
+            if (species.Rarity is { Length: > 0 } rarity) written.Set("Rarity", Words.Spaced(rarity));
+            if (species.MoveArea is { Length: > 0 } area) written.Set("Movement", Words.Movement(area));
+
+            // DEFAULT or ROBO - what tells a machine's egg from an animal's.
+            if (species.EggType is { Length: > 0 } egg)
+                written.Set("Egg", egg is "ROBO" ? "Robotic" : "Standard");
+
+            // Only when it cannot, which is rare. A column of Yes with two No in it says less
+            // than a column that is empty except where the answer is interesting.
+            if (!species.CanBattle) written.Set("NoBattle", true);
+        }
+
+        written.Set("Predator", creature.IsPredator);
+        written.Set("Fur", creature.HasFur);
 
         return written;
     }

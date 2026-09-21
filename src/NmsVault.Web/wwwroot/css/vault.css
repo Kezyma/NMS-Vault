@@ -974,6 +974,12 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 */
 .card-traits { display: flex; flex-wrap: wrap; gap: var(--space-2xs); margin: var(--space-sm) 0 0; }
 .item-table .col-traits { white-space: normal; }
+
+/* One short word each, so they stay on their own line and keep the columns narrow. */
+.item-table .col-nature { white-space: nowrap; }
+
+/* A seed is a fixed-width hex string and should not wrap mid-number. */
+.item-table .col-seed { white-space: nowrap; }
 .item-table .col-traits .chip { margin: 0 var(--space-2xs) var(--space-2xs) 0; }
 
 .nothing { padding: var(--space-3xl); text-align: center; color: var(--text-faint); }
@@ -1032,6 +1038,52 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .vault-download .loading,
 .vault-download .failed { margin: 0; padding: var(--space-md); font-size: var(--text-sm); }
 .vault-download .failed { color: var(--bad); }
+
+/*
+   The creature-or-egg choice, above the formats. Separated by a rule rather than spacing
+   alone: it answers a different question from the list under it - what goes in the file,
+   rather than who the file is for - and without the line the two read as one menu where the
+   first two entries happen to behave oddly.
+*/
+.vault-download .forms {
+    display: flex;
+    gap: var(--space-xs);
+    margin: 0;
+    padding: var(--space-sm) var(--space-md) var(--space-2xs);
+    border: none;
+}
+
+.vault-download .forms label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-2xs) var(--space-xs);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--text-dim);
+    cursor: pointer;
+}
+
+.vault-download .forms label:hover { background: var(--bg-hover); color: var(--text); }
+
+/* The chosen one is the one being downloaded, so it reads as the live setting it is. */
+.vault-download .forms label:has(input:checked) { color: var(--text); font-weight: 600; }
+
+.vault-download .forms input { accent-color: var(--accent); margin: 0; cursor: pointer; }
+
+.vault-download .forms label:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+/* Under the radios, so it reads as a note on the choice rather than on the formats below. */
+.vault-download .hatching {
+    margin: 0;
+    padding: 0 var(--space-md) var(--space-sm);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    border-bottom: 1px solid var(--border);
+}
 
 .vault-download .options { margin: 0; padding: 0; list-style: none; }
 
@@ -1700,9 +1752,8 @@ button.icon:hover:not(:disabled) { background: none; border-color: transparent; 
     text-transform: uppercase;
 }
 
-.item-modal > .sheet .creature .marks { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin: 0; }
-.item-modal > .sheet .creature .marks + .pairs { margin-top: var(--space-md); }
-.item-modal > .sheet .creature .chip.mono { font-family: var(--font-mono); font-size: var(--text-xs); }
+/* Climates, rarities and yes-or-no are words, so they read in the body face. */
+.item-modal > .sheet .creature .nature dd { font-family: inherit; }
 
 /* Label above value, as the stats read, so the two blocks scan the same way. */
 .item-modal > .sheet .creature .pairs {
@@ -1738,6 +1789,11 @@ button.icon:hover:not(:disabled) { background: none; border-color: transparent; 
 
 /* Affinity names are words, not numbers, so they read in the body face. */
 .item-modal > .sheet .creature .matchups dd { font-family: inherit; }
+
+/* Each one wears its own glyph, the same circle the badge beside the name uses. */
+.item-modal > .sheet .creature .affinities { display: inline-flex; flex-wrap: wrap; gap: var(--space-md); }
+.item-modal > .sheet .creature .affinity { display: inline-flex; align-items: center; gap: var(--space-xs); }
+.item-modal > .sheet .creature .affinity img { width: 18px; height: 18px; display: block; flex: none; }
 
 /* Both of these want the whole width rather than a column of their own. */
 .item-modal > .sheet .creature .moves,

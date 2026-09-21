@@ -75,7 +75,7 @@ public static class PetExtractor
         root.Set("Climates", Climates(lang));
         root.Set("Matchups", Matchups());
         root.Set("Traits", Traits(lang));
-        root.Set("BattleStats", BattleStats(lang));
+        root.Set("SpeciesNames", SpeciesNames(lang));
         root.Set("Species", species.Facts);
         root.Set("Moves", moves);
 
@@ -294,9 +294,14 @@ public static class PetExtractor
 
             var entry = new JsonObject();
 
-            if (species.TryGetProperty("MinScale", out var min)) entry.Set("MinScale", min.GetDouble());
-            if (species.TryGetProperty("MaxScale", out var max)) entry.Set("MaxScale", max.GetDouble());
+            // MinScale and MaxScale are deliberately not written. They describe wild spawns
+            // rather than companions, and a quarter of the creatures to hand fall outside them -
+            // the Hungering Worm is 0.45 against a stated 3.5 to 4 - so showing a creature's
+            // size against them said something false.
             if (Text(species, "MoveArea") is { Length: > 0 } area) entry.Set("MoveArea", area);
+
+            // DEFAULT or ROBO. The only thing that tells a machine's egg from an animal's.
+            if (Text(species, "EggType") is { Length: > 0 } egg) entry.Set("EggType", egg);
             if (Text(species, "Rarity") is { Length: > 0 } rarity) entry.Set("Rarity", rarity);
 
             // Only when false. Nearly every species can fight, so the interesting case is the
@@ -413,18 +418,17 @@ public static class PetExtractor
     /// three slots take both signs.
     /// </para>
     /// <para>
-    /// <b>Which name belongs to which slot is inferred</b>, because the mapping lives in the
-    /// game's code rather than its files - the language file is the only thing that mentions the
-    /// class words at all. Two things pin it down. NMSE names the slots Helpfulness, Aggression
-    /// and Independence in that order, which fixes the positive poles; the three remaining words
-    /// then pair off as opposites with only one sensible assignment. The Diplodocus agrees on
-    /// the sign: its middle slot is -1, and a docile herbivore reading as utterly gentle is right
-    /// where utterly aggressive would not be.
+    /// <b>This table is verified against the game</b>, from screenshots of the companion
+    /// register for six of the twelve creatures. It was inferred first, and the game agreed:
+    /// the Hungering Worm stores -0.83 in its first slot and reads "Playfulness 83%
+    /// (Whimsical)", which is the negative pole of slot zero and the magnitude as a percentage,
+    /// both exactly as guessed.
     /// </para>
     /// <para>
-    /// The percentage is the magnitude and the class is an even quarter of it, which is inference
-    /// too - no threshold appears anywhere in the unpacked data. If the game disagrees, this
-    /// table and <see cref="Bands"/> are the only things that need to change.
+    /// The class bands were <b>not</b> guessed correctly, and are now fitted to eighteen
+    /// readings rather than assumed. Even quarters - S from 75 - was wrong for everything
+    /// between 75 and 80: the Mecha-Mouse reads 80% as Diligent, which is A, while the
+    /// Robo-Warden reads 82% as Adventurous, which is S. See <see cref="Bands"/>.
     /// </para>
     /// </remarks>
     private static readonly (string Positive, string PositiveStub, string Negative, string NegativeStub)[] Axes =
@@ -442,9 +446,28 @@ public static class PetExtractor
         ("INDEPENDENT", "FIEND_IND"), ("DEVOTED", "FIEND_DEV"),
     ];
 
-    /// <summary>The lowest percentage each class covers, strongest first.</summary>
+    /// <summary>
+    /// The lowest percentage each class covers, strongest first.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Fitted to eighteen readings taken from the game's own companion register, not derived
+    /// from any table - no threshold appears anywhere in the unpacked data.
+    /// </para>
+    /// <para>
+    /// Observed: C at 18, 20, 22, 23 and 30; B at 36 and 50; A at 71, 75, 79 and <b>80</b>; S at
+    /// <b>82</b>, 83, 85 and 100. So the boundaries fall in (30, 36], (50, 71] and (80, 82], and
+    /// the round numbers inside those windows are the ones below. Every one of the eighteen
+    /// agrees with them.
+    /// </para>
+    /// <para>
+    /// Two of the readings do the real work and are worth keeping in mind if this is ever
+    /// revisited: 80 is A and 82 is S, so the top band starts between them and nowhere near the
+    /// 75 an even-quarter split would put it.
+    /// </para>
+    /// </remarks>
     private static readonly (string Class, double From)[] Bands =
-        [("S", 75), ("A", 50), ("B", 25), ("C", 0)];
+        [("S", 81), ("A", 67), ("B", 34), ("C", 0)];
 
     private static JsonObject Traits(Dictionary<string, string> lang)
     {
@@ -497,26 +520,41 @@ public static class PetExtractor
     }
 
     /// <summary>
-    /// The three battle stats, in the order the payload stores them.
+    /// The game's own name for a creature's species.
     /// </summary>
     /// <remarks>
-    /// <c>PetBattlerCoreStatClassOverrides</c> and <c>PetBattlerTreatsEaten</c> are both indexed
-    /// health, agility, combat (NMSE <c>CompanionPanel.cs:1697-1700</c>), which is not the order
-    /// the game's own headers read in.
+    /// <para>
+    /// A creature stores a loc id in <c>CustomSpeciesName</c> - <c>^UI_DIPLO_PET_SPECIES</c> -
+    /// and behind it is the name the game shows: Prehistoric Giant. That is what a creature's
+    /// type is, in the way a ship's is Fighter or Hauler; the gallery used to print
+    /// <c>CreatureType</c> instead, which is Passive on half of them and a body shape
+    /// - Quad, MiniRobo, LandJellyfish - on the rest.
+    /// </para>
+    /// <para>
+    /// Keyed by loc id rather than by creature id, because the two do not line up: DIPLO_PET
+    /// does take UI_DIPLO_PET_SPECIES, but SCUTTLER_PET takes UI_MINIFIEND_SPECIES and
+    /// BUGFIEND takes a marker tag. Only the payload knows which.
+    /// </para>
+    /// <para>
+    /// The three patterns below are every one observed across the creatures to hand, and come
+    /// to about a kilobyte in total. A creature whose loc id is not among them keeps the name
+    /// it had before, so a miss costs nothing.
+    /// </para>
     /// </remarks>
-    private static readonly (string LocId, string Fallback)[] Stats =
-    [
-        ("UI_PB_STAT_HEADER_HEALTH", "Health"),
-        ("UI_PB_STAT_HEADER_SPEED",  "Agility"),
-        ("UI_PB_STAT_HEADER_BUDGET", "Combat Effectiveness"),
-    ];
+    private static readonly string[] SpeciesNamePatterns = ["_SPECIES", "UI_MARKER_TAG_", "UI_FIEND_NAME"];
 
-    private static JsonArray BattleStats(Dictionary<string, string> lang)
+    private static JsonObject SpeciesNames(Dictionary<string, string> lang)
     {
-        var written = new JsonArray();
+        var written = new JsonObject();
 
-        foreach (var (locId, fallback) in Stats)
-            written.Add(lang.GetValueOrDefault(locId) is { Length: > 0 } name ? name : fallback);
+        foreach (var (key, value) in lang.OrderBy(e => e.Key, StringComparer.Ordinal))
+        {
+            bool wanted = key.EndsWith(SpeciesNamePatterns[0], StringComparison.Ordinal)
+                || key.StartsWith(SpeciesNamePatterns[1], StringComparison.Ordinal)
+                || key.Equals(SpeciesNamePatterns[2], StringComparison.Ordinal);
+
+            if (wanted && value is { Length: > 0 }) written.Set(key, value);
+        }
 
         return written;
     }

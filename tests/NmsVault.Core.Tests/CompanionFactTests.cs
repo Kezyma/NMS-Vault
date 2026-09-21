@@ -51,26 +51,15 @@ public class CompanionFactTests
     }
 
     [Fact]
-    public void MoodsAreReadInNmsesOrder()
+    public void ACreatureHasNoNumbersWorthPuttingOnACard()
     {
-        var moods = Facts().Moods;
-
-        Assert.Equal(["Hungry", "Lonely"], moods.Select(m => m.Label));
-        Assert.All(moods, m => Assert.InRange(m.Value, 0, 1));
-    }
-
-    [Fact]
-    public void TheCardTakesWhatWasSettledAtHatchingAndLeavesTheRest()
-    {
-        // Size alone. Trust and the moods drift with play, so a gallery ordered by them would
-        // rank creatures by how their last owner left them - and the three traits are no
-        // longer numbers here either, because each is one end of an axis and a column of
-        // signed values put the gentlest creature and the fiercest at opposite ends of it.
-        // They are resolved into the game's own words at ingest instead.
-        var stats = Facts().AsStats();
-
-        Assert.Equal(["Scale"], stats.Select(s => s.Label));
-        Assert.All(stats, s => Assert.StartsWith("#", s.Id, StringComparison.Ordinal));
+        // A ship's stats rank it against other ships. A creature has nothing of that shape:
+        // scale is a size rather than a score - 1.0 is small for a Diplodocus and enormous for
+        // a beetle - trust and the moods drift with play, and each trait names one end of an
+        // axis, so a column of signed values put the gentlest creature and the fiercest at
+        // opposite ends of one scale. Scale is shown on the creature's own view against its
+        // species range; the traits are resolved into the game's own words at ingest.
+        Assert.Empty(Facts().AsStats());
     }
 
     [Fact]
@@ -191,9 +180,8 @@ public class CompanionFactTests
         Assert.Equal("Companion", facts.CreatureType);
         Assert.Null(facts.Biome);
         Assert.Empty(facts.Traits);
-        Assert.Empty(facts.Moods);
         Assert.Empty(facts.Seeds);
         Assert.Empty(facts.BattleMoves);
-        Assert.Equal(0, facts.Scale);
+        Assert.Null(facts.SpeciesName);
     }
 }

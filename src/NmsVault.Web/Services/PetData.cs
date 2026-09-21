@@ -40,7 +40,9 @@ public sealed class PetData(HttpClient http)
             }
             catch (Exception ex) when (ex is HttpRequestException or JsonException)
             {
-                return _index = PetIndex.Empty;
+                // Not cached - see the note in TechData. A creature drawn without this shows
+                // raw ids, and it should recover on the next sheet rather than on a reload.
+                return PetIndex.Empty;
             }
         }
         finally

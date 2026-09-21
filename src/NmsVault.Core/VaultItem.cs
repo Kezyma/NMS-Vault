@@ -22,6 +22,9 @@ public sealed class VaultItem
     /// <summary>The key the metadata block lives under.</summary>
     public const string VaultKey = "Vault";
 
+    /// <summary>The key a companion's unhatched form lives under.</summary>
+    public const string EggKey = "Egg";
+
     private readonly JsonObject _root;
 
     private VaultItem(JsonObject root, EntityKind kind, VaultMetadata meta)
@@ -82,6 +85,51 @@ public sealed class VaultItem
     /// </para>
     /// </summary>
     public JsonArray? AccessorySlots => _root.GetArray("PetAccessoryCustomisation");
+
+    /// <summary>
+    /// The same creature as it was before it hatched, or null where only one form was captured.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A companion can be exported twice: as the egg and as what hatched out of it. The two are
+    /// the same animal - creature, species and genus seeds, traits, moves and origin all match -
+    /// so they are one item in the gallery with two payloads rather than two entries for one
+    /// creature.
+    /// </para>
+    /// <para>
+    /// They are not interchangeable downloads, though, which is why both are kept. An egg
+    /// carries no accessories, and on the pair checked it held a real <c>BoneScaleSeed</c> where
+    /// the hatched form held a placeholder. Whoever is importing wants one or the other
+    /// depending on whether they intend to hatch it themselves.
+    /// </para>
+    /// </remarks>
+    public JsonObject? EggPayload => _root.GetObject(EggKey);
+
+    /// <summary>Whether this item also holds the creature's unhatched form.</summary>
+    public bool HasEgg => EggPayload is not null;
+
+    /// <summary>
+    /// This item as its egg, ready to hand to an export adapter.
+    /// </summary>
+    /// <remarks>
+    /// The egg becomes the payload and the accessories go, because an egg wears nothing - which
+    /// is not a detail the adapters need to know about: each one reads <see cref="Payload"/> and
+    /// <see cref="AccessorySlots"/> and produces the right file without a variant of its own.
+    /// The name is suffixed so downloading both does not put two files of the same name in
+    /// someone's downloads folder.
+    /// </remarks>
+    /// <returns>An item whose payload is the egg.</returns>
+    /// <exception cref="InvalidOperationException">If this item has no egg.</exception>
+    public VaultItem AsEgg()
+    {
+        if (EggPayload is not { } egg)
+            throw new InvalidOperationException($"'{Meta.Id}' has no egg to export.");
+
+        return Create(
+            Kind,
+            egg.DeepClone(),
+            Meta with { DisplayName = $"{Meta.DisplayName} (Egg)" });
+    }
 
     // --- Reading and writing ------------------------------------------
 
@@ -144,6 +192,23 @@ public sealed class VaultItem
         return new VaultItem(root, kind, meta);
     }
 
+    /// <summary>
+    /// The same item with a companion's unhatched form attached.
+    /// </summary>
+    /// <remarks>
+    /// Written after the <c>Vault</c> block rather than before it. Both are the gallery's
+    /// additions to what the game wrote, so they belong together on the end - and an importer
+    /// reading one of these documents takes the payload by name and never sees either.
+    /// </remarks>
+    /// <param name="eggPayload">The egg's creature object.</param>
+    /// <returns>A new item carrying the egg.</returns>
+    public VaultItem WithEgg(JsonObject eggPayload)
+    {
+        var root = _root.DeepClone();
+        root.Set(EggKey, eggPayload.DeepClone());
+        return new VaultItem(root, Kind, Meta);
+    }
+
     /// <summary>The whole document, including the <c>Vault</c> block.</summary>
     public JsonObject ToJson() => _root;
 
@@ -159,6 +224,10 @@ public sealed class VaultItem
     {
         var copy = _root.DeepClone();
         copy.Remove(VaultKey);
+
+        // The egg goes with it. It is the gallery's own addition too, and an NMSE export that
+        // carried a second creature stapled to it would not be an NMSE export.
+        copy.Remove(EggKey);
         return copy;
     }
 

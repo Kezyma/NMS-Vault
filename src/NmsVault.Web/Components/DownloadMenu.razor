@@ -61,6 +61,38 @@
             }
             else
             {
+                @*
+                    Which of the two forms the file should hold. A creature and the egg it
+                    hatched from are the same animal, so they are one item rather than two -
+                    but they are not the same download, and this is where that is chosen.
+
+                    Radios rather than a second list of formats: all four editors take either
+                    one, so the choice is what goes in the file, not who it is for.
+                *@
+                @if (_hasEgg)
+                {
+                    <fieldset class="forms">
+                        <legend class="visually-hidden">Which form to download</legend>
+
+                        @foreach (var form in Forms)
+                        {
+                            <label>
+                                <input type="radio" name="@_formGroup" checked="@(_form == form)"
+                                       @onchange="() => Pick(form)" />
+                                <span>@form</span>
+                            </label>
+                        }
+                    </fieldset>
+
+                    @*
+                        Worth saying, because the two are not the same animal. Comparing twelve
+                        creatures with the eggs they hatched from, eight differ in personality
+                        and five in size - the traits drift rather than reroll, but they move.
+                    *@
+                    <p class="hatching dim">An egg hatches into its own creature: expect a
+                        different personality, and possibly a different size.</p>
+                }
+
                 <ul class="options">
                     @foreach (var option in _options)
                     {
@@ -133,7 +165,20 @@
     [Parameter]
     public bool Compact { get; set; }
 
+    /// <summary>The two forms, in the order they are offered. The first is the default.</summary>
+    private static readonly CompanionForm[] Forms = [CompanionForm.Companion, CompanionForm.Egg];
+
     private bool _open;
+    private bool _hasEgg;
+    private CompanionForm _form = Forms[0];
+
+    /// <summary>
+    /// Groups this menu's radios and no other's. A page draws one of these per row, and
+    /// radios sharing a name behave as one group however far apart they are - so without this
+    /// choosing Egg on one card cleared the choice on every other.
+    /// </summary>
+    private readonly string _formGroup = $"form-{Guid.NewGuid():N}";
+
     private ElementReference _control;
     private ElementReference _panel;
     private IReadOnlyList<DownloadOption>? _options;
@@ -162,14 +207,38 @@
         // pull twenty whole ship documents to draw twenty buttons nobody has pressed.
         if (_options is not null) { return; }
 
+        await Load().ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Reads what this item can be downloaded as, in the form currently chosen.
+    /// </summary>
+    /// <remarks>
+    /// Run again when the form changes rather than once per item, because what a format loses
+    /// is not the same for both: the warning that companion accessories will not survive is
+    /// true of a creature wearing something and false of its egg, which wears nothing.
+    /// </remarks>
+    private async Task Load()
+    {
         try
         {
-            _options = await Exports.OptionsAsync(Row.Id).ConfigureAwait(true);
+            _hasEgg = await Exports.HasEggAsync(Row.Id).ConfigureAwait(true);
+            _options = await Exports.OptionsAsync(Row.Id, _form).ConfigureAwait(true);
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
             _failed = "That item could not be read. It may not have finished publishing.";
         }
+    }
+
+    private async Task Pick(CompanionForm form)
+    {
+        if (_form == form) { return; }
+
+        _form = form;
+        _options = null;
+
+        await Load().ConfigureAwait(true);
     }
 
     private async Task Choose(DownloadOption option)
@@ -193,7 +262,7 @@
 
         try
         {
-            var file = await Exports.ExportAsync(Row.Id, option.Editor).ConfigureAwait(true);
+            var file = await Exports.ExportAsync(Row.Id, option.Editor, _form).ConfigureAwait(true);
 
             _module ??= await Js.InvokeAsync<IJSObjectReference>("import", "./vault.js").ConfigureAwait(true);
             await _module.InvokeVoidAsync(

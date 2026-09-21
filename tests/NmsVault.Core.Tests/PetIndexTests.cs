@@ -286,31 +286,51 @@ public class PetIndexTests
         Assert.Equal([a, b, c], traits.Select(t => t.Name));
     }
 
-    [Fact]
-    public void ADiplodocusReadsAsTheGalleryShowsIt()
+    [Theory]
+    // Read off screenshots of the game's own companion register. These are not what the tables
+    // predict - they are what the game printed - so a change to the pairing, the percentage or
+    // the class bands that breaks any of them is a change away from the game.
+    [InlineData("^DIPLO_PET", 0.5, -1.0, 0.5,
+        "Helpfulness 50% (Cooperative)|Gentleness 100% (Sweet Tempered)|Independence 50% (Free Spirited)")]
+    [InlineData("^QUAD_PET", 0.1784112006, 0.7080084085, 0.7908408046,
+        "Helpfulness 18% (Compliant)|Aggression 71% (Fierce)|Independence 79% (Autonomous)")]
+    // The one that proved the pairing: a negative first slot reads as Playfulness, not as a
+    // lack of Helpfulness.
+    [InlineData("^FLYINGSNAKE", -0.8269261122, 0.3639779985, 0.2314400077,
+        "Playfulness 83% (Whimsical)|Aggression 36% (Territorial)|Independence 23% (Aloof)")]
+    [InlineData("^BONECOW", -0.75, -0.3000000119, 0.8500000238,
+        "Playfulness 75% (Frolicsome)|Gentleness 30% (Tolerant)|Independence 85% (Adventurous)")]
+    // The two that fixed the top band: 80 is A and 82 is S.
+    [InlineData("^ROBO_RODENT", 0.8000000119, -0.5, 0.2000000030,
+        "Helpfulness 80% (Diligent)|Gentleness 50% (Patient)|Independence 20% (Aloof)")]
+    [InlineData("^ROBO_PET", 1.0, 0.22, 0.82,
+        "Helpfulness 100% (Dutiful)|Aggression 22% (Passionate)|Independence 82% (Adventurous)")]
+    public void ACreatureReadsAsTheGameReadsIt(
+        string creatureId, double first, double second, double third, string expected)
     {
-        // The creature actually published, and the one to check the inferred pairing against
-        // in game. If this changes, the table in PetExtractor is what changed.
-        var traits = Index().Traits("^DIPLO_PET", [0.5, -1.0, 0.5]);
+        var traits = Index().Traits(creatureId, [first, second, third]);
 
-        Assert.Equal(
-            ["Helpfulness 50% (Diligent)", "Gentleness 100% (Sweet Tempered)", "Independence 50% (Autonomous)"],
-            traits.Select(t => $"{t.Name} {t.Percent}% ({t.Word})"));
+        Assert.Equal(expected, string.Join("|", traits.Select(t => $"{t.Name} {t.Percent}% ({t.Word})")));
     }
 
     [Theory]
+    // Not even quarters, which is what this assumed before the game was consulted. The observed
+    // boundaries fall in (30, 36], (50, 71] and (80, 82]; these are the edges of the bands
+    // fitted inside them.
     [InlineData(0.0, "C")]
-    [InlineData(0.24, "C")]
-    [InlineData(0.25, "B")]
-    [InlineData(0.49, "B")]
-    [InlineData(0.5, "A")]
-    [InlineData(0.74, "A")]
-    [InlineData(0.75, "S")]
+    [InlineData(0.30, "C")]
+    [InlineData(0.33, "C")]
+    [InlineData(0.34, "B")]
+    [InlineData(0.50, "B")]
+    [InlineData(0.66, "B")]
+    [InlineData(0.67, "A")]
+    [InlineData(0.80, "A")]
+    [InlineData(0.81, "S")]
     [InlineData(1.0, "S")]
     // The magnitude is what counts, so the bands are symmetrical about zero.
     [InlineData(-1.0, "S")]
     [InlineData(-0.1, "C")]
-    public void TheClassIsAnEvenQuarterOfTheMagnitude(double value, string expected)
+    public void TheClassIsFittedToWhatTheGamePrints(double value, string expected)
     {
         var trait = Index().Traits("^DIPLO_PET", [value]).Single();
 
@@ -344,24 +364,46 @@ public class PetIndexTests
     }
 
     [Fact]
-    public void ASpeciesCarriesItsScaleAndItsHabits()
+    public void ASpeciesCarriesItsHabits()
     {
+        // No scale. The table's MinScale and MaxScale describe wild spawns rather than
+        // companions - three of the twelve creatures to hand fall outside their own species'
+        // range - so they are deliberately not published.
         var species = Index().Species("^DIPLO_PET");
 
         Assert.NotNull(species);
-        Assert.Equal(0.4, species!.MinScale);
-        Assert.Equal(12.0, species.MaxScale);
-        Assert.Equal("Ground", species.MoveArea);
+        Assert.Equal("Ground", species!.MoveArea);
         Assert.Equal("Uncommon", species.Rarity);
+        Assert.Equal("DEFAULT", species.EggType);
         Assert.True(species.CanBattle);
     }
 
     [Fact]
-    public void TheBattleStatsReadInThePayloadsOrder()
+    public void AMachineHatchesFromAMachinesEgg()
+        => Assert.Equal("ROBO", Index().Species("^QUAD_PET")?.EggType);
+
+    [Theory]
+    // What a creature's type actually is, in the way a ship's is Fighter.
+    [InlineData("^UI_DIPLO_PET_SPECIES", "Prehistoric Giant")]
+    [InlineData("^UI_FIEND_NAME", "Burrowing Monstrosity")]
+    [InlineData("^UI_PETWORM_SPECIES", "Maggotling")]
+    // The loc id does not follow from the creature id - SCUTTLER_PET takes the fiend's name
+    // and BUGFIEND takes a marker tag - so only the payload knows which to ask for.
+    [InlineData("^UI_MINIFIEND_SPECIES", "Scuttling Horror")]
+    [InlineData("^UI_MARKER_TAG_BUGFIEND", "Vile Broodling")]
+    public void ASpeciesReadsAsTheGameNamesIt(string locId, string expected)
+        => Assert.Equal(expected, Index().SpeciesName(locId));
+
+    [Fact]
+    public void ACreatureWithNoSpeciesNameGetsNoneRatherThanAWrongOne()
     {
-        // Health, agility, combat - which is not the order the game's own headers read in, and
-        // is the order PetBattlerTreatsEaten and the class overrides are indexed.
-        Assert.Equal(["Health", "Agility", "Combat Effectiveness"], Index().BattleStats);
+        // One of the twelve to hand stores a bare caret. The caller falls back to CreatureType,
+        // which is worse but true.
+        var index = Index();
+
+        Assert.Null(index.SpeciesName("^"));
+        Assert.Null(index.SpeciesName(null));
+        Assert.Null(index.SpeciesName("^UI_NOT_A_REAL_KEY"));
     }
 
     [Fact]

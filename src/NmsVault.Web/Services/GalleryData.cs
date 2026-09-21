@@ -18,6 +18,51 @@ public sealed record GalleryAffinity(string Id, string Name, string? Icon)
             : null;
 }
 
+/// <summary>
+/// What a creature is like, as the manifest carries it: one named field per value.
+/// </summary>
+/// <param name="Climate">The world it came from, in the game's word - a Lush one is Verdant.</param>
+/// <param name="Rarity">How often the species turns up.</param>
+/// <param name="Movement">How it gets about - Walking, Flying, Swimming.</param>
+/// <param name="Egg">Which kind of egg it hatched from - Standard or Robotic.</param>
+/// <param name="IsPredator">Whether it hunts.</param>
+/// <param name="HasFur">Whether it is furred.</param>
+/// <param name="NoBattle">Whether the species is barred from the arena. False for nearly all.</param>
+public sealed record GalleryNature(
+    string? Climate, string? Rarity, string? Movement, string? Egg,
+    bool IsPredator, bool HasFur, bool NoBattle)
+{
+    /// <summary>The fields in the order they read, skipping the ones this creature has none of.</summary>
+    public IReadOnlyList<KeyValuePair<string, string>> Fields =>
+    [
+        .. Pair("Native climate", Climate),
+        .. Pair("Rarity", Rarity),
+        .. Pair("Movement", Movement),
+        .. Pair("Predator", IsPredator ? "Yes" : "No"),
+        .. Pair("Fur", HasFur ? "Yes" : "No"),
+        .. Pair("Egg", Egg),
+        .. NoBattle ? Pair("Pet battles", "No") : [],
+    ];
+
+    private static KeyValuePair<string, string>[] Pair(string label, string? value)
+        => value is { Length: > 0 } ? [new(label, value)] : [];
+
+    /// <summary>Reads one from a manifest entry, or null where there is none.</summary>
+    /// <param name="entry">The <c>Nature</c> object, or null.</param>
+    /// <returns>The nature, or null.</returns>
+    internal static GalleryNature? FromJson(JsonObject? entry)
+        => entry is null
+            ? null
+            : new GalleryNature(
+                entry.GetString("Climate"),
+                entry.GetString("Rarity"),
+                entry.GetString("Movement"),
+                entry.GetString("Egg"),
+                entry.Get("Predator") is true,
+                entry.Get("Fur") is true,
+                entry.Get("NoBattle") is true);
+}
+
 /// <summary>One of a creature's three personality traits, already resolved into words.</summary>
 /// <param name="Name">The pole the stored value falls on - Gentleness, not Aggression.</param>
 /// <param name="Percent">How far along that pole, 0 to 100.</param>
@@ -100,6 +145,12 @@ public sealed record GalleryRow
     /// <inheritdoc cref="Affinity"/>
     public IReadOnlyList<GalleryTrait> Traits { get; init; } = [];
 
+    /// <summary>
+    /// What a creature is like - its climate, rarity and habits. Null for everything else.
+    /// </summary>
+    /// <inheritdoc cref="Affinity"/>
+    public GalleryNature? Nature { get; init; }
+
     /// <summary>Seeds, keyed by what each governs.</summary>
     public IReadOnlyDictionary<string, string> Seeds { get; init; } = new Dictionary<string, string>();
 
@@ -174,6 +225,7 @@ public sealed record GalleryRow
             Biome = entry.GetString("Biome"),
             Affinity = GalleryAffinity.FromJson(entry.GetObject("Affinity")),
             Traits = GalleryTrait.FromJson(entry.GetArray("Traits")),
+            Nature = GalleryNature.FromJson(entry.GetObject("Nature")),
             Seeds = ReadMap(entry.GetObject("Seeds")),
             Stats = ReadStats(entry.GetObject("Stats")),
             Tech = ReadList(entry.GetArray("Tech")),

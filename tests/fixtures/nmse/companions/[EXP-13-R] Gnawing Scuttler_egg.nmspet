@@ -1,0 +1,114 @@
+{
+	"Scale": 1.0,
+	"CreatureID": "^SCUTTLER_PET",
+	"Descriptors": [
+		"^366051701"
+	],
+	"CreatureSeed": [
+		true,
+		"0xDF23350A15D95E55"
+	],
+	"CreatureSecondarySeed": [
+		false,
+		"0x0"
+	],
+	"SpeciesSeed": "0x23042F843DF001D6",
+	"GenusSeed": "0x3A808C21D6A2FA5B",
+	"CustomSpeciesName": "^UI_MINIFIEND_SPECIES",
+	"Predator": false,
+	"UA": "0x20030005DA597B",
+	"AllowUnmodifiedReroll": true,
+	"ColourBaseSeed": [
+		false,
+		"0x0"
+	],
+	"BoneScaleSeed": [
+		true,
+		"0x3B13760298A9FE50"
+	],
+	"HasFur": false,
+	"Biome": {
+		"Biome": "Lush"
+	},
+	"CreatureType": {
+		"CreatureType": "Predator"
+	},
+	"BirthTime": 1789990786,
+	"LastEggTime": 0,
+	"LastTrustIncreaseTime": 0,
+	"LastTrustDecreaseTime": 0,
+	"EggModified": false,
+	"HasBeenSummoned": false,
+	"CustomName": "Gnawing Scuttler",
+	"Trust": 0.800000011920929,
+	"SenderData": {
+		"LID": "",
+		"UID": "",
+		"USN": "",
+		"PTK": "",
+		"TS": 0
+	},
+	"Traits": [
+		0.20000000298023225,
+		1.0,
+		0.800000011920929
+	],
+	"Moods": [
+		0.9900000095367432,
+		0.10000000149011612
+	],
+	"PetBattlerUseCoreStatClassOverrides": false,
+	"PetBattlerCoreStatClassOverrides": [
+		{
+			"InventoryClass": "C"
+		},
+		{
+			"InventoryClass": "C"
+		},
+		{
+			"InventoryClass": "C"
+		}
+	],
+	"PetBattlerTreatsEaten": [
+		0,
+		0,
+		0
+	],
+	"PetBattlerTreatsAvailable": 0,
+	"PetBattleProgressToTreat": 0.0,
+	"PetBattlerVictories": 0,
+	"PetBattlerMoveList": [
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		}
+	],
+	"PetBattlerMoves": [
+		"^ATTACK_AFF",
+		"^ATTACK_DOT_NORM",
+		"^DOT_AFF",
+		"^SELF_HEAL",
+		"^STUN"
+	]
+}

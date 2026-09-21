@@ -209,15 +209,55 @@ public class FilteringTests
             ["Name", "Type", "Class", "Damage", "Mining", "Scan", "Tech Slots", "Tech Installed"],
             GalleryFacets.SortsFor("Armoury").Select(s => s.Label));
 
-        // Companions have no class and no technology. What they have is an affinity, which
-        // groups them the way a class ranks a ship, and a size. Trust and the moods are
-        // deliberately absent - those drift with play, so ordering by them would rank
-        // creatures by how their last owner left them - and the three traits are words rather
-        // than numbers, because each is one end of an axis and there is no order to sort them
-        // into that a reader would be looking for.
+        // Companions have no class, no technology and no numbers at all. Type is the species -
+        // Prehistoric Giant - and affinity groups them the way a class ranks a ship. Scale is a
+        // size rather than a score, trust and the moods drift with play, and each of the three
+        // traits names one end of an axis, so there is no order to sort any of them into that a
+        // reader would be looking for.
         Assert.Equal(
-            ["Name", "Type", "Affinity", "Scale"],
+            ["Name", "Type", "Affinity"],
             GalleryFacets.SortsFor("Stable").Select(s => s.Label));
+    }
+
+    [Fact]
+    public void ACreaturesNatureReadsAsLabelledFieldsInAFixedOrder()
+    {
+        // The item view lists these and the table shows the same ones as columns, so the order
+        // lives in one place. Egg-modified is deliberately not among them: it is false on every
+        // creature and every egg to hand, so the row only ever said no.
+        var nature = new GalleryNature("Airless", "Common", "Walking", "Standard",
+            IsPredator: true, HasFur: false, NoBattle: false);
+
+        Assert.Equal(
+            ["Native climate", "Rarity", "Movement", "Predator", "Fur", "Egg"],
+            nature.Fields.Select(f => f.Key));
+
+        Assert.Equal(
+            ["Airless", "Common", "Walking", "Yes", "No", "Standard"],
+            nature.Fields.Select(f => f.Value));
+    }
+
+    [Fact]
+    public void AFieldACreatureHasNothingForIsLeftOutRatherThanLeftBlank()
+    {
+        // A species the tables do not know keeps its yes-or-no answers and drops the rest, so
+        // the table draws no column for a field nothing on the page carries.
+        var unknown = new GalleryNature(null, null, null, null,
+            IsPredator: false, HasFur: true, NoBattle: false);
+
+        Assert.Equal(["Predator", "Fur"], unknown.Fields.Select(f => f.Key));
+    }
+
+    [Fact]
+    public void TheArenaFieldAppearsOnlyWhenTheAnswerIsNo()
+    {
+        // Ten of twelve can fight. A column of Yes with two No in it says less than one that is
+        // there only where the answer is interesting.
+        var canFight = new GalleryNature("Verdant", null, null, null, false, false, NoBattle: false);
+        var cannot = new GalleryNature("Scorched", null, null, null, false, false, NoBattle: true);
+
+        Assert.DoesNotContain("Pet battles", canFight.Fields.Select(f => f.Key));
+        Assert.Equal("No", cannot.Fields.Single(f => f.Key == "Pet battles").Value);
     }
 
     [Fact]

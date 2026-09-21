@@ -110,14 +110,26 @@
                                 <span class="chip" title="@($"{trait.Name} {trait.Rating}")">@(trait.Word ?? trait.Name)</span>
                             }
                         </td>
+
+                        @* The same fields the item's own view lists, one per column. *@
+                        @foreach (string label in NatureColumns)
+                        {
+                            <td class="col-nature">@Nature(row, label)</td>
+                        }
                     }
 
-                    <td>
-                        @foreach (var seed in row.Seeds)
-                        {
-                            <code>@seed.Value</code>
-                        }
-                    </td>
+                    @* One column per seed rather than all of them stacked in one cell. A ship
+                       has a single seed and reads the same as before; a creature has two, and
+                       had them jammed together in a column headed "Seed". *@
+                    @foreach (string label in SeedColumns)
+                    {
+                        <td class="col-seed">
+                            @if (row.Seeds.TryGetValue(label, out string? seed))
+                            {
+                                <code>@seed</code>
+                            }
+                        </td>
+                    }
 
                     @foreach (var stat in StatColumns)
                     {
@@ -198,15 +210,47 @@
     /// <summary>The other way round: only creatures carry an affinity.</summary>
     private bool HasAffinity => Rows.Any(r => r.Affinity is not null);
 
+    /// <summary>
+    /// The nature fields any of these rows carries, in the order they read.
+    /// </summary>
+    /// <remarks>
+    /// Taken from the rows rather than written out here, so a column cannot appear for a field
+    /// nothing has - the arena column shows up only on a page holding a species that cannot
+    /// fight, which is how it stays out of the way the rest of the time.
+    /// </remarks>
+    private IReadOnlyList<string> NatureColumns =>
+        [.. Rows.SelectMany(r => r.Nature?.Fields ?? []).Select(f => f.Key).Distinct()];
+
+    /// <summary>
+    /// The seeds any of these rows carries, in the order they first appear.
+    /// </summary>
+    /// <remarks>
+    /// Taken from the rows for the same reason the nature columns are: a page shows a column
+    /// only for a seed something on it actually has. Ships and multi-tools carry one, labelled
+    /// Seed, so their table is unchanged; creatures carry a species and a genus.
+    /// </remarks>
+    private IReadOnlyList<string> SeedColumns =>
+        [.. Rows.SelectMany(r => r.Seeds.Keys).Distinct()];
+
+    /// <summary>One row's value for a nature column, or empty where it has none.</summary>
+    private static string Nature(GalleryRow row, string label)
+    {
+        foreach (var (key, value) in row.Nature?.Fields ?? [])
+            if (string.Equals(key, label, StringComparison.Ordinal)) return value;
+
+        return "";
+    }
+
     private IReadOnlyList<Column> Columns =>
     [
         new("Name", "col-name"),
         new("Type"),
         .. HasClass ? (Column[])[new("Class", "col-class")] : [],
         .. HasAffinity
-            ? (Column[])[new("Affinity", "col-affinity"), new("Personality", "col-traits")]
+            ? (Column[])[new("Affinity", "col-affinity"), new("Personality", "col-traits"),
+                         .. NatureColumns.Select(label => new Column(label, "col-nature"))]
             : [],
-        new("Seed"),
+        .. SeedColumns.Select(label => new Column(label, "col-seed")),
         .. StatColumns.Select(stat => new Column(stat, "col-stat")),
         new("Tags"),
     ];

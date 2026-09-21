@@ -24,6 +24,10 @@ public class ExportTests
     private const string Customised = "[EXP-13-R] Iron Vulture.nmsship";
     private const string Tool = "[EXP-12-R] Atlas Sceptre.nmstool";
 
+    // A creature captured twice: as the egg, and as what hatched out of it.
+    private const string Pet = "[EXP-13-R] Gnawing Scuttler.nmspet";
+    private const string Egg = "[EXP-13-R] Gnawing Scuttler_egg.nmspet";
+
     /// <summary>
     /// Serves one vault document, and nothing else. Anything the service asks for that was
     /// not put here comes back 404, which is how the missing-image path gets exercised.
@@ -109,6 +113,88 @@ public class ExportTests
                 Content = new ByteArrayContent([]),
             });
     }
+
+    [Fact]
+    public async Task AnEggIsDownloadedInsteadWhenItIsTheOneChosen()
+    {
+        // A creature and the egg it hatched from are one item with two payloads, so the choice
+        // is made at download time rather than by having two entries for one animal.
+        var (service, _) = WithEgg();
+
+        var creature = await service.ExportAsync("item", EditorId.Nmse, CompanionForm.Companion);
+        var egg = await service.ExportAsync("item", EditorId.Nmse, CompanionForm.Egg);
+
+        Assert.NotEqual(creature.Content, egg.Content);
+
+        // The egg is the creature before it hatched, so what it is - species and genus - has to
+        // match, and what it does not carry is the accessories.
+        var hatched = JsonObject.FromBytes(creature.Content);
+        var unhatched = JsonObject.FromBytes(egg.Content);
+
+        Assert.Equal(hatched.GetString("SpeciesSeed"), unhatched.GetString("SpeciesSeed"));
+        Assert.Equal(hatched.GetString("GenusSeed"), unhatched.GetString("GenusSeed"));
+        Assert.Null(unhatched.GetArray("PetAccessoryCustomisation"));
+    }
+
+    [Fact]
+    public async Task TheTwoFormsDoNotLandOnTopOfEachOther()
+    {
+        // Downloading both would otherwise put two files of the same name in one folder, and
+        // the second would quietly replace the first.
+        var (service, _) = WithEgg();
+
+        var creature = await service.ExportAsync("item", EditorId.Nmse, CompanionForm.Companion);
+        var egg = await service.ExportAsync("item", EditorId.Nmse, CompanionForm.Egg);
+
+        Assert.Equal("Test Item.nmspet", creature.FileName);
+        Assert.Equal("Test Item (Egg).nmspet", egg.FileName);
+    }
+
+    [Fact]
+    public async Task WhatAFormatLosesIsAskedOfTheFormBeingDownloaded()
+    {
+        // goatfungus drops companion accessories, which is worth stopping someone for when
+        // they are downloading a creature wearing three and is simply untrue of its egg.
+        var (service, _) = WithEgg();
+
+        var forCreature = await service.OptionsAsync("item", CompanionForm.Companion);
+        var forEgg = await service.OptionsAsync("item", CompanionForm.Egg);
+
+        Assert.NotEmpty(forCreature.First(o => o.Editor == EditorId.Goatfungus).Losses);
+        Assert.Empty(forEgg.First(o => o.Editor == EditorId.Goatfungus).Losses);
+    }
+
+    [Fact]
+    public async Task AnItemWithNoEggIgnoresTheChoiceRatherThanFailing()
+    {
+        // The menu only offers the choice where there is one, but a stale selection must not
+        // be able to turn into a failed download on the next item.
+        var (service, _) = ServiceFor("companions", Pet, ".nmspet");
+
+        Assert.False(await service.HasEggAsync("item"));
+
+        var asked = await service.ExportAsync("item", EditorId.Nmse, CompanionForm.Egg);
+        var plain = await service.ExportAsync("item", EditorId.Nmse);
+
+        Assert.Equal(plain.Content, asked.Content);
+        Assert.Equal(plain.FileName, asked.FileName);
+    }
+
+    /// <summary>A companion carrying the egg it hatched from, as the gallery stores one.</summary>
+    private static (ExportService Service, OneItem Transport) WithEgg()
+    {
+        var stored = Import(Pet).WithEgg(Import(Egg).Payload);
+        var transport = new OneItem("item", stored.ToBytes());
+
+        return (new ExportService(new HttpClient(transport) { BaseAddress = new Uri("https://example.test/") }),
+                transport);
+    }
+
+    private static VaultItem Import(string file)
+        => NmseImporter.Read(
+            File.ReadAllBytes(Path.Combine(FixtureRoot, "companions", file)),
+            new VaultMetadata { Id = "item", DisplayName = "Test Item" },
+            ".nmspet");
 
     [Fact]
     public async Task A404IsStillA404()

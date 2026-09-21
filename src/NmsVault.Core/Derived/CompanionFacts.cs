@@ -19,65 +19,47 @@ public readonly record struct CompanionValue(string Label, double Value);
 /// fields.
 /// </para>
 /// <para>
-/// The split that matters is between what a creature <em>is</em> and how a particular save
-/// left it. Scale and the three traits are fixed at hatching and are what anyone would choose
-/// a companion by; trust and the two moods drift with play and say more about the last owner
-/// than about the creature. Both are shown, and they are shown apart.
+/// What is here is what a creature <em>is</em>. What a particular save happened to leave - its
+/// trust and its two moods - is not read at all: it is the last owner's state rather than the
+/// creature's, and across twelve real creatures it was identical on every one of them.
+/// </para>
+/// <para>
+/// The traits are not quite either. Comparing each creature with the egg it hatched from shows
+/// them <em>drifting</em> - eight of twelve pairs differ, by a little: +0.90 against +0.82 -
+/// so a personality is not fixed at hatching the way a seed is. It is close enough to a fact
+/// about the creature to be worth showing, and far enough from one to be worth saying so.
 /// </para>
 /// </remarks>
 /// <param name="CreatureType">Passive, Predator and so on, as the game writes it.</param>
 /// <param name="Biome">Where it is from - Lush, Toxic, Barren.</param>
 /// <param name="SpeciesId">The game's creature id, without its caret.</param>
-/// <param name="Scale">Its size. The same species ranges widely.</param>
 /// <param name="IsPredator">Whether it hunts.</param>
 /// <param name="HasFur">Whether it is furred.</param>
-/// <param name="Traits">Helpfulness, aggression and independence - fixed at hatching.</param>
-/// <param name="Moods">Hunger and loneliness - how the last save left it.</param>
-/// <param name="Trust">How far it had been won over, from nothing to one.</param>
+/// <param name="Traits">Helpfulness, aggression and independence, as stored.</param>
 /// <param name="Seeds">Every seed the creature carries, labelled.</param>
 /// <param name="BattleMoves">Its pet battle moves, as the game's ids without their carets.</param>
 /// <param name="AccessorySlots">How many accessory slots it has.</param>
 /// <param name="AccessoriesWorn">How many of them hold something.</param>
-/// <param name="UniverseAddress">Where it came from, as the game's packed address. Null if absent.</param>
 /// <param name="EggModified">Whether its egg was edited in the Sequencer before it hatched.</param>
 /// <param name="CustomName">The name its owner gave it, or null.</param>
-/// <param name="BattleClasses">
-/// The stored class letter for health, agility and combat effectiveness, in that order. These
-/// only mean anything when <paramref name="BattleClassesApply"/> is set.
+/// <param name="SpeciesName">
+/// The loc id of the game's own name for its species, or null. Resolved through
+/// <see cref="PetIndex.SpeciesName"/>, which is the only thing that knows the text behind it.
 /// </param>
-/// <param name="BattleClassesApply">
-/// Whether the game reads those stored classes. False on everything hatched normally, in which
-/// case the real classes are generated and the payload does not hold them.
-/// </param>
-/// <param name="GeneEdits">
-/// How far health, agility and combat effectiveness have each been raised by feeding, 0 to 10.
-/// </param>
-/// <param name="GeneEditsAvailable">How many edits it has banked and not spent.</param>
-/// <param name="MutationProgress">How far along it is towards earning the next one, 0 to 1.</param>
-/// <param name="ArenaVictories">How many pet battles it has won.</param>
 public sealed record CompanionFacts(
     string CreatureType,
     string? Biome,
     string? SpeciesId,
-    double Scale,
     bool IsPredator,
     bool HasFur,
     IReadOnlyList<CompanionValue> Traits,
-    IReadOnlyList<CompanionValue> Moods,
-    double Trust,
     IReadOnlyList<LabelledSeed> Seeds,
     IReadOnlyList<string> BattleMoves,
     int AccessorySlots,
     int AccessoriesWorn,
-    string? UniverseAddress,
     bool EggModified,
     string? CustomName,
-    IReadOnlyList<string> BattleClasses,
-    bool BattleClassesApply,
-    IReadOnlyList<int> GeneEdits,
-    int GeneEditsAvailable,
-    double MutationProgress,
-    int ArenaVictories)
+    string? SpeciesName)
 {
     /// <summary>What the three <c>Traits</c> entries mean, in order.</summary>
     /// <remarks>
@@ -89,10 +71,6 @@ public sealed record CompanionFacts(
     /// game's own words for the places with room to read them.
     /// </remarks>
     public static readonly string[] TraitLabels = ["Helpfulness", "Aggression", "Independence"];
-
-    /// <summary>What the two <c>Moods</c> entries mean, in order.</summary>
-    /// <inheritdoc cref="TraitLabels"/>
-    public static readonly string[] MoodLabels = ["Hungry", "Lonely"];
 
     /// <summary>Reads everything off a creature.</summary>
     /// <param name="pet">The creature payload.</param>
@@ -110,20 +88,13 @@ public sealed record CompanionFacts(
             pet.GetObject("CreatureType")?.GetString("CreatureType") ?? "Companion",
             pet.GetObject("Biome")?.GetString("Biome"),
             pet.GetString("CreatureID")?.TrimStart('^'),
-            Number(pet.Get("Scale")),
             pet.Get("Predator") is true,
             pet.Get("HasFur") is true,
             Read(pet.GetArray("Traits"), TraitLabels),
-            Read(pet.GetArray("Moods"), MoodLabels),
-            Number(pet.Get("Trust")),
             SeedReader.ForCompanion(pet),
             Moves(pet.GetArray("PetBattlerMoves")),
             accessories?.Length ?? 0,
             Worn(accessories),
-
-            // Where it came from. The only thing in the payload that says so, and it decodes
-            // to a galaxy, a system and a planet.
-            Blank(pet.GetString("UA")),
 
             // Whether the egg was edited in the Sequencer, which is what "hatched" rather than
             // "tamed" actually means.
@@ -132,38 +103,32 @@ public sealed record CompanionFacts(
             // What its owner called it, as opposed to what the gallery lists it under.
             Blank(pet.GetString("CustomName")),
 
-            // The arena. Classes first - stored, but inert unless the flag beside them is set,
-            // which it is not on anything that hatched the ordinary way.
-            Classes(pet.GetArray("PetBattlerCoreStatClassOverrides")),
-            pet.Get("PetBattlerUseCoreStatClassOverrides") is true,
-
-            // Then what feeding it has actually changed, which is real on any creature.
-            Counts(pet.GetArray("PetBattlerTreatsEaten")),
-            (int)Number(pet.Get("PetBattlerTreatsAvailable")),
-            Number(pet.Get("PetBattleProgressToTreat")),
-            (int)Number(pet.Get("PetBattlerVictories")));
+            // A loc id, not a name: what it reads as needs the game's strings.
+            Blank(pet.GetString("CustomSpeciesName")));
     }
-
-    /// <summary>How many gene edits have been spent across the three stats.</summary>
-    public int GeneEditsSpent => GeneEdits.Sum();
-
-    /// <summary>
-    /// The most any creature can be improved by feeding: ten edits on each of three stats.
-    /// </summary>
-    public const int GeneEditLimit = 30;
 
     /// <summary>
     /// The numbers worth putting on a card beside a ship's stats.
     /// </summary>
     /// <remarks>
-    /// Only the size. The three traits used to sit here too, as the signed numbers the payload
-    /// stores, and they were the wrong shape for a column: each names one end of an axis, so
-    /// -1 under "Aggression" is a wholly gentle creature and sorting the column put the
-    /// gentlest and the fiercest at opposite ends of a scale nobody reads that way. They are
-    /// resolved into the game's own words at ingest instead - see <see cref="PetIndex.Traits"/>.
+    /// <para>
+    /// None, and none is the honest answer. A ship's stats rank it against other ships - more
+    /// damage is better - and a creature has nothing of that shape. Scale was the last thing
+    /// here and is not a score: 1.0 is small for a Diplodocus and enormous for a beetle, so a
+    /// column of them compares nothing. Measuring it against the species range did not rescue
+    /// it either, because that range describes wild spawns and a quarter of the creatures to
+    /// hand fall outside their own.
+    /// </para>
+    /// <para>
+    /// The three traits were here too, as the signed numbers the payload stores, and were the
+    /// wrong shape for a column for their own reason: each names one end of an axis, so -1
+    /// under "Aggression" is a wholly gentle creature and sorting put the gentlest and the
+    /// fiercest at opposite ends of one scale. They are resolved into the game's own words at
+    /// ingest instead - see <see cref="PetIndex.Traits"/>.
+    /// </para>
     /// </remarks>
-    /// <returns>The stats, in the order they should read.</returns>
-    public IReadOnlyList<ItemStat> AsStats() => [new ItemStat("#SCALE", "Scale", Scale)];
+    /// <returns>Nothing. Kept so a creature answers the same question every other kind does.</returns>
+    public IReadOnlyList<ItemStat> AsStats() => [];
 
     private static IReadOnlyList<CompanionValue> Read(JsonArray? values, string[] labels)
     {
@@ -172,31 +137,6 @@ public sealed record CompanionFacts(
         var read = new List<CompanionValue>(labels.Length);
         for (int i = 0; i < labels.Length && i < values.Length; i++)
             read.Add(new CompanionValue(labels[i], Number(values.Get(i))));
-
-        return read;
-    }
-
-    /// <summary>
-    /// The class letters out of a class-override array, which wraps each one in an object.
-    /// </summary>
-    private static IReadOnlyList<string> Classes(JsonArray? values)
-    {
-        if (values is null) return [];
-
-        var read = new List<string>(values.Length);
-        for (int i = 0; i < values.Length; i++)
-            read.Add(values.GetObject(i)?.GetString("InventoryClass") ?? "");
-
-        return read;
-    }
-
-    private static IReadOnlyList<int> Counts(JsonArray? values)
-    {
-        if (values is null) return [];
-
-        var read = new List<int>(values.Length);
-        for (int i = 0; i < values.Length; i++)
-            read.Add((int)Number(values.Get(i)));
 
         return read;
     }

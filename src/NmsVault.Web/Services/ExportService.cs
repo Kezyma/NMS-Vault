@@ -98,12 +98,17 @@ public sealed class ExportService(HttpClient http)
 
     /// <summary>What the download menu should show for one item.</summary>
     /// <param name="id">The item's id.</param>
+    /// <param name="form">Which form of a companion to describe.</param>
     /// <param name="cancellationToken">Cancellation.</param>
     /// <returns>One entry per editor, including the ones that cannot take this kind.</returns>
     public async Task<IReadOnlyList<DownloadOption>> OptionsAsync(
-        string id, CancellationToken cancellationToken = default)
+        string id, CompanionForm form = CompanionForm.Companion,
+        CancellationToken cancellationToken = default)
     {
-        var item = await ItemAsync(id, cancellationToken).ConfigureAwait(false);
+        // Taken for the form being offered, not for the item as stored. What a format loses
+        // differs between the two - an egg wears nothing, so the warning about accessories
+        // that do not survive is true of the creature and false of its egg.
+        var item = Form(await ItemAsync(id, cancellationToken).ConfigureAwait(false), form);
 
         var options = new List<DownloadOption>(Adapters.Count);
 
@@ -129,18 +134,39 @@ public sealed class ExportService(HttpClient http)
     /// <summary>Produces one item's file for one editor.</summary>
     /// <param name="id">The item's id.</param>
     /// <param name="editor">Which editor's format.</param>
+    /// <param name="form">Which form of a companion to produce.</param>
     /// <param name="cancellationToken">Cancellation.</param>
     /// <returns>The file name and bytes.</returns>
     /// <exception cref="NotSupportedException">If that editor has no format for the kind.</exception>
     public async Task<ExportResult> ExportAsync(
-        string id, EditorId editor, CancellationToken cancellationToken = default)
+        string id, EditorId editor, CompanionForm form = CompanionForm.Companion,
+        CancellationToken cancellationToken = default)
     {
-        var item = await ItemAsync(id, cancellationToken).ConfigureAwait(false);
+        var item = Form(await ItemAsync(id, cancellationToken).ConfigureAwait(false), form);
         var adapter = Adapters.First(a => a.Editor == editor);
 
         return adapter.Export(item, new ExportOptions(
             await ImagesAsync(item, cancellationToken).ConfigureAwait(false)));
     }
+
+    /// <summary>
+    /// Whether this item also holds the creature's unhatched form, and so has a choice to offer.
+    /// </summary>
+    /// <param name="id">The item's id.</param>
+    /// <param name="cancellationToken">Cancellation.</param>
+    /// <returns>True when an egg was captured alongside the creature.</returns>
+    public async Task<bool> HasEggAsync(string id, CancellationToken cancellationToken = default)
+        => (await ItemAsync(id, cancellationToken).ConfigureAwait(false)).HasEgg;
+
+    /// <summary>
+    /// The item in the form asked for.
+    /// </summary>
+    /// <remarks>
+    /// An item with no egg stays itself whatever is asked for, so a stale choice left over from
+    /// another item cannot turn into a failed download.
+    /// </remarks>
+    private static VaultItem Form(VaultItem item, CompanionForm form)
+        => form == CompanionForm.Egg && item.HasEgg ? item.AsEgg() : item;
 
     /// <summary>Fetches an item document, or returns the one already fetched.</summary>
     /// <param name="id">The item's id.</param>

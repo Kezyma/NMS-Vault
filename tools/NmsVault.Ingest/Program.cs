@@ -85,6 +85,7 @@ public static class Program
         string? author, string? gameVersion, bool force)
     {
         var mapper = JsonNameMapper.LoadEmbedded();
+        var importer = new VaultImporter(mapper);
         byte[] bytes = File.ReadAllBytes(source.FullName);
 
         // Reported before anything is stored, so a wrong detection is visible rather than
@@ -203,28 +204,44 @@ public static class Program
 
         var all = from.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
 
-        var exports = all
+        var found = all
             .Where(f => ExportExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
             .OrderBy(f => f.FullName, StringComparer.Ordinal)
             .ToList();
 
-        if (exports.Count == 0)
+        if (found.Count == 0)
         {
             Console.Error.WriteLine($"error: nothing under '{from.FullName}' looks like an export.");
             return 1;
         }
 
+        // Eggs are not items of their own. They are folded into the creature they hatch into,
+        // which is the file of the same name without the suffix.
+        var eggs = found.ToDictionary(f => f.FullName, f => GalleryStore.EggBeside(f.FullName), StringComparer.Ordinal);
+        var exports = found.Where(f => !GalleryStore.IsEgg(f.FullName)).ToList();
+        int orphaned = 0;
+
+        foreach (var orphan in found.Where(f => GalleryStore.IsEgg(f.FullName) && !File.Exists(GalleryStore.Hatched(f.FullName))))
+        {
+            Console.Error.WriteLine(
+                $"  {orphan.Name}: nothing for this to hatch into. Expected "
+                + $"'{Path.GetFileName(GalleryStore.Hatched(orphan.FullName))}' beside it.");
+            orphaned++;
+        }
+
         ReportOrphanedMetadata(all);
+
 
         int cleared = store.Clear();
         if (cleared > 0) Console.WriteLine($"  cleared {cleared} stored item(s)");
 
         var mapper = JsonNameMapper.LoadEmbedded();
+        var importer = new VaultImporter(mapper);
 
         // Two exports that resolve to one id would otherwise take it in turns, and which of
         // them won would depend on the order the file system handed them over.
         var taken = new Dictionary<string, string>(StringComparer.Ordinal);
-        int built = 0, failed = 0;
+        int built = 0, failed = orphaned;
 
         foreach (var export in exports)
         {
@@ -258,14 +275,23 @@ public static class Program
                     Images = [.. pictures.Select((path, i) => store.AddImage(path, slug, i))],
                 };
 
-                var item = new VaultImporter(mapper).Import(File.ReadAllBytes(export.FullName), meta, export.Name);
+                var item = importer.Import(File.ReadAllBytes(export.FullName), meta, export.Name);
+
+                // The same creature before it hatched, kept beside the one that did. Both are
+                // offered on the download menu; see VaultItem.EggPayload for why both are worth
+                // keeping rather than picking one.
+                var egg = eggs[export.FullName];
+
+                if (egg is not null)
+                    item = item.WithEgg(importer.Import(File.ReadAllBytes(egg), meta, Path.GetFileName(egg)).Payload);
 
                 store.Write(item);
                 taken[slug] = export.Name;
                 built++;
 
                 string shown = pictures.Count == 1 ? "1 picture" : $"{pictures.Count} pictures";
-                Console.WriteLine($"  {slug}: {item.Kind} from {export.Name} ({shown})");
+                Console.WriteLine(
+                    $"  {slug}: {item.Kind} from {export.Name} ({shown}{(egg is null ? "" : ", with egg")})");
             }
             catch (Exception ex) when (ex is ImportException or InvalidDataException or InvalidOperationException)
             {
@@ -403,6 +429,7 @@ public static class Program
         }
 
         var mapper = JsonNameMapper.LoadEmbedded();
+        var importer = new VaultImporter(mapper);
         var stored = store.ReadAll().ToList();
 
         var jobs = new List<(string Id, FileInfo File)>();
@@ -609,6 +636,7 @@ public static class Program
     private static int Convert(FileInfo source, EditorId to, FileInfo? output, string? name)
     {
         var mapper = JsonNameMapper.LoadEmbedded();
+        var importer = new VaultImporter(mapper);
         byte[] bytes = File.ReadAllBytes(source.FullName);
 
         var detected = FormatDetector.Detect(bytes, mapper, source.Name);
@@ -723,6 +751,7 @@ public static class Program
     private static int Inspect(FileInfo source)
     {
         var mapper = JsonNameMapper.LoadEmbedded();
+        var importer = new VaultImporter(mapper);
         byte[] bytes = File.ReadAllBytes(source.FullName);
 
         var detected = FormatDetector.Detect(bytes, mapper, source.Name);
@@ -763,6 +792,7 @@ public static class Program
     private static int Validate(GalleryStore store)
     {
         var mapper = JsonNameMapper.LoadEmbedded();
+        var importer = new VaultImporter(mapper);
         var adapters = Adapters(mapper);
         var tech = LoadTechIndex(store);
 

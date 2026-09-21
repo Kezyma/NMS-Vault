@@ -65,3 +65,21 @@ public static class EntityKinds
     /// </summary>
     public static bool IsAvailable(this EntityKind kind) => kind != EntityKind.Freighter;
 }
+
+/// <summary>
+/// Which form of a companion a download carries.
+/// </summary>
+/// <remarks>
+/// A creature can be captured twice, as the egg and as what hatched out of it, and the two are
+/// not interchangeable: an egg carries no accessories and whoever is importing wants one or the
+/// other depending on whether they mean to hatch it themselves. Names match the words on the
+/// download menu so the two cannot drift apart.
+/// </remarks>
+public enum CompanionForm
+{
+    /// <summary>The hatched creature. What an item holds unless it says otherwise.</summary>
+    Companion,
+
+    /// <summary>The same creature before it hatched.</summary>
+    Egg,
+}

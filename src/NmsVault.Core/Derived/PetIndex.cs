@@ -31,13 +31,16 @@ public sealed record PetTrait(string Name, int Percent, string Class, string? Wo
 public sealed record PetMatchup(IReadOnlyList<PetAffinity> Weak, IReadOnlyList<PetAffinity> Strong);
 
 /// <summary>What the game's species table says about a creature's kind.</summary>
-/// <param name="MinScale">Smallest this species grows, or null if not stated.</param>
-/// <param name="MaxScale">Largest this species grows, or null if not stated.</param>
 /// <param name="MoveArea">Where it gets about - Ground, Water, Air.</param>
 /// <param name="Rarity">How often it turns up - Common through SuperRare.</param>
+/// <param name="EggType">Which kind of egg it hatches from - DEFAULT or ROBO.</param>
 /// <param name="CanBattle">Whether it can be taken into the arena at all.</param>
-public sealed record PetSpecies(
-    double? MinScale, double? MaxScale, string? MoveArea, string? Rarity, bool CanBattle);
+/// <remarks>
+/// The species table also states a MinScale and a MaxScale, which are not read. They describe
+/// wild spawns rather than companions and a quarter of the creatures to hand fall outside them,
+/// so a creature's size measured against them said something false.
+/// </remarks>
+public sealed record PetSpecies(string? MoveArea, string? Rarity, string? EggType, bool CanBattle);
 
 /// <summary>
 /// Works out what the game would say about a creature: its affinity, what its moves are
@@ -72,6 +75,7 @@ public sealed class PetIndex
     private readonly IReadOnlyDictionary<string, string> _biomes;
     private readonly IReadOnlyDictionary<string, string> _forced;
     private readonly IReadOnlyDictionary<string, string> _climates;
+    private readonly IReadOnlyDictionary<string, string> _speciesNames;
     private readonly IReadOnlyDictionary<string, MoveEntry> _moves;
     private readonly IReadOnlyDictionary<string, (string[] Weak, string[] Strong)> _matchups;
     private readonly IReadOnlyDictionary<string, SpeciesEntry> _species;
@@ -81,6 +85,7 @@ public sealed class PetIndex
     private sealed record MoveEntry(
         string Id, string? Icon, string? Affinity, string? Target, string? Description,
         IReadOnlyDictionary<string, string> Names);
+
 
     private sealed record SpeciesEntry(PetSpecies Facts, string TraitSet);
 
@@ -93,23 +98,23 @@ public sealed class PetIndex
         IReadOnlyDictionary<string, string> biomes,
         IReadOnlyDictionary<string, string> forced,
         IReadOnlyDictionary<string, string> climates,
+        IReadOnlyDictionary<string, string> speciesNames,
         IReadOnlyDictionary<string, MoveEntry> moves,
         IReadOnlyDictionary<string, (string[] Weak, string[] Strong)> matchups,
         IReadOnlyDictionary<string, SpeciesEntry> species,
         IReadOnlyDictionary<string, IReadOnlyList<Axis>> traits,
-        IReadOnlyList<(string Class, double From)> bands,
-        IReadOnlyList<string> battleStats)
+        IReadOnlyList<(string Class, double From)> bands)
     {
         _affinities = affinities;
         _biomes = biomes;
         _forced = forced;
         _climates = climates;
+        _speciesNames = speciesNames;
         _moves = moves;
         _matchups = matchups;
         _species = species;
         _traits = traits;
         _bands = bands;
-        BattleStats = battleStats;
     }
 
     /// <summary>An index with nothing in it, for when the companion data has not loaded.</summary>
@@ -118,21 +123,15 @@ public sealed class PetIndex
         new Dictionary<string, string>(StringComparer.Ordinal),
         new Dictionary<string, string>(StringComparer.Ordinal),
         new Dictionary<string, string>(StringComparer.Ordinal),
+        new Dictionary<string, string>(StringComparer.Ordinal),
         new Dictionary<string, MoveEntry>(StringComparer.Ordinal),
         new Dictionary<string, (string[], string[])>(StringComparer.Ordinal),
         new Dictionary<string, SpeciesEntry>(StringComparer.Ordinal),
         new Dictionary<string, IReadOnlyList<Axis>>(StringComparer.Ordinal),
-        [],
         []);
 
     /// <summary>How many affinities are known.</summary>
     public int Count => _affinities.Count;
-
-    /// <summary>
-    /// The three battle stats, labelled as the game labels them, in the order the payload
-    /// stores them: health, agility, combat effectiveness.
-    /// </summary>
-    public IReadOnlyList<string> BattleStats { get; }
 
     /// <summary>Reads an index from a <c>pets.json</c> document.</summary>
     /// <param name="bytes">The document bytes.</param>
@@ -174,12 +173,12 @@ public sealed class PetIndex
             Pairs(root.GetObject("BiomeAffinities")),
             Pairs(root.GetObject("ForcedAffinities")),
             Pairs(root.GetObject("Climates")),
+            Pairs(root.GetObject("SpeciesNames")),
             moves,
             Matchups(root.GetObject("Matchups")),
             Species(root.GetObject("Species")),
             TraitSets(root.GetObject("Traits")),
-            Bands(root.GetObject("Traits")?.GetArray("Bands")),
-            Texts(root.GetArray("BattleStats")));
+            Bands(root.GetObject("Traits")?.GetArray("Bands")));
     }
 
     private static Dictionary<string, string> Pairs(JsonObject? source)
@@ -228,10 +227,9 @@ public sealed class PetIndex
 
             map[name] = new SpeciesEntry(
                 new PetSpecies(
-                    Number(entry, "MinScale"),
-                    Number(entry, "MaxScale"),
                     entry.GetString("MoveArea"),
                     entry.GetString("Rarity"),
+                    entry.GetString("EggType"),
                     // Written only when the species cannot fight, because nearly all can.
                     entry.Get("NoBattle") is not true),
                 entry.GetString("TraitSet") ?? "Default");
@@ -436,6 +434,22 @@ public sealed class PetIndex
     public PetSpecies? Species(string? creatureId)
         => Bare(creatureId) is { Length: > 0 } species && _species.TryGetValue(species, out var entry)
             ? entry.Facts
+            : null;
+
+    /// <summary>
+    /// The game's own name for a creature's species, or null when it has none.
+    /// </summary>
+    /// <remarks>
+    /// This is a creature's type in the sense a ship's is Fighter: what kind of thing it is.
+    /// <c>CreatureType</c> is not - it reads Passive on half of them and names a body shape on
+    /// the rest - so the gallery asks here first and falls back to that only when the payload
+    /// carries no name, which one of the twelve creatures to hand does not.
+    /// </remarks>
+    /// <param name="customSpeciesName">The loc id the creature stores, caret and all.</param>
+    /// <returns>The name, or null.</returns>
+    public string? SpeciesName(string? customSpeciesName)
+        => Bare(customSpeciesName) is { Length: > 0 } key
+            ? _speciesNames.GetValueOrDefault(key)
             : null;
 
     /// <summary>Strips the caret that marks a game identifier.</summary>

@@ -46,10 +46,11 @@ public static class GalleryFacets
             Facet<GalleryRow>.Many("tags", "Tags", r => r.Tags),
         };
 
-        // The one thing besides its type that anyone browses creatures by, and the game
-        // writes it into the pet object as a plain word.
+        // The one thing besides its type that anyone browses creatures by. Filtered on the
+        // game's own word for the world - Verdant, Airless - rather than the payload's raw
+        // biome, so the heading offers what the table and the item view actually show.
         if (page is "Stable")
-            common.Insert(1, Facet<GalleryRow>.One("biome", "Biome", r => r.Biome));
+            common.Insert(1, Facet<GalleryRow>.One("climate", "Climate", r => r.Nature?.Climate ?? r.Biome));
 
         if (page is "Shipyard" or "Armoury")
         {
@@ -185,13 +186,12 @@ public static class GalleryFacets
                       ("techslots", SlotCounts.TechSlotsLabel),
                       ("techinstalled", SlotCounts.TechInstalledLabel)],
 
-        // Only the size. Trust and the moods are deliberately absent - they drift with play,
-        // so ordering a gallery by them would rank creatures by how their last owner left
-        // them. The three traits are not numbers any more either: each is one end of an axis,
-        // so sorting on the stored value put the gentlest creature and the fiercest at
-        // opposite ends of a scale nobody reads that way. They are words now, and the sort
-        // that replaces them is the affinity below.
-        "Stable" => [("scale", "Scale")],
+        // Nothing. A creature has no number that ranks it against another creature: scale is
+        // a size rather than a score, trust and the moods drift with play, and each of the
+        // three traits names one end of an axis, so sorting on the stored value put the
+        // gentlest creature and the fiercest at opposite ends of one scale. What is left to
+        // order a stable by is its name, its species and its affinity, which are above.
+        "Stable" => [],
 
         _ => [],
     };
