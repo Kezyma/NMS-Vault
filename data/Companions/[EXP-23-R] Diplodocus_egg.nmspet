@@ -15,14 +15,14 @@
 	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
 	"Predator": false,
 	"UA": "0x20030005DA597B",
-	"AllowUnmodifiedReroll": true,
+	"AllowUnmodifiedReroll": false,
 	"ColourBaseSeed": [
 		false,
 		"0x0"
 	],
 	"BoneScaleSeed": [
 		true,
-		"0x1"
+		"0xB8315117B566590D"
 	],
 	"HasFur": false,
 	"Biome": {
@@ -31,14 +31,14 @@
 	"CreatureType": {
 		"CreatureType": "Passive"
 	},
-	"BirthTime": 1789991102,
-	"LastEggTime": 1789991102,
+	"BirthTime": 1789990736,
+	"LastEggTime": 0,
 	"LastTrustIncreaseTime": 0,
-	"LastTrustDecreaseTime": 1789991102,
+	"LastTrustDecreaseTime": 0,
 	"EggModified": false,
-	"HasBeenSummoned": true,
-	"CustomName": "",
-	"Trust": 1.0,
+	"HasBeenSummoned": false,
+	"CustomName": "Diplodocus",
+	"Trust": 0.800000011920929,
 	"SenderData": {
 		"LID": "",
 		"UID": "",
@@ -52,8 +52,8 @@
 		0.5
 	],
 	"Moods": [
-		0.8028051257133484,
-		0.2066505253314972
+		0.009999999776482582,
+		0.5
 	],
 	"PetBattlerUseCoreStatClassOverrides": false,
 	"PetBattlerCoreStatClassOverrides": [
@@ -108,40 +108,5 @@
 		"^HOSTILE_DISPEL",
 		"^SELF_ABSORB",
 		"^SACRIFICE_DEF"
-	],
-	"PetAccessoryCustomisation": [
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		},
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		},
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		}
 	]
 }

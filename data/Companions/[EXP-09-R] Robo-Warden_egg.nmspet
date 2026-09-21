@@ -1,18 +1,20 @@
 {
 	"Scale": 1.0,
-	"CreatureID": "^DIPLO_PET",
-	"Descriptors": [],
+	"CreatureID": "^ROBO_PET",
+	"Descriptors": [
+		"^366051701"
+	],
 	"CreatureSeed": [
 		true,
-		"0x1"
+		"0x4CE52B371BB24426"
 	],
 	"CreatureSecondarySeed": [
 		false,
 		"0x0"
 	],
-	"SpeciesSeed": "0xAC264B85D936857C",
-	"GenusSeed": "0xDCFD437798CDD942",
-	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
+	"SpeciesSeed": "0x63BC3DC2A5FC37E7",
+	"GenusSeed": "0xEF4369FCD8B46E0B",
+	"CustomSpeciesName": "^UI_MINIROBO_SPECIES",
 	"Predator": false,
 	"UA": "0x20030005DA597B",
 	"AllowUnmodifiedReroll": true,
@@ -22,23 +24,23 @@
 	],
 	"BoneScaleSeed": [
 		true,
-		"0x1"
+		"0x4CE52B371BB24426"
 	],
 	"HasFur": false,
 	"Biome": {
 		"Biome": "Lush"
 	},
 	"CreatureType": {
-		"CreatureType": "Passive"
+		"CreatureType": "MiniRobo"
 	},
-	"BirthTime": 1789991102,
-	"LastEggTime": 1789991102,
+	"BirthTime": 1789990802,
+	"LastEggTime": 0,
 	"LastTrustIncreaseTime": 0,
-	"LastTrustDecreaseTime": 1789991102,
+	"LastTrustDecreaseTime": 0,
 	"EggModified": false,
-	"HasBeenSummoned": true,
-	"CustomName": "",
-	"Trust": 1.0,
+	"HasBeenSummoned": false,
+	"CustomName": "Robo-Warden",
+	"Trust": 0.6000000238418579,
 	"SenderData": {
 		"LID": "",
 		"UID": "",
@@ -47,13 +49,13 @@
 		"TS": 0
 	},
 	"Traits": [
-		0.5,
-		-1.0,
-		0.5
+		1.0,
+		0.25,
+		0.75
 	],
 	"Moods": [
-		0.8028051257133484,
-		0.2066505253314972
+		0.212567999958992,
+		0.8327410221099854
 	],
 	"PetBattlerUseCoreStatClassOverrides": false,
 	"PetBattlerCoreStatClassOverrides": [
@@ -105,43 +107,8 @@
 	"PetBattlerMoves": [
 		"^ATTACK_AFF",
 		"^AFF_WILD",
-		"^HOSTILE_DISPEL",
-		"^SELF_ABSORB",
-		"^SACRIFICE_DEF"
-	],
-	"PetAccessoryCustomisation": [
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		},
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		},
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		}
+		"^CHARGEUP_BUFF",
+		"^SELF_HEAL",
+		"^SPEED_UP"
 	]
 }

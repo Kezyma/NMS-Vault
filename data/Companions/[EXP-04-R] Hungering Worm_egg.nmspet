@@ -1,0 +1,119 @@
+{
+	"Scale": 0.5,
+	"CreatureID": "^FLYINGSNAKE",
+	"Descriptors": [
+		"^_SNAKE_A",
+		"^_SET_B",
+		"^_HEAD_SANDWORM",
+		"^_BODY_CENTIPEDE",
+		"^_TAIL_CENTIPEDE",
+		"^366051701"
+	],
+	"CreatureSeed": [
+		true,
+		"0x4CE52B371BB24426"
+	],
+	"CreatureSecondarySeed": [
+		false,
+		"0x0"
+	],
+	"SpeciesSeed": "0xCBB2FB194311851A",
+	"GenusSeed": "0xA9FB46745128FDB1",
+	"CustomSpeciesName": "^UI_PETWORM_SPECIES",
+	"Predator": false,
+	"UA": 4536589159381968,
+	"AllowUnmodifiedReroll": true,
+	"ColourBaseSeed": [
+		false,
+		"0x0"
+	],
+	"BoneScaleSeed": [
+		true,
+		"0x4CE52B371BB24426"
+	],
+	"HasFur": false,
+	"Biome": {
+		"Biome": "Scorched"
+	},
+	"CreatureType": {
+		"CreatureType": "FlyingSnake"
+	},
+	"BirthTime": 1789990828,
+	"LastEggTime": 1634037442,
+	"LastTrustIncreaseTime": 0,
+	"LastTrustDecreaseTime": 1634037442,
+	"EggModified": false,
+	"HasBeenSummoned": false,
+	"CustomName": "Hungering Worm",
+	"Trust": 0.6000000238418579,
+	"SenderData": {
+		"LID": "",
+		"UID": "",
+		"USN": "",
+		"PTK": "",
+		"TS": 0
+	},
+	"Traits": [
+		-0.7517510056495667,
+		0.40441998839378359,
+		0.21040000021457673
+	],
+	"Moods": [
+		0.212567999958992,
+		0.8327410221099854
+	],
+	"PetBattlerUseCoreStatClassOverrides": false,
+	"PetBattlerCoreStatClassOverrides": [
+		{
+			"InventoryClass": "C"
+		},
+		{
+			"InventoryClass": "C"
+		},
+		{
+			"InventoryClass": "C"
+		}
+	],
+	"PetBattlerTreatsEaten": [
+		0,
+		0,
+		0
+	],
+	"PetBattlerTreatsAvailable": 0,
+	"PetBattleProgressToTreat": 0.0,
+	"PetBattlerVictories": 0,
+	"PetBattlerMoveList": [
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		},
+		{
+			"MoveTemplateID": "^",
+			"Cooldown": 0,
+			"ScoreBoost": 0.0
+		}
+	],
+	"PetBattlerMoves": [
+		"^ATTACK_LUSH",
+		"^AFF_WILD",
+		"^ATTACK_BOTH",
+		"^SELF_HEAL",
+		"^DONT_TOUCH"
+	]
+}

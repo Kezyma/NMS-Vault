@@ -1,40 +1,47 @@
 {
-	"Scale": 1.0,
-	"CreatureID": "^DIPLO_PET",
-	"Descriptors": [],
+	"Scale": 0.44999998807907107,
+	"CreatureID": "^FLYINGSNAKE",
+	"Descriptors": [
+		"^_SNAKE_A",
+		"^_SET_B",
+		"^_HEAD_SANDWORM",
+		"^_BODY_CENTIPEDE",
+		"^_TAIL_CENTIPEDE",
+		"^366051701"
+	],
 	"CreatureSeed": [
 		true,
-		"0x1"
+		"0x4CE52B371BB24426"
 	],
 	"CreatureSecondarySeed": [
 		false,
 		"0x0"
 	],
-	"SpeciesSeed": "0xAC264B85D936857C",
-	"GenusSeed": "0xDCFD437798CDD942",
-	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
+	"SpeciesSeed": "0xCBB2FB194311851A",
+	"GenusSeed": "0xA9FB46745128FDB1",
+	"CustomSpeciesName": "^UI_PETWORM_SPECIES",
 	"Predator": false,
-	"UA": "0x20030005DA597B",
+	"UA": 4536589159381968,
 	"AllowUnmodifiedReroll": true,
 	"ColourBaseSeed": [
-		false,
-		"0x0"
+		true,
+		"0x54FC26870A12F4CC"
 	],
 	"BoneScaleSeed": [
 		true,
-		"0x1"
+		"0x4CE52B371BB24426"
 	],
 	"HasFur": false,
 	"Biome": {
-		"Biome": "Lush"
+		"Biome": "Scorched"
 	},
 	"CreatureType": {
-		"CreatureType": "Passive"
+		"CreatureType": "FlyingSnake"
 	},
-	"BirthTime": 1789991102,
-	"LastEggTime": 1789991102,
+	"BirthTime": 1789991148,
+	"LastEggTime": 1789991148,
 	"LastTrustIncreaseTime": 0,
-	"LastTrustDecreaseTime": 1789991102,
+	"LastTrustDecreaseTime": 1789991148,
 	"EggModified": false,
 	"HasBeenSummoned": true,
 	"CustomName": "",
@@ -47,13 +54,13 @@
 		"TS": 0
 	},
 	"Traits": [
-		0.5,
-		-1.0,
-		0.5
+		-0.8269261121749878,
+		0.36397799849510195,
+		0.231440007686615
 	],
 	"Moods": [
-		0.8028051257133484,
-		0.2066505253314972
+		0.8013339042663574,
+		0.20345020294189454
 	],
 	"PetBattlerUseCoreStatClassOverrides": false,
 	"PetBattlerCoreStatClassOverrides": [
@@ -103,11 +110,11 @@
 		}
 	],
 	"PetBattlerMoves": [
-		"^ATTACK_AFF",
+		"^ATTACK_LUSH",
 		"^AFF_WILD",
-		"^HOSTILE_DISPEL",
-		"^SELF_ABSORB",
-		"^SACRIFICE_DEF"
+		"^ATTACK_BOTH",
+		"^SELF_HEAL",
+		"^DONT_TOUCH"
 	],
 	"PetAccessoryCustomisation": [
 		{

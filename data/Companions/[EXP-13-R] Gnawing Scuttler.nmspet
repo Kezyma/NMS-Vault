@@ -1,18 +1,20 @@
 {
 	"Scale": 1.0,
-	"CreatureID": "^DIPLO_PET",
-	"Descriptors": [],
+	"CreatureID": "^SCUTTLER_PET",
+	"Descriptors": [
+		"^366051701"
+	],
 	"CreatureSeed": [
 		true,
-		"0x1"
+		"0xDF23350A15D95E55"
 	],
 	"CreatureSecondarySeed": [
 		false,
 		"0x0"
 	],
-	"SpeciesSeed": "0xAC264B85D936857C",
-	"GenusSeed": "0xDCFD437798CDD942",
-	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
+	"SpeciesSeed": "0x23042F843DF001D6",
+	"GenusSeed": "0x3A808C21D6A2FA5B",
+	"CustomSpeciesName": "^UI_MINIFIEND_SPECIES",
 	"Predator": false,
 	"UA": "0x20030005DA597B",
 	"AllowUnmodifiedReroll": true,
@@ -22,19 +24,19 @@
 	],
 	"BoneScaleSeed": [
 		true,
-		"0x1"
+		"0xDF23350A15D95E55"
 	],
 	"HasFur": false,
 	"Biome": {
 		"Biome": "Lush"
 	},
 	"CreatureType": {
-		"CreatureType": "Passive"
+		"CreatureType": "Predator"
 	},
-	"BirthTime": 1789991102,
-	"LastEggTime": 1789991102,
+	"BirthTime": 1789991129,
+	"LastEggTime": 1789991129,
 	"LastTrustIncreaseTime": 0,
-	"LastTrustDecreaseTime": 1789991102,
+	"LastTrustDecreaseTime": 1789991129,
 	"EggModified": false,
 	"HasBeenSummoned": true,
 	"CustomName": "",
@@ -47,13 +49,13 @@
 		"TS": 0
 	},
 	"Traits": [
-		0.5,
-		-1.0,
-		0.5
+		0.2199999988079071,
+		0.8999999761581421,
+		0.8799999952316284
 	],
 	"Moods": [
-		0.8028051257133484,
-		0.2066505253314972
+		0.8013399243354797,
+		0.20284266769886018
 	],
 	"PetBattlerUseCoreStatClassOverrides": false,
 	"PetBattlerCoreStatClassOverrides": [
@@ -104,10 +106,10 @@
 	],
 	"PetBattlerMoves": [
 		"^ATTACK_AFF",
-		"^AFF_WILD",
-		"^HOSTILE_DISPEL",
-		"^SELF_ABSORB",
-		"^SACRIFICE_DEF"
+		"^ATTACK_DOT_NORM",
+		"^DOT_AFF",
+		"^SELF_HEAL",
+		"^STUN"
 	],
 	"PetAccessoryCustomisation": [
 		{

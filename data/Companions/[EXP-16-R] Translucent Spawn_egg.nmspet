@@ -1,44 +1,48 @@
 {
-	"Scale": 1.0,
-	"CreatureID": "^DIPLO_PET",
-	"Descriptors": [],
+	"Scale": 2.0,
+	"CreatureID": "^STRIDERGLOW",
+	"Descriptors": [
+		"^_GLOWSTRIDER_MESH",
+		"^_HEAD_03",
+		"^2331300544"
+	],
 	"CreatureSeed": [
 		true,
-		"0x1"
+		"0x92BC8FC7AB87EE78"
 	],
 	"CreatureSecondarySeed": [
 		false,
 		"0x0"
 	],
-	"SpeciesSeed": "0xAC264B85D936857C",
-	"GenusSeed": "0xDCFD437798CDD942",
-	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
+	"SpeciesSeed": "0xCF04D4AF79D6A73E",
+	"GenusSeed": "0xC0E776BC27578443",
+	"CustomSpeciesName": "^UI_GLOWPET_SPECIES",
 	"Predator": false,
 	"UA": "0x20030005DA597B",
-	"AllowUnmodifiedReroll": true,
+	"AllowUnmodifiedReroll": false,
 	"ColourBaseSeed": [
 		false,
 		"0x0"
 	],
 	"BoneScaleSeed": [
 		true,
-		"0x1"
+		"0x92BC8FC7AB87EE78"
 	],
 	"HasFur": false,
 	"Biome": {
-		"Biome": "Lush"
+		"Biome": "Weird"
 	},
 	"CreatureType": {
 		"CreatureType": "Passive"
 	},
-	"BirthTime": 1789991102,
-	"LastEggTime": 1789991102,
+	"BirthTime": 1789990767,
+	"LastEggTime": 0,
 	"LastTrustIncreaseTime": 0,
-	"LastTrustDecreaseTime": 1789991102,
+	"LastTrustDecreaseTime": 0,
 	"EggModified": false,
-	"HasBeenSummoned": true,
-	"CustomName": "",
-	"Trust": 1.0,
+	"HasBeenSummoned": false,
+	"CustomName": "Translucent Spawn",
+	"Trust": 0.800000011920929,
 	"SenderData": {
 		"LID": "",
 		"UID": "",
@@ -47,13 +51,13 @@
 		"TS": 0
 	},
 	"Traits": [
-		0.5,
-		-1.0,
-		0.5
+		0.800000011920929,
+		-0.5,
+		0.20000000298023225
 	],
 	"Moods": [
-		0.8028051257133484,
-		0.2066505253314972
+		0.009999999776482582,
+		0.8327410221099854
 	],
 	"PetBattlerUseCoreStatClassOverrides": false,
 	"PetBattlerCoreStatClassOverrides": [
@@ -104,44 +108,9 @@
 	],
 	"PetBattlerMoves": [
 		"^ATTACK_AFF",
-		"^AFF_WILD",
-		"^HOSTILE_DISPEL",
-		"^SELF_ABSORB",
-		"^SACRIFICE_DEF"
-	],
-	"PetAccessoryCustomisation": [
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		},
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		},
-		{
-			"SelectedPreset": "^DEFAULT_PET",
-			"CustomData": {
-				"DescriptorGroups": [],
-				"PaletteID": "^",
-				"Colours": [],
-				"TextureOptions": [],
-				"BoneScales": [],
-				"Scale": 1.0
-			}
-		}
+		"^MULTI_AFF",
+		"^ATTACK_SELFDOT",
+		"^FULL_ABSORB",
+		"^CHANGE_AFFINITY"
 	]
 }

@@ -1,40 +1,42 @@
 {
 	"Scale": 1.0,
-	"CreatureID": "^DIPLO_PET",
-	"Descriptors": [],
+	"CreatureID": "^LAND_JELLYFISH",
+	"Descriptors": [
+		"^3997382721"
+	],
 	"CreatureSeed": [
 		true,
-		"0x1"
-	],
-	"CreatureSecondarySeed": [
-		false,
 		"0x0"
 	],
-	"SpeciesSeed": "0xAC264B85D936857C",
-	"GenusSeed": "0xDCFD437798CDD942",
-	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
+	"CreatureSecondarySeed": [
+		true,
+		"0x0"
+	],
+	"SpeciesSeed": "0xA2EC4085A80CFB37",
+	"GenusSeed": "0x42173A19A45ECEF2",
+	"CustomSpeciesName": "^",
 	"Predator": false,
 	"UA": "0x20030005DA597B",
 	"AllowUnmodifiedReroll": true,
 	"ColourBaseSeed": [
-		false,
-		"0x0"
+		true,
+		"0x1E559B4BFC80E47B"
 	],
 	"BoneScaleSeed": [
 		true,
-		"0x1"
+		"0x0"
 	],
 	"HasFur": false,
 	"Biome": {
 		"Biome": "Lush"
 	},
 	"CreatureType": {
-		"CreatureType": "Passive"
+		"CreatureType": "LandJellyfish"
 	},
-	"BirthTime": 1789991102,
-	"LastEggTime": 1789991102,
+	"BirthTime": 1789991142,
+	"LastEggTime": 1789991142,
 	"LastTrustIncreaseTime": 0,
-	"LastTrustDecreaseTime": 1789991102,
+	"LastTrustDecreaseTime": 1789991142,
 	"EggModified": false,
 	"HasBeenSummoned": true,
 	"CustomName": "",
@@ -47,13 +49,13 @@
 		"TS": 0
 	},
 	"Traits": [
-		0.5,
-		-1.0,
-		0.5
+		0.17841120064258576,
+		0.7080084085464478,
+		0.7908408045768738
 	],
 	"Moods": [
-		0.8028051257133484,
-		0.2066505253314972
+		0.801260232925415,
+		0.20273980498313905
 	],
 	"PetBattlerUseCoreStatClassOverrides": false,
 	"PetBattlerCoreStatClassOverrides": [
@@ -104,10 +106,10 @@
 	],
 	"PetBattlerMoves": [
 		"^ATTACK_AFF",
-		"^AFF_WILD",
+		"^BARRAGE_AFF",
 		"^HOSTILE_DISPEL",
-		"^SELF_ABSORB",
-		"^SACRIFICE_DEF"
+		"^SELF_DISPEL",
+		"^DEBUFF_DEF"
 	],
 	"PetAccessoryCustomisation": [
 		{

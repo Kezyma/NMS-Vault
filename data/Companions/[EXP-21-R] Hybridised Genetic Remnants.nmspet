@@ -1,40 +1,50 @@
 {
 	"Scale": 1.0,
-	"CreatureID": "^DIPLO_PET",
-	"Descriptors": [],
+	"CreatureID": "^BUGFIEND",
+	"Descriptors": [
+		"^_ARTHROPOD_1",
+		"^3997382721",
+		"^_APODLEGS_1",
+		"^_APODSHELL_1",
+		"^_APODHEADUPPER_1",
+		"^_APOD1ANTENNA_2",
+		"^_APOD5TUSKS_1",
+		"^_APOD5JAW_1",
+		"^_APODHEADLOWER_5"
+	],
 	"CreatureSeed": [
 		true,
-		"0x1"
-	],
-	"CreatureSecondarySeed": [
-		false,
 		"0x0"
 	],
-	"SpeciesSeed": "0xAC264B85D936857C",
-	"GenusSeed": "0xDCFD437798CDD942",
-	"CustomSpeciesName": "^UI_DIPLO_PET_SPECIES",
-	"Predator": false,
+	"CreatureSecondarySeed": [
+		true,
+		"0x0"
+	],
+	"SpeciesSeed": 1,
+	"GenusSeed": 1,
+	"CustomSpeciesName": "^UI_MARKER_TAG_BUGFIEND",
+	"Predator": true,
 	"UA": "0x20030005DA597B",
 	"AllowUnmodifiedReroll": true,
 	"ColourBaseSeed": [
-		false,
+		true,
 		"0x0"
 	],
 	"BoneScaleSeed": [
 		true,
-		"0x1"
+		"0x0"
 	],
 	"HasFur": false,
 	"Biome": {
-		"Biome": "Lush"
+		"Biome": "Dead"
 	},
 	"CreatureType": {
-		"CreatureType": "Passive"
+		"CreatureType": "Predator"
 	},
-	"BirthTime": 1789991102,
-	"LastEggTime": 1789991102,
+	"BirthTime": 1789991126,
+	"LastEggTime": 1789991126,
 	"LastTrustIncreaseTime": 0,
-	"LastTrustDecreaseTime": 1789991102,
+	"LastTrustDecreaseTime": 1789991126,
 	"EggModified": false,
 	"HasBeenSummoned": true,
 	"CustomName": "",
@@ -47,13 +57,13 @@
 		"TS": 0
 	},
 	"Traits": [
-		0.5,
-		-1.0,
-		0.5
+		0.847000002861023,
+		0.7260000109672546,
+		-0.824999988079071
 	],
 	"Moods": [
-		0.8028051257133484,
-		0.2066505253314972
+		0.8013628125190735,
+		0.2055002599954605
 	],
 	"PetBattlerUseCoreStatClassOverrides": false,
 	"PetBattlerCoreStatClassOverrides": [
@@ -104,10 +114,10 @@
 	],
 	"PetBattlerMoves": [
 		"^ATTACK_AFF",
-		"^AFF_WILD",
-		"^HOSTILE_DISPEL",
-		"^SELF_ABSORB",
-		"^SACRIFICE_DEF"
+		"^AFF_SPEED_THEM",
+		"^DOT_AFF",
+		"^SELF_DISPEL",
+		"^SPEED_UP"
 	],
 	"PetAccessoryCustomisation": [
 		{
