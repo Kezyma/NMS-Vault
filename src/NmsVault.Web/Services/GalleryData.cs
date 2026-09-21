@@ -121,6 +121,18 @@ public sealed record GalleryRow
     /// <summary>Display type - "Hauler", "Voltaic Staff".</summary>
     public string Type { get; init; } = "";
 
+    /// <summary>
+    /// What kind of thing it is beneath the model - <c>Ship</c>, <c>AlienShip</c>,
+    /// <c>RobotShip</c>, <c>Corvette</c>, <c>Multitool</c>, <c>Companion</c>.
+    /// </summary>
+    /// <remarks>
+    /// Coarser than <see cref="Type"/> and, for ships, the only thing that groups: the type is
+    /// a model name on anything unique, so a page of seventeen ships has eleven types. This
+    /// separates a living ship and a sentinel interceptor from an ordinary hull, which is the
+    /// distinction that decides what technology will fit.
+    /// </remarks>
+    public string Family { get; init; } = "";
+
     /// <summary>Whether the model path looked modded.</summary>
     public bool IsModified { get; init; }
 
@@ -220,6 +232,7 @@ public sealed record GalleryRow
             Page = entry.GetString("Page") ?? "",
             DisplayName = entry.GetString("DisplayName") ?? "",
             Type = entry.GetString("Type") ?? "",
+            Family = entry.GetString("Family") ?? "",
             IsModified = entry.Get("Modified") is true,
             Class = entry.GetString("Class"),
             Biome = entry.GetString("Biome"),

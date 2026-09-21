@@ -46,11 +46,36 @@ public static class GalleryFacets
             Facet<GalleryRow>.Many("tags", "Tags", r => r.Tags),
         };
 
-        // The one thing besides its type that anyone browses creatures by. Filtered on the
-        // game's own word for the world - Verdant, Airless - rather than the payload's raw
-        // biome, so the heading offers what the table and the item view actually show.
         if (page is "Stable")
-            common.Insert(1, Facet<GalleryRow>.One("climate", "Climate", r => r.Nature?.Climate ?? r.Biome));
+        {
+            // Affinity wears the game's own glyphs, the same way class does for a ship: it is
+            // what a creature is judged on, and eight of them group a stable properly where
+            // the type does not - every creature has a species of its own.
+            common.Insert(1, Facet<GalleryRow>.Labelled("affinity", "Affinity", r =>
+                r.Affinity is { } affinity
+                    ? [new FacetValue(affinity.Id, affinity.Name,
+                        affinity.Icon is { Length: > 0 } icon ? $"gallery/img/affinity/{icon}" : null)]
+                    : []));
+
+            // The game's own word for the world - Verdant, Airless - rather than the payload's
+            // raw biome, so the heading offers what the table and the item view show.
+            common.Insert(2, Facet<GalleryRow>.One("climate", "Climate", r => r.Nature?.Climate ?? r.Biome));
+
+            // The rest of what a creature is, each already resolved into the word it displays.
+            common.Insert(3, Facet<GalleryRow>.One("rarity", "Rarity", r => r.Nature?.Rarity));
+            common.Insert(4, Facet<GalleryRow>.One("movement", "Movement", r => r.Nature?.Movement));
+            common.Insert(5, Facet<GalleryRow>.One("egg", "Egg", r => r.Nature?.Egg));
+
+            // A yes-or-no reads as a heading with two entries rather than as a switch, which
+            // is what the others here are and what keeps the bar looking like one thing.
+            common.Insert(6, Facet<GalleryRow>.One("predator", "Predator",
+                r => r.Nature is { } nature ? (nature.IsPredator ? "Yes" : "No") : null));
+        }
+
+        // Coarser than the type and, for ships, the only thing that does group - a unique hull
+        // takes its own name as its type, so seventeen ships have eleven types between them.
+        if (page is "Shipyard")
+            common.Insert(1, Facet<GalleryRow>.One("family", "Hull", r => Hull(r.Family)));
 
         if (page is "Shipyard" or "Armoury")
         {
@@ -158,6 +183,23 @@ public static class GalleryFacets
 
         return [.. ordered.ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)];
     }
+
+    /// <summary>
+    /// A ship family as something a reader recognises.
+    /// </summary>
+    /// <remarks>
+    /// The enum names are the game's internals - an <c>AlienShip</c> is what everyone else
+    /// calls a living ship, and a <c>RobotShip</c> is a sentinel interceptor. What the
+    /// distinction is actually for is that each takes its own technology.
+    /// </remarks>
+    private static string? Hull(string family) => family switch
+    {
+        "Ship" => "Standard",
+        "AlienShip" => "Living",
+        "RobotShip" => "Sentinel",
+        "Corvette" => "Corvette",
+        _ => null,
+    };
 
     private static string TypeLabel(string page) => page switch
     {
