@@ -252,7 +252,10 @@ public static class TechGrids
         long l => (int)l,
         double d => (int)d,
         RawDouble r => (int)r.Value,
-        string s when int.TryParse(s, out int parsed) => parsed,
+        // Invariant, like every other numeric conversion in this project. This was the one
+        // site still using the ambient culture.
+        string s when int.TryParse(s, System.Globalization.NumberStyles.Integer,
+            System.Globalization.CultureInfo.InvariantCulture, out int parsed) => parsed,
         _ => 0,
     };
 }

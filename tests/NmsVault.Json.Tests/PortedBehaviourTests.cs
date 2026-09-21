@@ -140,6 +140,47 @@ public class PortedBehaviourTests
         Assert.Equal("Nöstromo", reparsed.GetString("Name"));
     }
 
+    [Theory]
+    [InlineData("\U0001F680", "a rocket, the plainest emoji case")]
+    [InlineData("\U0001F430\U0001F431", "two in a row, so the index advance is exercised twice")]
+    [InlineData("A\U0001F680B", "surrounded by ASCII, so the non-astral path still runs")]
+    [InlineData("\U00020BB7", "CJK extension B - astral but not an emoji")]
+    public void FromBytes_RoundTripsCharactersOutsideTheBasicPlane(string value, string why)
+    {
+        // A character above U+FFFF arrives as two chars. Encoded half by half it becomes
+        // CESU-8, which is not valid UTF-8: the reader hands back BinaryData rather than a
+        // string, GetString returns null, and the value silently disappears on reload. That
+        // is a description or a ship's name lost without a word, so it is pinned here.
+        Assert.NotEmpty(why);
+
+        var source = new JsonObject();
+        source.Set("Name", value);
+
+        string text = source.ToExportString();
+        byte[] bytes = Encoding.Latin1.GetBytes(text);
+
+        // Valid UTF-8 on the wire, and no escapes - goatfungus's parser rejects \u above 255.
+        Assert.True(System.Text.Unicode.Utf8.IsValid(bytes), "the exported bytes are not valid UTF-8");
+        Assert.DoesNotContain(@"\u", text);
+
+        Assert.Equal(value, JsonObject.FromBytes(bytes).GetString("Name"));
+    }
+
+    [Fact]
+    public void FromBytes_ReplacesAnUnpairedSurrogateRatherThanWritingInvalidBytes()
+    {
+        // A lone surrogate is not a character and has no UTF-8 form. Writing one anyway
+        // produces bytes the reader refuses, taking the rest of the document with it, so it
+        // becomes the replacement character - what Encoding.UTF8 does by default.
+        var source = new JsonObject();
+        source.Set("Name", "A\ud83dB");
+
+        byte[] bytes = Encoding.Latin1.GetBytes(source.ToExportString());
+
+        Assert.True(System.Text.Unicode.Utf8.IsValid(bytes));
+        Assert.Equal("A\ufffdB", JsonObject.FromBytes(bytes).GetString("Name"));
+    }
+
     [Fact]
     public void FromBytes_AutoDetectsObfuscatedPayload()
     {

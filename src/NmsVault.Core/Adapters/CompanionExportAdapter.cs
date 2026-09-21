@@ -60,23 +60,11 @@ public sealed class CompanionExportAdapter : IExportAdapter
     {
         var losses = new List<string>();
 
-        if (item.Kind == EntityKind.Starship
-            && item.CharacterCustomisationData is { } ccd
-            && !CustomisationHelpers.IsDefault(ccd))
-        {
-            // This format carries CustomData.Colours only - verified from libNOM's own
-            // JSONPath, which terminates at .Colours. Parts and textures have nowhere to go.
-            var custom = ccd.GetObject("CustomData");
-            if (custom?.GetArray("DescriptorGroups") is { Length: > 0 })
-                losses.Add("This format does not store custom parts, so the ship will arrive as the "
-                    + "base model in the right colours.");
-            if (custom?.GetArray("TextureOptions") is { Length: > 0 })
-                losses.Add("This format does not store the chosen texture, so the ship's finish will "
-                    + "differ in-game.");
-            if (custom?.GetString("PaletteID") is { } p && p is not ("^" or ""))
-                losses.Add($"This format does not store the colour palette ({p}), so the ship may "
-                    + "appear in different colours.");
-        }
+        // This format carries CustomData.Colours only - verified from libNOM's own JSONPath,
+        // which terminates at .Colours. Everything else in the block has nowhere to go, and
+        // CustomisationHelpers.Losses is the one list of what that means.
+        if (item.Kind == EntityKind.Starship)
+            losses.AddRange(CustomisationHelpers.Losses(item.CharacterCustomisationData));
 
         if (item.Kind == EntityKind.Starship && item.ShipBase is not null)
             losses.Add("This format does not store the parts a corvette is built from, so the ship "
@@ -122,7 +110,7 @@ public sealed class CompanionExportAdapter : IExportAdapter
                 // Kaii stores the accessory wrapper object, not the flat array the vault
                 // holds, so re-wrap: { Data: [slot, slot, slot] }.
                 root.Set("Accessories", item.AccessorySlots is { } slots
-                    ? WrapAccessories(slots)
+                    ? WrapAccessories(slots, _mapper)
                     : null);
             }
         }
@@ -158,10 +146,19 @@ public sealed class CompanionExportAdapter : IExportAdapter
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    private static JsonObject WrapAccessories(JsonArray slots)
+    /// <summary>
+    /// Wraps the accessory slots the way this editor expects them.
+    /// </summary>
+    /// <remarks>
+    /// Obfuscated, like every other value in the document. Writing them readable produced
+    /// exactly the half-obfuscated file KeyObfuscator's own docs describe as the failure mode -
+    /// and our importer tolerates it, because ToName passes readable names straight through, so
+    /// a round trip through this project would never have shown it.
+    /// </remarks>
+    private static JsonObject WrapAccessories(JsonArray slots, JsonNameMapper mapper)
     {
         var wrapper = new JsonObject();
-        wrapper.Set("Data", slots.DeepClone());
+        wrapper.Set("Data", KeyObfuscator.Obfuscate(slots, mapper));
         return wrapper;
     }
 }

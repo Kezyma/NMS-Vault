@@ -176,6 +176,58 @@ public class DetectionTests
     }
 
     [Fact]
+    public void AMalformedEscapeIsUnrecognisedRatherThanCrashing()
+    {
+        // ParseHexDigit used to throw IOException, which Detect does not catch - so a file
+        // truncated inside an escape, or carrying a bad hex digit, took the caller down
+        // instead of being refused.
+        foreach (string text in (string[])[
+            @"{""a"":""\uZZZZ""}",      // bad hex digit
+            @"{""a"":""\u12",            // truncated mid-escape
+            @"{""a"":""\xZZ""}"])        // the other escape form
+        {
+            var result = FormatDetector.Detect(Encoding.UTF8.GetBytes(text), Mapper, "x.json");
+            Assert.Equal(SourceFormat.Unknown, result.Format);
+        }
+    }
+
+    [Fact]
+    public void AnAbsurdlyLongNumberIsUnrecognisedRatherThanCrashing()
+    {
+        // Legal JSON, and it used to walk off a fixed 64-char buffer with
+        // IndexOutOfRangeException, which Detect does not catch either.
+        foreach (string text in (string[])[
+            "{\"a\":0." + new string('0', 200) + "}",
+            "{\"a\":1e" + new string('9', 200) + "}"])
+        {
+            var result = FormatDetector.Detect(Encoding.UTF8.GetBytes(text), Mapper, "x.json");
+            Assert.Equal(SourceFormat.Unknown, result.Format);
+        }
+    }
+
+    [Fact]
+    public void DeeplyNestedInputIsUnrecognisedRatherThanKillingTheProcess()
+    {
+        // Parsing is recursive. Without a depth limit this is StackOverflowException, which
+        // .NET cannot catch - the process dies rather than the file being rejected, and
+        // Detect parses whatever anybody drops in.
+        string text = new string('[', 50_000);
+
+        var result = FormatDetector.Detect(Encoding.UTF8.GetBytes(text), Mapper, "x.json");
+
+        Assert.Equal(SourceFormat.Unknown, result.Format);
+    }
+
+    [Fact]
+    public void NestingWithinTheLimitStillParses()
+    {
+        // The limit has to be above anything real. A save nests about a dozen deep.
+        string text = new string('[', 100) + new string(']', 100);
+
+        Assert.NotNull(JsonArray.Parse(text));
+    }
+
+    [Fact]
     public void ABaseEntryIsRejectedWithAnExplanation()
     {
         // A PersistentPlayerBases entry is a legitimate NMSE export but not a gallery item,

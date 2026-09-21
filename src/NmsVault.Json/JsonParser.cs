@@ -21,6 +21,18 @@ public static class JsonParser
     private const int MaxJsonNumberLength = 64;
 
     /// <summary>
+    /// How deep a document may nest before it is refused.
+    /// </summary>
+    /// <remarks>
+    /// Parsing is recursive, so without a limit a file of fifty thousand open brackets
+    /// overflows the stack - and StackOverflowException cannot be caught, so the process
+    /// dies rather than the file being rejected. FormatDetector parses whatever it is handed,
+    /// which makes that reachable from any file somebody drops in. Real saves nest about a
+    /// dozen deep; this is far above anything genuine and far below the stack.
+    /// </remarks>
+    private const int MaxDepth = 128;
+
+    /// <summary>
     /// Pre-computed indentation strings for JSON formatting.
     /// Avoids allocating newline + tabs on every recursive serialization call.
     /// </summary>
@@ -220,8 +232,15 @@ public static class JsonParser
     private static void AppendQuotedString(StringBuilder sb, string s)
     {
         sb.Append('"');
-        foreach (char c in s)
+
+        // By index rather than foreach, because a character outside the BMP arrives as two
+        // chars and has to be encoded as one code point. Encoding the halves separately
+        // produces CESU-8, which is not valid UTF-8 - the reader rejects it, hands back
+        // BinaryData instead of a string, and the value silently becomes empty on reload.
+        for (int i = 0; i < s.Length; i++)
         {
+            char c = s[i];
+
             switch (c)
             {
                 case '\r': sb.Append("\\r"); break;
@@ -249,7 +268,23 @@ public static class JsonParser
                         // StringBuilder output was passed to Latin1.GetBytes() on save.
                         // Writing \uXXXX escapes would break NMSSaveEditor.jar (only accepts
                         // \u values <= 255), so raw UTF-8 bytes are the correct form here.
-                        AppendUtf8Bytes(sb, c);
+                        // A high surrogate followed by a low one is a single code point.
+                        // An unpaired surrogate is not a character at all and has no UTF-8
+                        // form, so it becomes the replacement character - which is what
+                        // Encoding.UTF8 does with its default fallback.
+                        int cp = c;
+
+                        if (char.IsHighSurrogate(c) && i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]))
+                        {
+                            cp = char.ConvertToUtf32(c, s[i + 1]);
+                            i++;
+                        }
+                        else if (char.IsSurrogate(c))
+                        {
+                            cp = 0xFFFD;
+                        }
+
+                        AppendUtf8Bytes(sb, cp);
                     }
                     else
                     {
@@ -266,28 +301,40 @@ public static class JsonParser
     }
 
     /// <summary>
-    /// Encode a single Unicode character (U+0080 and above) as UTF-8 and append
+    /// Encode a single Unicode code point (U+0080 and above) as UTF-8 and append
     /// each resulting byte as a raw Latin-1 character to the StringBuilder.
     /// This matches the NMS game engine's convention of embedding multi-byte UTF-8
     /// sequences directly in the Latin-1-encoded JSON byte stream for all non-ASCII
     /// characters, including the Latin-1 supplement (U+0080-U+00FF), CJK, Greek,
     /// Cyrillic, and any other Unicode range.
     /// </summary>
-    private static void AppendUtf8Bytes(StringBuilder sb, char c)
+    /// <remarks>
+    /// Takes a code point, not a char, so that anything above the BMP - an emoji in a
+    /// description, an astral character in a ship's name - is written as the four bytes UTF-8
+    /// defines rather than as two three-byte sequences. The latter is CESU-8, which the
+    /// reader correctly refuses.
+    /// </remarks>
+    private static void AppendUtf8Bytes(StringBuilder sb, int cp)
     {
-        int cp = c;
         if (cp <= 0x7F)
         {
-            sb.Append(c);
+            sb.Append((char)cp);
         }
         else if (cp <= 0x7FF)
         {
             sb.Append((char)(0xC0 | (cp >> 6)));
             sb.Append((char)(0x80 | (cp & 0x3F)));
         }
-        else
+        else if (cp <= 0xFFFF)
         {
             sb.Append((char)(0xE0 | (cp >> 12)));
+            sb.Append((char)(0x80 | ((cp >> 6) & 0x3F)));
+            sb.Append((char)(0x80 | (cp & 0x3F)));
+        }
+        else
+        {
+            sb.Append((char)(0xF0 | (cp >> 18)));
+            sb.Append((char)(0x80 | ((cp >> 12) & 0x3F)));
             sb.Append((char)(0x80 | ((cp >> 6) & 0x3F)));
             sb.Append((char)(0x80 | (cp & 0x3F)));
         }
@@ -366,7 +413,7 @@ public static class JsonParser
     public static object? ParseValue(string json)
     {
         using var reader = new JsonReader(json);
-        var result = ParseValue(reader, reader.ReadSkipWhitespace(), null, null);
+        var result = ParseValue(reader, reader.ReadSkipWhitespace(), null, null, 0);
         if (reader.ReadSkipWhitespace() >= 0)
             throw new JsonException("Invalid trailing data", reader.Line, reader.Column);
         return result;
@@ -393,7 +440,7 @@ public static class JsonParser
         using var reader = new JsonReader(json);
         if (reader.ReadSkipWhitespace() != '{')
             throw new JsonException("Invalid object string", reader.Line, reader.Column);
-        var result = ParseObjectBody(reader, mapper, autoDetect);
+        var result = ParseObjectBody(reader, mapper, autoDetect, 0);
         if (reader.ReadSkipWhitespace() >= 0)
             throw new JsonException("Invalid trailing data", reader.Line, reader.Column);
         return result;
@@ -409,21 +456,21 @@ public static class JsonParser
         using var reader = new JsonReader(json);
         if (reader.ReadSkipWhitespace() != '[')
             throw new JsonException("Invalid array string", reader.Line, reader.Column);
-        var result = ParseArrayBody(reader, null, null);
+        var result = ParseArrayBody(reader, null, null, 0);
         if (reader.ReadSkipWhitespace() >= 0)
             throw new JsonException("Invalid trailing data", reader.Line, reader.Column);
         return result;
     }
 
     private static object? ParseValue(JsonReader reader, int c, JsonNameMapper? mapper,
-        JsonNameMapper? autoDetect)
+        JsonNameMapper? autoDetect, int depth)
     {
         if (c < 0) throw new JsonException("Short read", reader.Line, reader.Column);
 
         return c switch
         {
-            '{' => ParseObjectBody(reader, mapper, autoDetect),
-            '[' => ParseArrayBody(reader, mapper, autoDetect),
+            '{' => ParseObjectBody(reader, mapper, autoDetect, depth + 1),
+            '[' => ParseArrayBody(reader, mapper, autoDetect, depth + 1),
             '"' => ParseString(reader),
             'f' => ParseFalse(reader),
             't' => ParseTrue(reader),
@@ -435,8 +482,10 @@ public static class JsonParser
     }
 
     private static JsonObject ParseObjectBody(JsonReader reader, JsonNameMapper? mapper,
-        JsonNameMapper? autoDetect)
+        JsonNameMapper? autoDetect, int depth)
     {
+        if (depth > MaxDepth) throw TooDeep(reader);
+
         var obj = new JsonObject();
         JsonNameMapper? activeMapper = mapper;
         int c = reader.ReadSkipWhitespace();
@@ -472,7 +521,7 @@ public static class JsonParser
 
                 if (reader.ReadSkipWhitespace() != ':')
                     throw new JsonException("Invalid token", reader.Line, reader.Column);
-                object? value = ParseValue(reader, reader.ReadSkipWhitespace(), activeMapper, autoDetect);
+                object? value = ParseValue(reader, reader.ReadSkipWhitespace(), activeMapper, autoDetect, depth);
                 obj.AddUnchecked(key, value);
                 c = reader.ReadSkipWhitespace();
                 if (c == '}') break;
@@ -494,15 +543,17 @@ public static class JsonParser
     }
 
     private static JsonArray ParseArrayBody(JsonReader reader, JsonNameMapper? mapper,
-        JsonNameMapper? autoDetect)
+        JsonNameMapper? autoDetect, int depth)
     {
+        if (depth > MaxDepth) throw TooDeep(reader);
+
         var arr = new JsonArray();
         int c = reader.ReadSkipWhitespace();
         if (c != ']')
         {
             while (true)
             {
-                arr.AddUnchecked(ParseValue(reader, c, mapper, autoDetect));
+                arr.AddUnchecked(ParseValue(reader, c, mapper, autoDetect, depth));
                 c = reader.ReadSkipWhitespace();
                 if (c == ']') break;
                 if (c != ',') throw new JsonException("Invalid token", reader.Line, reader.Column);
@@ -737,14 +788,26 @@ public static class JsonParser
         }
     }
 
+    /// <summary>One hex digit of a \u or \x escape.</summary>
+    /// <remarks>
+    /// Throws JsonException, not IOException. FormatDetector catches JsonException to answer
+    /// "not a format I know"; an IOException went straight past it, so a file truncated inside
+    /// an escape - or one carrying \uZZZZ - crashed the caller instead of being rejected.
+    /// </remarks>
     private static int ParseHexDigit(int c)
     {
-        if (c < 0) throw new IOException("short read");
+        if (c < 0) throw new JsonException("Short read in escape sequence");
         int index = HexChars.IndexOf((char)c);
-        if (index < 0) throw new IOException("invalid hex char");
+        if (index < 0) throw new JsonException("Invalid hex character in escape sequence");
         if (index >= 16) index -= 6;
         return index;
     }
+
+    private static JsonException TooDeep(JsonReader reader)
+        => new($"Nested deeper than {MaxDepth} levels", reader.Line, reader.Column);
+
+    private static JsonException TooLong(JsonReader reader)
+        => new($"Number longer than {MaxJsonNumberLength} characters", reader.Line, reader.Column);
 
     private static object ParseNumber(JsonReader reader, int first)
     {
@@ -797,8 +860,15 @@ public static class JsonParser
             numLen += intStr.Length;
             numBuf[numLen++] = '.';
             numBuf[numLen++] = (char)d;
+
+            // Bounds-checked: the buffer is fixed at MaxJsonNumberLength and a number with
+            // enough fraction digits is legal JSON. Unchecked, it walked off the end and threw
+            // IndexOutOfRangeException, which FormatDetector does not catch.
             while ((d = reader.ReadDigit()) >= 0)
+            {
+                if (numLen >= numBuf.Length) throw TooLong(reader);
                 numBuf[numLen++] = (char)d;
+            }
         }
 
         // Exponent
@@ -814,17 +884,27 @@ public static class JsonParser
                 numLen += intStr.Length;
             }
             isInteger = false;
+            if (numLen >= numBuf.Length) throw TooLong(reader);
             numBuf[numLen++] = 'E';
+
             int d = reader.ReadDigitOrSign();
             if (d == '+' || d == '-')
             {
+                if (numLen >= numBuf.Length) throw TooLong(reader);
                 numBuf[numLen++] = (char)d;
                 d = reader.ReadDigit();
             }
+
             if (d < 0) throw new JsonException("Invalid token", reader.Line, reader.Column);
+
+            if (numLen >= numBuf.Length) throw TooLong(reader);
             numBuf[numLen++] = (char)d;
+
             while ((d = reader.ReadDigit()) >= 0)
+            {
+                if (numLen >= numBuf.Length) throw TooLong(reader);
                 numBuf[numLen++] = (char)d;
+            }
         }
 
         if (isInteger && !intOverflow)

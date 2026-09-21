@@ -1,3 +1,4 @@
+using System.Globalization;
 using NmsVault.Json;
 
 namespace NmsVault.Core;
@@ -92,7 +93,12 @@ public sealed record VaultMetadata
         Tags = ReadStrings(vault.GetArray("Tags")),
         Source = vault.GetString("Source"),
         Author = vault.GetString("Author"),
-        DateAdded = DateTimeOffset.TryParse(vault.GetString("DateAdded"), out var d) ? d : null,
+        // Invariant and round-trip, to match the "O" format the writer below uses. Left to
+        // the ambient culture this follows the browser's locale in WebAssembly, and under a
+        // non-Gregorian calendar an ISO-8601 string parses to the wrong year - which then gets
+        // written into a NomNom export as its DateCreated.
+        DateAdded = DateTimeOffset.TryParse(vault.GetString("DateAdded"), CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind, out var d) ? d : null,
         GameVersion = vault.GetString("GameVersion"),
     };
 

@@ -71,21 +71,10 @@ public sealed class NomNomExportAdapter : IExportAdapter
     {
         var losses = new List<string>();
 
-        if (item.Kind == EntityKind.Starship
-            && item.CharacterCustomisationData is { } ccd
-            && !CustomisationHelpers.IsDefault(ccd))
-        {
-            var custom = ccd.GetObject("CustomData");
-            if (custom?.GetArray("DescriptorGroups") is { Length: > 0 })
-                losses.Add("This format does not store custom parts, so the ship will arrive as the "
-                    + "base model in the right colours.");
-            if (custom?.GetArray("TextureOptions") is { Length: > 0 })
-                losses.Add("This format does not store the chosen texture, so the ship's finish will "
-                    + "differ in-game.");
-            if (custom?.GetString("PaletteID") is { } p && p is not ("^" or ""))
-                losses.Add($"This format does not store the colour palette ({p}), so the ship may "
-                    + "appear in different colours.");
-        }
+        // Colours only, like Kaii - CustomisationHelpers.Losses is the one list of what that
+        // leaves behind, shared so the two cannot drift apart again.
+        if (item.Kind == EntityKind.Starship)
+            losses.AddRange(CustomisationHelpers.Losses(item.CharacterCustomisationData));
 
         return losses;
     }

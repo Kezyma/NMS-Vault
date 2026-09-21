@@ -114,26 +114,65 @@ public static class CustomisationHelpers
     /// </summary>
     public static bool IsDefault(JsonObject ccd)
     {
-        try
-        {
-            string preset = ccd.GetString("SelectedPreset") ?? "";
-            if (preset is not ("^" or "")) return false;
+        // No try/catch. GetString, GetObject and GetArray all answer null rather than throwing
+        // for names like these, so the catch was unreachable - and it returned true, meaning
+        // "nothing here", which is the direction that makes LossesFor report no loss at all.
+        string preset = ccd.GetString("SelectedPreset") ?? "";
+        if (preset is not ("^" or "")) return false;
 
-            var custom = ccd.GetObject("CustomData");
-            if (custom is null) return true;
+        var custom = ccd.GetObject("CustomData");
+        if (custom is null) return true;
 
-            string palette = custom.GetString("PaletteID") ?? "";
-            if (palette is not ("^" or "")) return false;
+        string palette = custom.GetString("PaletteID") ?? "";
+        if (palette is not ("^" or "")) return false;
 
-            foreach (var name in (string[])["DescriptorGroups", "Colours", "TextureOptions", "BoneScales"])
-                if (custom.GetArray(name) is { Length: > 0 }) return false;
+        foreach (var name in (string[])["DescriptorGroups", "Colours", "TextureOptions", "BoneScales"])
+            if (custom.GetArray(name) is { Length: > 0 }) return false;
 
-            return true;
-        }
-        catch
-        {
-            return true;
-        }
+        return true;
+    }
+
+    /// <summary>
+    /// What a format that carries only <c>CustomData.Colours</c> drops from a ship's
+    /// customisation, as sentences for the reader.
+    /// </summary>
+    /// <remarks>
+    /// One copy, called by both the Kaii and the NomNom adapter. They each had their own and
+    /// both were incomplete in the same way: they tested three of the five things
+    /// <see cref="IsDefault"/> considers, so a ship whose only customisation was a preset or a
+    /// set of bone scales reported <em>no losses at all</em> - the dialog said nothing would be
+    /// lost, and it was.
+    /// </remarks>
+    /// <param name="ccd">The customisation block, or null.</param>
+    /// <returns>A sentence per thing that will not survive. Empty when nothing is lost.</returns>
+    public static IReadOnlyList<string> Losses(JsonObject? ccd)
+    {
+        if (ccd is null || IsDefault(ccd)) return [];
+
+        var losses = new List<string>();
+        var custom = ccd.GetObject("CustomData");
+
+        if (custom?.GetArray("DescriptorGroups") is { Length: > 0 })
+            losses.Add("This format does not store custom parts, so the ship will arrive as the "
+                + "base model in the right colours.");
+
+        if (custom?.GetArray("TextureOptions") is { Length: > 0 })
+            losses.Add("This format does not store the chosen texture, so the ship's finish will "
+                + "differ in-game.");
+
+        if (custom?.GetString("PaletteID") is { } p && p is not ("^" or ""))
+            losses.Add($"This format does not store the colour palette ({p}), so the ship may "
+                + "appear in different colours.");
+
+        if (ccd.GetString("SelectedPreset") is { } preset && preset is not ("^" or ""))
+            losses.Add($"This format does not store the chosen preset ({preset}), so the ship will "
+                + "arrive without it.");
+
+        if (custom?.GetArray("BoneScales") is { Length: > 0 })
+            losses.Add("This format does not store the adjusted proportions, so the ship will "
+                + "arrive at its default shape.");
+
+        return losses;
     }
 
     /// <summary>

@@ -44,7 +44,7 @@ public static class NmseImporter
         return resolved switch
         {
             EntityKind.Companion => ReadCompanion(document, meta),
-            _ => VaultItem.Create(resolved, StripKnownSidecars(document, resolved), meta),
+            _ => VaultItem.Create(resolved, StripKnownSidecars(document), meta),
         };
     }
 
@@ -67,27 +67,44 @@ public static class NmseImporter
 
     private static VaultItem ReadCompanion(JsonObject document, VaultMetadata meta)
     {
-        // NMSE splices the accessory slots into the pet object flat. Lift them back out so
-        // the payload is the pet alone and the slots are a first-class sidecar.
-        var pet = document.DeepClone();
-        var slots = pet.GetArray("PetAccessoryCustomisation");
+        // Two shapes arrive here. NMSE's own .nmspet is a bare pet, with the accessory slots
+        // spliced in flat beside the creature's own fields. A document this project stored is
+        // wrapped - { Pet, PetAccessoryCustomisation, Vault } - and re-importing one is a
+        // thing the convert verb does.
+        //
+        // Taking the wrapper's contents rather than the wrapper is what ReadStarship does with
+        // Ship, and not doing it here meant a stored document came back with itself as its own
+        // payload: { Pet: { Pet: {...}, Vault: {...} } }. That is a nested wrapper and a
+        // metadata block written into somebody's real save, which is the one thing the Vault
+        // block exists to prevent.
+        var pet = (document.GetObject(EntityKind.Companion.PayloadKey()) ?? document).DeepClone();
+
+        // Read from the root either way: in a bare export the root is the pet, and in a stored
+        // document the slots sit beside the wrapper rather than inside it.
+        var slots = document.GetArray("PetAccessoryCustomisation");
         pet.Remove("PetAccessoryCustomisation");
+
+        // Belt and braces for the bare case, where the root carries both the pet and the
+        // metadata this project added.
+        pet.Remove(VaultItem.VaultKey);
 
         return VaultItem.Create(EntityKind.Companion, pet, meta, accessorySlots: slots);
     }
 
-    private static JsonObject StripKnownSidecars(JsonObject document, EntityKind kind)
+    private static JsonObject StripKnownSidecars(JsonObject document)
     {
         var payload = document.DeepClone();
 
         // Defensive: if a sidecar key ever leaks into a bare payload, drop it rather than
         // carrying it into the vault - and from there back into somebody's real save,
         // since ToKey passes unknown names through unchanged.
-        if (kind != EntityKind.Starship)
-        {
-            payload.Remove("UsesLegacyColours");
-            payload.Remove("CharacterCustomisationData");
-        }
+        //
+        // Unconditional, where it used to skip starships. Only a bare payload reaches here -
+        // Read returns a wrapped one to ReadStarship before this - so the skipped case was a
+        // bare ship, which is exactly the one with no wrapper to keep a sidecar in and the
+        // only one where the removal could ever have mattered.
+        payload.Remove("UsesLegacyColours");
+        payload.Remove("CharacterCustomisationData");
         payload.Remove(VaultItem.VaultKey);
         return payload;
     }
