@@ -936,7 +936,6 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* The thumbnail is a button, and has to go on looking like a thumbnail. */
 .item-table .col-art .art {
-    position: relative;
     display: block;
     /* Not one control tall: this is a thumbnail, and its height is the thumbnail's. */
     height: auto;
@@ -950,21 +949,6 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .item-table .col-art .art:hover img { opacity: 0.85; }
 .item-table .col-art .art:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* How many pictures are behind this one. A count rather than a stack of dots: at 48 pixels
-   across there is room for a digit and not for anything else. */
-.item-table .col-art .more {
-    position: absolute;
-    right: -3px;
-    bottom: -3px;
-    min-width: 14px;
-    padding: 0 3px;
-    font-size: 10px;
-    line-height: 14px;
-    text-align: center;
-    color: var(--bg-solid);
-    background: var(--accent);
-    border-radius: var(--radius-pill);
-}
 .item-table .col-name { font-weight: 600; white-space: nowrap; }
 
 /* On its own line under the name, and not bolded with it. */

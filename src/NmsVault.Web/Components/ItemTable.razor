@@ -64,6 +64,11 @@
                             nothing else, so it opens the pictures full size. No carousel in
                             the cell itself - arrows at 48 pixels across would be a target
                             nobody can hit, and the larger view pages through them anyway.
+
+                            No count of the other pictures either. Down a column it read as a
+                            number that meant something about the ship, and what it actually
+                            said - that there are two photographs rather than one - is not
+                            worth a badge on every row.
                         *@
                         @if (row.Image is { } image)
                         {
@@ -71,12 +76,6 @@
                                     title="@($"See {row.DisplayName} larger")"
                                     aria-label="@($"See {row.DisplayName} larger")">
                                 <img src="@($"gallery/{image}")" alt="" loading="lazy" />
-
-                                @if (row.Images.Count > 1)
-                                {
-                                    @* Says there is more here than the one picture showing. *@
-                                    <span class="more" aria-hidden="true">@row.Images.Count</span>
-                                }
                             </button>
                         }
                     </td>
