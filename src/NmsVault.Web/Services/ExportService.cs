@@ -155,9 +155,8 @@ public sealed class ExportService(HttpClient http)
         {
             if (_items.TryGetValue(id, out cached)) return cached;
 
-            // Bytes rather than a stream: in a browser the response stream crosses a bridge
-            // into JavaScript, and pulling a document through it a chunk at a time stalls.
-            byte[] bytes = await _http.GetByteArrayAsync($"gallery/items/{id}.json", cancellationToken)
+            byte[] bytes = await GalleryHttp
+                .DocumentAsync(_http, $"gallery/items/{id}.json", cancellationToken)
                 .ConfigureAwait(false);
 
             return _items[id] = VaultItem.FromBytes(bytes, id);

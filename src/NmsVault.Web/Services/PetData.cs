@@ -32,7 +32,8 @@ public sealed class PetData(HttpClient http)
 
             try
             {
-                byte[] bytes = await _http.GetByteArrayAsync("gallery/pets.json", cancellationToken)
+                byte[] bytes = await GalleryHttp
+                    .DocumentAsync(_http, "gallery/pets.json", cancellationToken)
                     .ConfigureAwait(false);
 
                 return _index = PetIndex.FromBytes(bytes);

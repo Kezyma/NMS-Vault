@@ -11,7 +11,13 @@
 
 <h1>@Heading</h1>
 
-@if (_all is null)
+@if (_failed is { Length: > 0 } failure)
+{
+    @* Told rather than shown blank. An index that will not load is the whole page gone, and
+       an unhandled exception here takes the shell with it. *@
+    <p class="nothing">@failure</p>
+}
+else if (_all is null)
 {
     <p class="dim">Loading&hellip;</p>
 }
@@ -102,6 +108,7 @@ else
     public required string Heading { get; set; }
 
     private IReadOnlyList<GalleryRow>? _all;
+    private string? _failed;
     private IReadOnlyList<Facet<GalleryRow>> _facets = [];
     private IReadOnlyList<SortOption> _sorts = [];
     private SortOption _sort;
@@ -137,8 +144,22 @@ else
         _sifter = new Sifter<GalleryRow>(_facets, r => r.SearchText);
         _shown = null;
         _all = null;
+        _failed = null;
 
-        _all = await Data.ForPageAsync(Page).ConfigureAwait(true);
+        try
+        {
+            _all = await Data.ForPageAsync(Page).ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
+        {
+            // The manifest is rewritten wholesale on every publish, so a page held open across
+            // one can ask for it in the window where it is not there - and a static host
+            // answers that with the shell and a 200, which fails as a parse error rather than
+            // as the missing file it is. Either way the page has nothing to draw, and saying
+            // so beats an error bar over an empty shell.
+            _failed = "The gallery could not be read. Reload the page - it may have been "
+                + "republishing.";
+        }
     }
 
     private void FilterChanged()

@@ -49,6 +49,77 @@ public class ExportTests
         }
     }
 
+    /// <summary>
+    /// Answers everything with the site's own shell, which is what a static host does with a
+    /// path that is not on disk.
+    /// </summary>
+    private sealed class SinglePageFallback : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+            => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    "<!DOCTYPE html><html><head><title>NMS-Vault</title></head><body></body></html>",
+                    Encoding.UTF8, "text/html"),
+            });
+    }
+
+    [Fact]
+    public async Task AMissingDocumentFailsAsAMissingDocument()
+    {
+        // The site is a single-page app on a static host, so a document that is not there is
+        // answered with index.html and a 200 - nothing throws until the parser meets <!DOCTYPE
+        // and rejects it, three layers below the fetch. A caller guarding against a failed
+        // request is not watching for a parse error there, so it escaped the component and
+        // took the whole page down with it instead of the one sheet that asked.
+        //
+        // Easy to reach, too: republishing rewrites every item document, and a page left open
+        // across a rebuild asks for one in the window where it does not exist.
+        var service = new ExportService(
+            new HttpClient(new SinglePageFallback()) { BaseAddress = new Uri("https://example.test/") });
+
+        var thrown = await Assert.ThrowsAsync<HttpRequestException>(() => service.ItemAsync("anything"));
+
+        Assert.Contains("not there", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AnEmptyBodyFailsAsAMissingDocumentToo()
+    {
+        // The dev server's version of the same thing, and the one actually reported: it answers
+        // a path that is not on disk with a 200, no content type and nothing in the body. The
+        // parser then rejects an empty document at line 1, column 1, which is the error that
+        // took the page down.
+        var service = new ExportService(
+            new HttpClient(new Empty200()) { BaseAddress = new Uri("https://example.test/") });
+
+        var thrown = await Assert.ThrowsAsync<HttpRequestException>(() => service.ItemAsync("anything"));
+
+        Assert.Contains("not there", thrown.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Answers everything with a 200, no content type and no body.</summary>
+    private sealed class Empty200 : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+            => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent([]),
+            });
+    }
+
+    [Fact]
+    public async Task A404IsStillA404()
+    {
+        // The host that answers honestly must keep failing the same way it always did.
+        var service = new ExportService(
+            new HttpClient(new OneItem("present", [])) { BaseAddress = new Uri("https://example.test/") });
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => service.ItemAsync("absent"));
+    }
+
     private static (ExportService Service, OneItem Transport) ServiceFor(
         string folder, string file, string extension, string id = "item")
     {

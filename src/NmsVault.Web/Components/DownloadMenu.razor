@@ -166,7 +166,7 @@
         {
             _options = await Exports.OptionsAsync(Row.Id).ConfigureAwait(true);
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
             _failed = "That item could not be read. It may not have finished publishing.";
         }

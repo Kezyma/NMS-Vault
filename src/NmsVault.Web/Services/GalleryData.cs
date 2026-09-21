@@ -245,10 +245,8 @@ public sealed class GalleryData(HttpClient http)
         {
             if (_rows is not null) return _rows;
 
-            // Taken as bytes and then parsed, rather than deserialised from the stream. In a
-            // browser the response stream crosses a bridge into JavaScript, and pulling a
-            // large document through it a chunk at a time stalls.
-            byte[] bytes = await _http.GetByteArrayAsync("gallery/index.json", cancellationToken)
+            byte[] bytes = await GalleryHttp
+                .DocumentAsync(_http, "gallery/index.json", cancellationToken)
                 .ConfigureAwait(false);
 
             var root = JsonObject.FromBytes(bytes);

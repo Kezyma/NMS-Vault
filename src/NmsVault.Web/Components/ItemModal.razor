@@ -467,8 +467,11 @@
                 _pets = await PetSource.IndexAsync(_leaving.Token).ConfigureAwait(true);
             _item = await Exports.ItemAsync(Row.Id, _leaving.Token).ConfigureAwait(true);
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
+            // JsonException as well as the request failure: a document that is there but
+            // unreadable is the same thing to a reader, and letting it escape a component
+            // takes down the page rather than the sheet.
             _failed = "That item could not be read. It may not have finished publishing.";
             return;
         }

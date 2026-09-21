@@ -31,9 +31,8 @@ public sealed class TechData(HttpClient http)
 
             try
             {
-                // Bytes then parse, not the stream: pulling a large document through the
-                // browser's stream bridge a chunk at a time stalls.
-                byte[] bytes = await _http.GetByteArrayAsync("gallery/tech.json", cancellationToken)
+                byte[] bytes = await GalleryHttp
+                    .DocumentAsync(_http, "gallery/tech.json", cancellationToken)
                     .ConfigureAwait(false);
 
                 return _index = TechIndex.FromBytes(bytes);
