@@ -137,4 +137,254 @@ public class PetIndexTests
             ["Lash", "Thunderstorm", "Solar Ray", "Regrowth", "Snaring Roots"],
             facts.BattleMoves.Select(m => index.Move(m, affinity).Name));
     }
+
+    [Theory]
+    [InlineData("Lush", "TROPICAL")]
+    [InlineData("Frozen", "FROST")]
+    [InlineData("Scorched", "FIRE")]
+    [InlineData("Toxic", "TOXIC")]
+    [InlineData("Barren", "DESERT")]
+    [InlineData("Radioactive", "RADIOACTIVE")]
+    [InlineData("Weird", "ANOMALOUS")]
+    public void EveryAffinityKnowsWhatBeatsItAndWhatItBeats(string biome, string expected)
+    {
+        var index = Index();
+        var affinity = index.Affinity(null, biome);
+
+        Assert.Equal(expected, affinity?.Name);
+
+        var matchup = index.Matchup(affinity);
+
+        Assert.NotNull(matchup);
+        Assert.Equal(2, matchup!.Weak.Count);
+        Assert.Equal(2, matchup.Strong.Count);
+
+        // Nothing beats itself, and nothing is on both of its own lists.
+        Assert.DoesNotContain(affinity!.Id, matchup.Weak.Select(a => a.Id));
+        Assert.DoesNotContain(affinity.Id, matchup.Strong.Select(a => a.Id));
+    }
+
+    [Fact]
+    public void TheMatchupTableAgreesWithItself()
+    {
+        // Every pairing is stated twice - once as A's weakness, once as B's strength - so the
+        // two halves have to line up. This is the test that catches a typo in a hand-written
+        // table, which is what this one is.
+        var index = Index();
+
+        var affinities = (string[])["Lush", "Cold", "Fire", "Toxic", "Barren", "Radioactive", "Weird", "Mech"];
+        var matchups = affinities.ToDictionary(id => id, id => index.Matchup(Affinity(index, id)));
+
+        foreach (string id in affinities)
+        {
+            Assert.NotNull(matchups[id]);
+
+            foreach (var beaten in matchups[id]!.Strong)
+                Assert.Contains(id, matchups[beaten.Id]!.Weak.Select(a => a.Id));
+
+            foreach (var beats in matchups[id]!.Weak)
+                Assert.Contains(id, matchups[beats.Id]!.Strong.Select(a => a.Id));
+        }
+    }
+
+    [Fact]
+    public void TropicalIsTheOneTheGalleryActuallyShows()
+    {
+        // The only creature published, so this is the matchup a reader will see.
+        var index = Index();
+        var matchup = index.Matchup(index.Affinity("^DIPLO_PET", "Lush"));
+
+        Assert.Equal(["TOXIC", "MECHANICAL"], matchup!.Weak.Select(a => a.Name));
+        Assert.Equal(["DESERT", "ANOMALOUS"], matchup.Strong.Select(a => a.Name));
+    }
+
+    [Theory]
+    // Typed in the id, so the glyph is the same whatever knows the move.
+    [InlineData("^ATTACK_COLD", "Cold")]
+    [InlineData("^ATTACK_HOT", "Fire")]
+    [InlineData("^ATTACK_DUST", "Barren")]
+    // Typed to the creature.
+    [InlineData("^ATTACK_AFF", "Lush")]
+    [InlineData("^STUN", "Lush")]
+    // The trap: SELF_HOT is a heal over time, not a fire move, so reading the suffix is wrong.
+    [InlineData("^SELF_HOT", "Lush")]
+    public void AMoveIsTypedByItsIdOrByTheCreature(string moveId, string expected)
+    {
+        var index = Index();
+        var move = index.Move(moveId, index.Affinity(null, "Lush"));
+
+        Assert.Equal(expected, move.Affinity?.Id);
+    }
+
+    [Fact]
+    public void AnUntypedMoveDrawsNoAffinityGlyph()
+    {
+        var index = Index();
+
+        Assert.Null(index.Move("^ATTACK_NORM", index.Affinity(null, "Lush")).Affinity);
+        Assert.Null(index.Move("^ATTACK_DOT_NORM", index.Affinity(null, "Lush")).Affinity);
+    }
+
+    [Theory]
+    [InlineData("^SELF_SHIELD", "defence.webp")]
+    [InlineData("^BUFF_DODGE", "stealth.webp")]
+    [InlineData("^BUFF_ACCURACY", "accuracy.webp")]
+    [InlineData("^SELF_HEAL", "health.webp")]
+    [InlineData("^SELF_HOT", "health.webp")]
+    [InlineData("^SELF_RESET_CD", "cooldown.webp")]
+    [InlineData("^BUFF_SPEED", "speed.webp")]
+    [InlineData("^BUFF_DAMAGE", "power.webp")]
+    [InlineData("^ATTACK_AFF", "attack.webp")]
+    public void AMoveIsDrawnWithTheStatItTouches(string moveId, string expected)
+    {
+        // Not IconStyle, which says "Attack" for 55 of the 61 moves including both heals.
+        Assert.Equal(expected, Index().Move(moveId, null).Icon);
+    }
+
+    [Theory]
+    [InlineData("Lush", "Verdant")]
+    [InlineData("Dead", "Airless")]
+    [InlineData("Scorched", "Scorched")]
+    [InlineData("Lava", "Volcanic")]
+    [InlineData("Weird", "Unusual")]
+    [InlineData("Waterworld", "Water-bound")]
+    [InlineData("GasGiant", "Gaseous")]
+    [InlineData("Barren", "Barren")]
+    public void AClimateReadsAsTheGameWritesIt(string biome, string expected)
+        => Assert.Equal(expected, Index().Climate(biome));
+
+    [Fact]
+    public void EveryBiomeACreatureCanCarryHasAClimate()
+    {
+        var index = Index();
+
+        foreach (string biome in (string[])["Lush", "Toxic", "Scorched", "Radioactive", "Frozen",
+                                            "Barren", "Dead", "Weird", "Swamp", "Lava",
+                                            "Waterworld", "GasGiant"])
+        {
+            // Never the raw id, which is what the gallery printed before this existed. Two of
+            // them do happen to match - Toxic and Swamp are their own names - so the check is
+            // that the table answered, not that the answer differs.
+            Assert.NotNull(index.Climate(biome));
+        }
+    }
+
+    [Fact]
+    public void AnUnknownBiomeFallsBackToItsOwnName()
+        => Assert.Equal("Somewhere", Index().Climate("Somewhere"));
+
+    [Theory]
+    // The three the payload stores, at the sign and magnitude the Diplodocus carries.
+    [InlineData(0.5, -1.0, 0.5, "Helpfulness", "Gentleness", "Independence")]
+    // The other end of all three.
+    [InlineData(-0.5, 1.0, -0.5, "Playfulness", "Aggression", "Devotion")]
+    public void TheSignPicksWhichEndOfTheAxisACreatureIsOn(
+        double first, double second, double third, string a, string b, string c)
+    {
+        var traits = Index().Traits("^DIPLO_PET", [first, second, third]);
+
+        Assert.Equal([a, b, c], traits.Select(t => t.Name));
+    }
+
+    [Fact]
+    public void ADiplodocusReadsAsTheGalleryShowsIt()
+    {
+        // The creature actually published, and the one to check the inferred pairing against
+        // in game. If this changes, the table in PetExtractor is what changed.
+        var traits = Index().Traits("^DIPLO_PET", [0.5, -1.0, 0.5]);
+
+        Assert.Equal(
+            ["Helpfulness 50% (Diligent)", "Gentleness 100% (Sweet Tempered)", "Independence 50% (Autonomous)"],
+            traits.Select(t => $"{t.Name} {t.Percent}% ({t.Word})"));
+    }
+
+    [Theory]
+    [InlineData(0.0, "C")]
+    [InlineData(0.24, "C")]
+    [InlineData(0.25, "B")]
+    [InlineData(0.49, "B")]
+    [InlineData(0.5, "A")]
+    [InlineData(0.74, "A")]
+    [InlineData(0.75, "S")]
+    [InlineData(1.0, "S")]
+    // The magnitude is what counts, so the bands are symmetrical about zero.
+    [InlineData(-1.0, "S")]
+    [InlineData(-0.1, "C")]
+    public void TheClassIsAnEvenQuarterOfTheMagnitude(double value, string expected)
+    {
+        var trait = Index().Traits("^DIPLO_PET", [value]).Single();
+
+        Assert.Equal(expected, trait.Class);
+        Assert.Equal((int)Math.Round(Math.Abs(value) * 100), trait.Percent);
+    }
+
+    [Fact]
+    public void EveryPoleHasAWordAtEveryClass()
+    {
+        // Six poles, four classes, two vocabularies - and a missing one would show as a bare
+        // percentage with an empty bracket after it.
+        var index = Index();
+
+        foreach (string species in (string[])["^DIPLO_PET", "^FIEND"])
+            foreach (double value in (double[])[0.9, 0.6, 0.3, 0.1, -0.9, -0.6, -0.3, -0.1])
+                foreach (var trait in index.Traits(species, [value, value, value]))
+                    Assert.False(string.IsNullOrWhiteSpace(trait.Word),
+                        $"{species} has no word for {trait.Name} at class {trait.Class}");
+    }
+
+    [Fact]
+    public void AFiendReadsInItsOwnWords()
+    {
+        // The game gives fiends a separate vocabulary for the same six poles, and the species
+        // id is what picks it.
+        var index = Index();
+
+        Assert.Equal("Sweet Tempered", index.Traits("^DIPLO_PET", [0, -1.0, 0])[1].Word);
+        Assert.Equal("Docile", index.Traits("^FIEND", [0, -1.0, 0])[1].Word);
+    }
+
+    [Fact]
+    public void ASpeciesCarriesItsScaleAndItsHabits()
+    {
+        var species = Index().Species("^DIPLO_PET");
+
+        Assert.NotNull(species);
+        Assert.Equal(0.4, species!.MinScale);
+        Assert.Equal(12.0, species.MaxScale);
+        Assert.Equal("Ground", species.MoveArea);
+        Assert.Equal("Uncommon", species.Rarity);
+        Assert.True(species.CanBattle);
+    }
+
+    [Fact]
+    public void TheBattleStatsReadInThePayloadsOrder()
+    {
+        // Health, agility, combat - which is not the order the game's own headers read in, and
+        // is the order PetBattlerTreatsEaten and the class overrides are indexed.
+        Assert.Equal(["Health", "Agility", "Combat Effectiveness"], Index().BattleStats);
+    }
+
+    [Fact]
+    public void AnEmptyIndexNamesNoTraitsRatherThanGuessing()
+    {
+        // The caller falls back to the raw numbers, which is better than three wrong words.
+        Assert.Empty(PetIndex.Empty.Traits("^DIPLO_PET", [0.5, -1.0, 0.5]));
+        Assert.Null(PetIndex.Empty.Matchup(null));
+        Assert.Null(PetIndex.Empty.Species("^DIPLO_PET"));
+        Assert.Equal("Lush", PetIndex.Empty.Climate("Lush"));
+    }
+
+    /// <summary>An affinity by id, via a biome that resolves to it.</summary>
+    private static PetAffinity? Affinity(PetIndex index, string id) => id switch
+    {
+        "Lush" => index.Affinity(null, "Lush"),
+        "Cold" => index.Affinity(null, "Frozen"),
+        "Fire" => index.Affinity(null, "Scorched"),
+        "Toxic" => index.Affinity(null, "Toxic"),
+        "Barren" => index.Affinity(null, "Barren"),
+        "Radioactive" => index.Affinity(null, "Radioactive"),
+        "Weird" => index.Affinity(null, "Weird"),
+        "Mech" => index.Affinity("^QUAD_PET", "Lush"),
+        _ => throw new ArgumentOutOfRangeException(nameof(id)),
+    };
 }

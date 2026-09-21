@@ -97,7 +97,21 @@
                         }
                     </td>
 
-                    <td class="col-class"><ClassBadge Class="@row.Class" /></td>
+                    @if (HasClass)
+                    {
+                        <td class="col-class"><ClassBadge Class="@row.Class" /></td>
+                    }
+
+                    @if (HasAffinity)
+                    {
+                        <td class="col-affinity"><AffinityBadge Affinity="@row.Affinity" /></td>
+                        <td class="col-traits">
+                            @foreach (var trait in row.Traits)
+                            {
+                                <span class="chip" title="@($"{trait.Name} {trait.Rating}")">@(trait.Word ?? trait.Name)</span>
+                            }
+                        </td>
+                    }
 
                     <td>
                         @foreach (var seed in row.Seeds)
@@ -176,11 +190,23 @@
     private IReadOnlyList<string> StatColumns =>
         Rows.Count == 0 ? [] : [.. Rows[0].Stats.Select(s => s.Key)];
 
+    /// <summary>
+    /// Whether these rows have a class at all. Only ships and multitools do, so on the
+    /// companions page the column was there and empty in every row.
+    /// </summary>
+    private bool HasClass => Rows.Any(r => r.Class is { Length: > 0 });
+
+    /// <summary>The other way round: only creatures carry an affinity.</summary>
+    private bool HasAffinity => Rows.Any(r => r.Affinity is not null);
+
     private IReadOnlyList<Column> Columns =>
     [
         new("Name", "col-name"),
         new("Type"),
-        new("Class", "col-class"),
+        .. HasClass ? (Column[])[new("Class", "col-class")] : [],
+        .. HasAffinity
+            ? (Column[])[new("Affinity", "col-affinity"), new("Personality", "col-traits")]
+            : [],
         new("Seed"),
         .. StatColumns.Select(stat => new Column(stat, "col-stat")),
         new("Tags"),

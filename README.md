@@ -107,13 +107,34 @@ only. To rehearse the whole of that locally before pushing:
 build-site.cmd
 ```
 
-One thing it cannot do for itself is re-read the game. The technology icons, class badges and
-favicon are extracted from an NMSE checkout, which no runner has, and are committed for that
-reason. After a game update:
+One thing it cannot do for itself is re-read the game. The technology icons, class badges,
+affinity glyphs and companion tables are extracted from a game install and an NMSE checkout,
+neither of which a runner has, and are committed for that reason.
+
+After a game update, first get the icons out. They ship inside the game's archives as
+BC7-compressed DDS, which the ingest tool can read neither half of - the archives are Hello
+Games' own HGPAK format rather than PSARC, and SkiaSharp cannot decode BC7. So unpack
+`TEXTURES/UI/FRONTEND/ICONS` with the PCBANKS Explorer that ships with AMUMSS, then:
 
 ```bash
-dotnet run --project tools/NmsVault.Ingest -- extract-tech --nmse "<NMSE>/Resources"
+python tools/dds-to-png.py "<unpack-folder>" "<png-folder>"
 ```
+
+Then the two extractions, which read the PNGs and NMSE's data tables:
+
+```bash
+dotnet run --project tools/NmsVault.Ingest -- extract-tech --nmse "<NMSE>/Resources" --icons "<png-folder>"
+```
+
+```bash
+dotnet run --project tools/NmsVault.Ingest -- extract-pets --nmse "<NMSE>/Resources" --icons "<png-folder>"
+```
+
+`extract-pets` writes `gallery/pets.json`: the affinities and their glyphs, which biome and
+which species map to which, the 61 battle moves and their names for each affinity, the
+personality words, the species table, and the weak/strong matchups. Rerun the ingest afterwards
+so the manifest picks up anything that changed - a creature's affinity and personality are
+resolved at ingest rather than in the browser.
 
 ### Running the gallery
 

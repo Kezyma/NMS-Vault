@@ -30,6 +30,7 @@
             <div class="titles">
                 <h2 class="card-name">
                     <ClassBadge Class="@Row.Class" />
+                    <AffinityBadge Affinity="@Row.Affinity" />
                     <span class="name-text">@Row.DisplayName</span>
                 </h2>
 
@@ -87,6 +88,21 @@
                     </div>
                 }
             </dl>
+        }
+
+        @*
+            A creature's personality, in the game's words. The three numbers behind it are an
+            axis each and read as nothing on their own, so the card carries the words and the
+            modal carries the percentages beside them.
+        *@
+        @if (Row.Traits.Count > 0)
+        {
+            <p class="card-traits">
+                @foreach (var trait in Row.Traits)
+                {
+                    <span class="chip" title="@($"{trait.Name} {trait.Rating}")">@(trait.Word ?? trait.Name)</span>
+                }
+            </p>
         }
 
         @if (Row.Tags.Count > 0)

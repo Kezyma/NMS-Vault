@@ -41,6 +41,20 @@ public readonly record struct CompanionValue(string Label, double Value);
 /// <param name="UniverseAddress">Where it came from, as the game's packed address. Null if absent.</param>
 /// <param name="EggModified">Whether its egg was edited in the Sequencer before it hatched.</param>
 /// <param name="CustomName">The name its owner gave it, or null.</param>
+/// <param name="BattleClasses">
+/// The stored class letter for health, agility and combat effectiveness, in that order. These
+/// only mean anything when <paramref name="BattleClassesApply"/> is set.
+/// </param>
+/// <param name="BattleClassesApply">
+/// Whether the game reads those stored classes. False on everything hatched normally, in which
+/// case the real classes are generated and the payload does not hold them.
+/// </param>
+/// <param name="GeneEdits">
+/// How far health, agility and combat effectiveness have each been raised by feeding, 0 to 10.
+/// </param>
+/// <param name="GeneEditsAvailable">How many edits it has banked and not spent.</param>
+/// <param name="MutationProgress">How far along it is towards earning the next one, 0 to 1.</param>
+/// <param name="ArenaVictories">How many pet battles it has won.</param>
 public sealed record CompanionFacts(
     string CreatureType,
     string? Biome,
@@ -57,10 +71,23 @@ public sealed record CompanionFacts(
     int AccessoriesWorn,
     string? UniverseAddress,
     bool EggModified,
-    string? CustomName)
+    string? CustomName,
+    IReadOnlyList<string> BattleClasses,
+    bool BattleClassesApply,
+    IReadOnlyList<int> GeneEdits,
+    int GeneEditsAvailable,
+    double MutationProgress,
+    int ArenaVictories)
 {
     /// <summary>What the three <c>Traits</c> entries mean, in order.</summary>
-    /// <remarks>NMSE's own labels - see its CompanionPanel, which writes to these positions.</remarks>
+    /// <remarks>
+    /// NMSE's own labels - see its CompanionPanel, which writes to these positions. Each names
+    /// one end of an axis, so a negative value means the creature is at the other end of it:
+    /// -1 under Aggression is a wholly gentle creature, not an aggressive one. These stay as
+    /// they are because they head a sortable column, where a signed number down one axis is
+    /// what a reader wants; <see cref="PetIndex.Traits"/> turns the same numbers into the
+    /// game's own words for the places with room to read them.
+    /// </remarks>
     public static readonly string[] TraitLabels = ["Helpfulness", "Aggression", "Independence"];
 
     /// <summary>What the two <c>Moods</c> entries mean, in order.</summary>
@@ -103,19 +130,40 @@ public sealed record CompanionFacts(
             pet.Get("EggModified") is true,
 
             // What its owner called it, as opposed to what the gallery lists it under.
-            Blank(pet.GetString("CustomName")));
+            Blank(pet.GetString("CustomName")),
+
+            // The arena. Classes first - stored, but inert unless the flag beside them is set,
+            // which it is not on anything that hatched the ordinary way.
+            Classes(pet.GetArray("PetBattlerCoreStatClassOverrides")),
+            pet.Get("PetBattlerUseCoreStatClassOverrides") is true,
+
+            // Then what feeding it has actually changed, which is real on any creature.
+            Counts(pet.GetArray("PetBattlerTreatsEaten")),
+            (int)Number(pet.Get("PetBattlerTreatsAvailable")),
+            Number(pet.Get("PetBattleProgressToTreat")),
+            (int)Number(pet.Get("PetBattlerVictories")));
     }
 
+    /// <summary>How many gene edits have been spent across the three stats.</summary>
+    public int GeneEditsSpent => GeneEdits.Sum();
+
     /// <summary>
-    /// The numbers worth putting on a card beside a ship's stats: its size, then what it is
-    /// like. Everything here is settled when the creature hatches.
+    /// The most any creature can be improved by feeding: ten edits on each of three stats.
     /// </summary>
+    public const int GeneEditLimit = 30;
+
+    /// <summary>
+    /// The numbers worth putting on a card beside a ship's stats.
+    /// </summary>
+    /// <remarks>
+    /// Only the size. The three traits used to sit here too, as the signed numbers the payload
+    /// stores, and they were the wrong shape for a column: each names one end of an axis, so
+    /// -1 under "Aggression" is a wholly gentle creature and sorting the column put the
+    /// gentlest and the fiercest at opposite ends of a scale nobody reads that way. They are
+    /// resolved into the game's own words at ingest instead - see <see cref="PetIndex.Traits"/>.
+    /// </remarks>
     /// <returns>The stats, in the order they should read.</returns>
-    public IReadOnlyList<ItemStat> AsStats() =>
-    [
-        new ItemStat("#SCALE", "Scale", Scale),
-        .. Traits.Select(t => new ItemStat($"#{t.Label.ToUpperInvariant()}", t.Label, t.Value)),
-    ];
+    public IReadOnlyList<ItemStat> AsStats() => [new ItemStat("#SCALE", "Scale", Scale)];
 
     private static IReadOnlyList<CompanionValue> Read(JsonArray? values, string[] labels)
     {
@@ -124,6 +172,31 @@ public sealed record CompanionFacts(
         var read = new List<CompanionValue>(labels.Length);
         for (int i = 0; i < labels.Length && i < values.Length; i++)
             read.Add(new CompanionValue(labels[i], Number(values.Get(i))));
+
+        return read;
+    }
+
+    /// <summary>
+    /// The class letters out of a class-override array, which wraps each one in an object.
+    /// </summary>
+    private static IReadOnlyList<string> Classes(JsonArray? values)
+    {
+        if (values is null) return [];
+
+        var read = new List<string>(values.Length);
+        for (int i = 0; i < values.Length; i++)
+            read.Add(values.GetObject(i)?.GetString("InventoryClass") ?? "");
+
+        return read;
+    }
+
+    private static IReadOnlyList<int> Counts(JsonArray? values)
+    {
+        if (values is null) return [];
+
+        var read = new List<int>(values.Length);
+        for (int i = 0; i < values.Length; i++)
+            read.Add((int)Number(values.Get(i)));
 
         return read;
     }

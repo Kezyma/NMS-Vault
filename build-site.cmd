@@ -76,15 +76,22 @@ rem  two can disagree - and when they do, every page loads its shell and never s
 rem
 rem  Done in PowerShell because reading a name out of a line and testing a path is a regular
 rem  expression and an if, and in batch it is neither.
+rem
+rem  Written without a single pipe, a \" escape or a [^...] class, none of which survive being
+rem  continued across lines with ^ here: cmd treats the \" as the end of the argument and then
+rem  reads the | after it as a pipe of its own, so the whole check fell over with
+rem  "'Select-Object' is not recognized" and the build sailed past the one thing it exists to
+rem  prove. Indexing replaces the first pipe, .Name the second, and .*? the character class.
 powershell -NoProfile -Command ^
   "$root = Join-Path $env:PAGES 'wwwroot';" ^
-  "$asked = (Select-String -Path (Join-Path $root 'index.html') -Pattern '_framework/blazor\.webassembly[^\"]*\.js' -AllMatches).Matches.Value | Select-Object -First 1;" ^
-  "if (-not $asked) { Write-Host 'FAILED: index.html names no Blazor script at all.'; exit 1 };" ^
+  "$found = (Select-String -Path (Join-Path $root 'index.html') -Pattern '_framework/blazor\.webassembly.*?\.js' -AllMatches).Matches;" ^
+  "if (-not $found) { Write-Host 'FAILED: index.html names no Blazor script at all.'; exit 1 };" ^
+  "$asked = $found[0].Value;" ^
   "if (-not (Test-Path (Join-Path $root $asked))) {" ^
-  "  Write-Host \"FAILED: index.html asks for '$asked', which was not published. The page would never start.\";" ^
-  "  Get-ChildItem (Join-Path $root '_framework') -Filter 'blazor.webassembly*' | Select-Object -ExpandProperty Name;" ^
+  "  Write-Host ('FAILED: index.html asks for ' + $asked + ', which was not published. The page would never start.');" ^
+  "  (Get-ChildItem (Join-Path $root '_framework') -Filter 'blazor.webassembly*').Name;" ^
   "  exit 1 };" ^
-  "Write-Host \"index.html asks for $asked, which is there.\""
+  "Write-Host ('index.html asks for ' + $asked + ', which is there.')"
 if errorlevel 1 goto :failed
 
 rem  The loader asks for this one by name, flatly - nothing can redirect it to a hashed file the

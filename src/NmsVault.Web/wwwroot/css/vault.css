@@ -821,6 +821,29 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     line-height: 1;
 }
 
+/*
+   The affinity glyph, beside the class badge and sized to match it. These are round rather
+   than shield-shaped, so they take a width as well - a 28px circle beside a 28px shield reads
+   as the same size, where height alone would make the circle look the larger of the two.
+*/
+.affinity-badge { display: inline-flex; align-items: center; flex: none; line-height: 0; }
+.affinity-badge img { width: 26px; height: 26px; }
+
+/* The fallback when the glyph is missing: the affinity's own name, which is short. */
+.affinity-name {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-xs);
+    height: 26px;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.04em;
+}
+
 .class-letter.class-s { color: var(--gold); }
 .class-letter.class-a { color: #b07fd0; }
 .class-letter.class-b { color: #5f9fd8; }
@@ -956,8 +979,18 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .item-table .col-class { width: 44px; }
 .item-table .col-class .class-badge { position: static; }
 .item-table .col-class .class-badge img { height: 24px; width: auto; }
+.item-table .col-affinity .affinity-badge img { width: 22px; height: 22px; }
 .item-table .col-stat, .item-table .col-num { text-align: right; font-family: var(--font-mono); }
 .item-table code { color: var(--tech); }
+
+/*
+   A creature's personality, as chips. The word alone on the card and in the table - the
+   percentage behind it is in the tooltip and spelt out in full in the modal, which has the
+   room for it.
+*/
+.card-traits { display: flex; flex-wrap: wrap; gap: var(--space-2xs); margin: var(--space-sm) 0 0; }
+.item-table .col-traits { white-space: normal; }
+.item-table .col-traits .chip { margin: 0 var(--space-2xs) var(--space-2xs) 0; }
 
 .nothing { padding: var(--space-3xl); text-align: center; color: var(--text-faint); }
 
@@ -1312,21 +1345,6 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
 
 /* ------------------------------------------------------------- companions */
 
-/*
-   The affinity a creature fights with, shown as the game shows it: its own glyph and its own
-   word for it, which is not the biome's word - a Lush creature is TROPICAL.
-*/
-.chip.affinity {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding-left: var(--space-xs);
-    border-color: var(--accent-dim);
-    color: var(--text);
-}
-
-.chip.affinity img { width: 18px; height: 18px; display: block; }
-
 .item-modal > .sheet .creature .given { margin: var(--space-md) 0 0; }
 .item-modal > .sheet .creature .given em { color: var(--text); font-style: italic; }
 .item-modal > .sheet .creature .from { margin: var(--space-xs) 0 0; font-size: var(--text-xs); }
@@ -1353,6 +1371,12 @@ button.danger:hover:not(:disabled) { background: rgba(224, 163, 92, 0.12); borde
     border-left: 2px solid var(--accent-dim);
 }
 
+/*
+   Two glyphs, as the game draws them: what the move is typed to, then the stat it touches.
+   Fixed width so the names line up whether a move carries one glyph or both - an untyped move
+   has no affinity to draw and would otherwise pull its name left.
+*/
+.move-list .glyphs { display: inline-flex; align-items: center; gap: var(--space-2xs); flex: none; width: 44px; }
 .move-list img { width: 20px; height: 20px; flex: none; display: block; }
 
 .move-list .name { font-weight: 600; letter-spacing: 0.02em; }
@@ -1717,6 +1741,19 @@ button.icon:hover:not(:disabled) { background: none; border-color: transparent; 
 .item-modal > .sheet .creature dd { margin: 0; font-family: var(--font-mono); font-size: var(--text-sm); }
 .item-modal > .sheet .creature .pairs.wide dd { overflow: hidden; text-overflow: ellipsis; }
 .item-modal > .sheet .creature code { color: var(--tech); }
+
+/* What a scale of 1.0 actually means, against the range the species covers. */
+.item-modal > .sheet .creature .range { margin: var(--space-md) 0 0; font-size: var(--text-xs); }
+
+/*
+   The arena block carries three lists where the others carry one, so its own runs need
+   separating - without this the core stats and the gene counts read as one six-item grid.
+*/
+.item-modal > .sheet .creature .arena .pairs + .pairs,
+.item-modal > .sheet .creature .arena .pairs + .matchups { margin-top: var(--space-lg); }
+
+/* Affinity names are words, not numbers, so they read in the body face. */
+.item-modal > .sheet .creature .matchups dd { font-family: inherit; }
 
 /* Both of these want the whole width rather than a column of their own. */
 .item-modal > .sheet .creature .moves,

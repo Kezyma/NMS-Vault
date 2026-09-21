@@ -209,12 +209,14 @@ public class FilteringTests
             ["Name", "Type", "Class", "Damage", "Mining", "Scan", "Tech Slots", "Tech Installed"],
             GalleryFacets.SortsFor("Armoury").Select(s => s.Label));
 
-        // Companions have no class and no technology, but they do have numbers of their own -
-        // the size and the three traits settled when they hatched. Trust and the moods are
-        // deliberately absent: those drift with play, so ordering by them would rank
-        // creatures by how their last owner left them.
+        // Companions have no class and no technology. What they have is an affinity, which
+        // groups them the way a class ranks a ship, and a size. Trust and the moods are
+        // deliberately absent - those drift with play, so ordering by them would rank
+        // creatures by how their last owner left them - and the three traits are words rather
+        // than numbers, because each is one end of an axis and there is no order to sort them
+        // into that a reader would be looking for.
         Assert.Equal(
-            ["Name", "Type", "Scale", "Helpfulness", "Aggression", "Independence"],
+            ["Name", "Type", "Affinity", "Scale"],
             GalleryFacets.SortsFor("Stable").Select(s => s.Label));
     }
 

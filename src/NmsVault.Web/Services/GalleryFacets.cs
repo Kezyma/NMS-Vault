@@ -109,6 +109,12 @@ public static class GalleryFacets
         if (page is "Shipyard" or "Armoury")
             sorts.Add(new SortOption("class", "Class", Descending: true, r => ClassRank(r.Class)));
 
+        // A creature's equivalent: the thing it is grouped by rather than ranked on, so it
+        // sorts by name and gathers the tropical ones together.
+        if (page is "Stable")
+            sorts.Add(new SortOption("affinity", "Affinity", Descending: false,
+                Text: r => r.Affinity?.Name ?? ""));
+
         // The stat labels come from the data rather than being written out again here, so a
         // page cannot offer a sort on a stat its items do not carry.
         foreach (var (key, label) in StatLabels(page))
@@ -179,11 +185,13 @@ public static class GalleryFacets
                       ("techslots", SlotCounts.TechSlotsLabel),
                       ("techinstalled", SlotCounts.TechInstalledLabel)],
 
-        // A creature's size and its three traits - the numbers settled when it hatched. Trust
-        // and the moods are not here: they drift with play, so ordering a gallery by them
-        // would rank creatures by how their last owner left them.
-        "Stable" => [("scale", "Scale"),
-                     .. CompanionFacts.TraitLabels.Select(t => (t.ToLowerInvariant(), t))],
+        // Only the size. Trust and the moods are deliberately absent - they drift with play,
+        // so ordering a gallery by them would rank creatures by how their last owner left
+        // them. The three traits are not numbers any more either: each is one end of an axis,
+        // so sorting on the stored value put the gentlest creature and the fiercest at
+        // opposite ends of a scale nobody reads that way. They are words now, and the sort
+        // that replaces them is the affinity below.
+        "Stable" => [("scale", "Scale")],
 
         _ => [],
     };

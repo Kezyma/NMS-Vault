@@ -3,6 +3,56 @@ using NmsVault.Json;
 
 namespace NmsVault.Web.Services;
 
+/// <summary>A creature's pet-battle affinity, as the manifest carries it.</summary>
+/// <param name="Id">The game's key - <c>Lush</c>, <c>Mech</c>.</param>
+/// <param name="Name">What the game calls it: Lush is TROPICAL.</param>
+/// <param name="Icon">The glyph's filename under <c>gallery/img/affinity</c>, or null.</param>
+public sealed record GalleryAffinity(string Id, string Name, string? Icon)
+{
+    /// <summary>Reads one from a manifest entry, or null where there is none.</summary>
+    /// <param name="entry">The <c>Affinity</c> object, or null.</param>
+    /// <returns>The affinity, or null.</returns>
+    internal static GalleryAffinity? FromJson(JsonObject? entry)
+        => entry?.GetString("Id") is { Length: > 0 } id
+            ? new GalleryAffinity(id, entry.GetString("Name") ?? id, entry.GetString("Icon"))
+            : null;
+}
+
+/// <summary>One of a creature's three personality traits, already resolved into words.</summary>
+/// <param name="Name">The pole the stored value falls on - Gentleness, not Aggression.</param>
+/// <param name="Percent">How far along that pole, 0 to 100.</param>
+/// <param name="Class">The class letter it falls in.</param>
+/// <param name="Word">The game's word for that class, or null if it has none.</param>
+public sealed record GalleryTrait(string Name, int Percent, string Class, string? Word)
+{
+    /// <summary>The whole line, as the game formats it: <c>50% (Diligent)</c>.</summary>
+    public string Rating => Word is { Length: > 0 } word ? $"{Percent}% ({word})" : $"{Percent}%";
+
+    /// <summary>Reads the list from a manifest entry.</summary>
+    /// <param name="entries">The <c>Traits</c> array, or null.</param>
+    /// <returns>The traits, or an empty list.</returns>
+    internal static IReadOnlyList<GalleryTrait> FromJson(JsonArray? entries)
+    {
+        if (entries is null) return [];
+
+        var read = new List<GalleryTrait>(entries.Length);
+
+        for (int i = 0; i < entries.Length; i++)
+        {
+            var entry = entries.GetObject(i);
+            if (entry?.GetString("Name") is not { Length: > 0 } name) continue;
+
+            read.Add(new GalleryTrait(
+                name,
+                (int)entry.GetLong("Percent"),
+                entry.GetString("Class") ?? "",
+                entry.GetString("Word")));
+        }
+
+        return read;
+    }
+}
+
 /// <summary>One row of the gallery, as <c>index.json</c> carries it.</summary>
 /// <remarks>
 /// Everything here is derived at ingest. The item's full payload is a separate document,
@@ -34,6 +84,21 @@ public sealed record GalleryRow
 
     /// <summary>Where a creature is from, e.g. "Lush". Null for everything else.</summary>
     public string? Biome { get; init; }
+
+    /// <summary>
+    /// What a creature fights as, resolved at ingest. Null for everything else.
+    /// </summary>
+    /// <remarks>
+    /// Worked out by the ingest tool rather than the browser, because it needs the species
+    /// table as well as the biome and a card must draw before <c>pets.json</c> has loaded.
+    /// </remarks>
+    public GalleryAffinity? Affinity { get; init; }
+
+    /// <summary>
+    /// A creature's personality in the game's words. Empty for everything else.
+    /// </summary>
+    /// <inheritdoc cref="Affinity"/>
+    public IReadOnlyList<GalleryTrait> Traits { get; init; } = [];
 
     /// <summary>Seeds, keyed by what each governs.</summary>
     public IReadOnlyDictionary<string, string> Seeds { get; init; } = new Dictionary<string, string>();
@@ -107,6 +172,8 @@ public sealed record GalleryRow
             IsModified = entry.Get("Modified") is true,
             Class = entry.GetString("Class"),
             Biome = entry.GetString("Biome"),
+            Affinity = GalleryAffinity.FromJson(entry.GetObject("Affinity")),
+            Traits = GalleryTrait.FromJson(entry.GetArray("Traits")),
             Seeds = ReadMap(entry.GetObject("Seeds")),
             Stats = ReadStats(entry.GetObject("Stats")),
             Tech = ReadList(entry.GetArray("Tech")),

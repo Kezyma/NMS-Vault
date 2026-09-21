@@ -68,6 +68,7 @@ public sealed class GalleryStore(string root)
     public int RebuildIndex()
     {
         var items = new JsonArray();
+        var pets = ReadPets();
         int count = 0;
 
         foreach (var (_, item) in ReadAll())
@@ -82,6 +83,18 @@ public sealed class GalleryStore(string root)
             // live here rather than being computed in the browser because filtering on any
             // of them would otherwise mean fetching every item document first.
             ItemFacts.For(item).WriteTo(entry);
+
+            // A creature's affinity, resolved here rather than in the browser. The card shows
+            // it beside the name the way a ship shows its class, and a card only ever reads
+            // this file - working it out in the page would mean every grid waiting on
+            // pets.json before it could draw a single name.
+            if (item.Kind == EntityKind.Companion)
+            {
+                var creature = CompanionFacts.For(item.Payload, item.AccessorySlots);
+
+                if (Affinity(pets, creature) is { } affinity) entry.Set("Affinity", affinity);
+                if (Traits(pets, creature) is { } traits) entry.Set("Traits", traits);
+            }
 
             // The card line goes in the manifest; the full text does not, because the only
             // place it is shown is the item's own view, and that fetches the document anyway.
@@ -337,6 +350,56 @@ public sealed class GalleryStore(string root)
             if (picture is null) return found;
             found.Add(picture);
         }
+    }
+
+    /// <summary>
+    /// The companion lookup published beside the gallery, or an empty one when it has not been
+    /// extracted yet. Missing it costs the affinity badge, not the manifest.
+    /// </summary>
+    private PetIndex ReadPets()
+    {
+        string path = Path.Combine(root, "pets.json");
+        return File.Exists(path) ? PetIndex.FromBytes(File.ReadAllBytes(path)) : PetIndex.Empty;
+    }
+
+    /// <summary>
+    /// The creature's personality in the game's words, or null where the tables cannot name it.
+    /// </summary>
+    /// <remarks>
+    /// Resolved here for the same reason the affinity is: it needs the species table, and a
+    /// card has only the manifest to draw from.
+    /// </remarks>
+    private static JsonArray? Traits(PetIndex pets, CompanionFacts creature)
+    {
+        var traits = pets.Traits(creature.SpeciesId, [.. creature.Traits.Select(t => t.Value)]);
+        if (traits.Count == 0) return null;
+
+        var written = new JsonArray();
+
+        foreach (var trait in traits)
+        {
+            var entry = new JsonObject();
+            entry.Set("Name", trait.Name);
+            entry.Set("Percent", trait.Percent);
+            entry.Set("Class", trait.Class);
+            if (trait.Word is { Length: > 0 } word) entry.Set("Word", word);
+            written.Add(entry);
+        }
+
+        return written;
+    }
+
+    /// <summary>The affinity to write into a creature's manifest entry, or null if unknown.</summary>
+    private static JsonObject? Affinity(PetIndex pets, CompanionFacts creature)
+    {
+        if (pets.Affinity(creature.SpeciesId, creature.Biome) is not { } affinity) return null;
+
+        var written = new JsonObject();
+        written.Set("Id", affinity.Id);
+        written.Set("Name", affinity.Name);
+        if (affinity.Icon is { Length: > 0 } icon) written.Set("Icon", icon);
+
+        return written;
     }
 
     private static JsonArray ToArray(IReadOnlyList<string> values)

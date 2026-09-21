@@ -21,6 +21,7 @@
             <div class="titles">
                 <h2 id="@_titleId">
                     <ClassBadge Class="@Row.Class" />
+                    <AffinityBadge Affinity="@Row.Affinity" />
                     <span class="name-text">@Row.DisplayName</span>
                 </h2>
 
@@ -103,24 +104,14 @@
 
                     <p class="marks">
                         @*
-                            What it fights as. A species override decides it where there is one -
-                            a Bonecat is tropical on a radioactive world - and the biome decides
-                            it otherwise.
+                            The climate in the game's words rather than the payload's: a Lush
+                            world is Verdant, a Dead one Airless.
                         *@
-                        @if (_affinity is { } affinity)
+                        @if (_climate is { Length: > 0 } climate)
                         {
-                            <span class="chip affinity" title="Pet battle affinity">
-                                @if (affinity.Icon is { Length: > 0 } glyph)
-                                {
-                                    @* Removes itself if the glyph has not been extracted yet,
-                                       so the name still reads rather than sitting beside a
-                                       broken image. *@
-                                    <img src="@($"gallery/img/affinity/{glyph}")" alt="" loading="lazy"
-                                         onerror="this.remove()" />
-                                }
-                                <span>@affinity.Name</span>
-                            </span>
+                            <span class="chip" title="Native Climate">@climate</span>
                         }
+
                         <span class="chip">@(creature.IsPredator ? "Predator" : "Not a predator")</span>
                         <span class="chip">@(creature.HasFur ? "Furred" : "Unfurred")</span>
 
@@ -130,11 +121,42 @@
                             the only place it was said was by hand, in a summary.
                         *@
                         <span class="chip">@(creature.EggModified ? "Egg modified" : "Egg unmodified")</span>
-                        @if (creature.SpeciesId is { Length: > 0 } species)
+
+                        @* What the game's species table says about its kind. *@
+                        @if (_species is { } species)
                         {
-                            <span class="chip mono">@species</span>
+                            @if (species.MoveArea is { Length: > 0 } area)
+                            {
+                                <span class="chip" title="Where it gets about">@Habit(area)</span>
+                            }
+                            @if (species.Rarity is { Length: > 0 } rarity)
+                            {
+                                <span class="chip" title="How often the species turns up">@Spaced(rarity)</span>
+                            }
+                            @if (!species.CanBattle)
+                            {
+                                <span class="chip warn" title="This species cannot be taken into the arena">No arena</span>
+                            }
+                        }
+
+                        @if (creature.SpeciesId is { Length: > 0 } speciesId)
+                        {
+                            <span class="chip mono">@speciesId</span>
                         }
                     </p>
+
+                    @*
+                        What Scale means. On its own the number says nothing - 1.0 is small for
+                        a Diplodocus and enormous for a beetle - so it is shown against the
+                        range the species can reach.
+                    *@
+                    @if (_species is { MinScale: { } smallest, MaxScale: { } largest } && largest > smallest)
+                    {
+                        <p class="dim range">
+                            Scale @creature.Scale.ToString("0.##")
+                            of @smallest.ToString("0.##")&ndash;@largest.ToString("0.##") for the species
+                        </p>
+                    }
 
                     @if (creature.CustomName is { Length: > 0 } given)
                     {
@@ -144,11 +166,39 @@
 
                     @if (creature.UniverseAddress is { Length: > 0 } address)
                     {
-                        @* The only thing in the payload that says where the creature is from. *@
-                        <p class="dim from">Found at <code>@address</code></p>
+                        @*
+                            The packed coordinates of the system and planet it came from - the
+                            only thing in the payload that says where it is from. Shown as the
+                            hex it is, because the bit layout is not confirmed: decoding it the
+                            usual way puts this one in solar system 1312, which is out of range,
+                            so either the packing differs or the field is not what it looks
+                            like. A wrong galaxy and planet would be worse than no reading.
+                        *@
+                        <p class="dim from">Universe address <code>@address</code></p>
                     }
-
                 </div>
+
+                @if (Row.Traits.Count > 0)
+                {
+                    <div class="personality">
+                        <h3>Personality</h3>
+
+                        @*
+                            Three numbers between -1 and 1, each an axis with a name at either
+                            end: the sign picks the end and the magnitude says how far along it.
+                            The words are the game's own.
+                        *@
+                        <dl class="pairs">
+                            @foreach (var trait in Row.Traits)
+                            {
+                                <div>
+                                    <dt>@trait.Name</dt>
+                                    <dd>@trait.Rating</dd>
+                                </div>
+                            }
+                        </dl>
+                    </div>
+                }
 
                 <div class="mood">
                     <h3>As it was left</h3>
@@ -185,6 +235,70 @@
                     </div>
                 }
 
+                <div class="arena">
+                    <h3>Battle abilities</h3>
+
+                    @*
+                        The three core stats. The payload holds a class letter for each, but
+                        only as an override the game ignores unless the flag beside them is
+                        set - and it is not on anything hatched the ordinary way, where the
+                        real classes are generated from the creature. So the honest reading is
+                        the one NMSE gives: procedural. The stored letters are shown only when
+                        the game would actually use them.
+                    *@
+                    <dl class="pairs">
+                        @for (int i = 0; i < _stats.Count; i++)
+                        {
+                            <div>
+                                <dt>@_stats[i]</dt>
+                                <dd class="@(creature.BattleClassesApply ? "" : "dim")">@BattleClass(creature, i)</dd>
+                            </div>
+                        }
+                    </dl>
+
+                    @*
+                        What feeding has actually changed, which is real on any creature. All
+                        zero on one that has never been fed, which is most of them.
+                    *@
+                    <dl class="pairs">
+                        <div>
+                            <dt>Genes improved</dt>
+                            <dd>@creature.GeneEditsSpent / @CompanionFacts.GeneEditLimit</dd>
+                        </div>
+                        <div>
+                            <dt>Edits banked</dt>
+                            <dd>@creature.GeneEditsAvailable</dd>
+                        </div>
+                        <div>
+                            <dt>To next edit</dt>
+                            @* Not P0, which puts a space before the sign in this culture. *@
+                            <dd>@((creature.MutationProgress * 100).ToString("0"))%</dd>
+                        </div>
+                        <div>
+                            <dt>Arena wins</dt>
+                            <dd>@creature.ArenaVictories</dd>
+                        </div>
+                    </dl>
+
+                    @*
+                        What the affinity is actually for. "Tropical" on its own says nothing;
+                        what beats it and what it beats is the part worth knowing.
+                    *@
+                    @if (_matchup is { } matchup)
+                    {
+                        <dl class="pairs wide matchups">
+                            <div>
+                                <dt>Weak against</dt>
+                                <dd>@string.Join(", ", matchup.Weak.Select(a => a.Name))</dd>
+                            </div>
+                            <div>
+                                <dt>Strong against</dt>
+                                <dd>@string.Join(", ", matchup.Strong.Select(a => a.Name))</dd>
+                            </div>
+                        </dl>
+                    }
+                </div>
+
                 @if (creature.BattleMoves.Count > 0)
                 {
                     <div class="moves">
@@ -195,6 +309,11 @@
                             move: the same ATTACK is Lash on a tropical creature and Freeze on a
                             frost one. Unresolved ones fall back to the id, which is what every
                             move used to show.
+
+                            Two glyphs each, as the game draws them: what the move is typed to,
+                            and the stat it touches. They are often the same thing said twice
+                            and sometimes not - a mechanical creature's plain attack shows cogs
+                            and a starburst.
                         *@
                         <ul class="move-list">
                             @foreach (string id in creature.BattleMoves)
@@ -202,11 +321,19 @@
                                 var move = _pets.Move(id, _affinity);
 
                                 <li @key="id" title="@move.Description">
-                                    @if (move.Icon is { Length: > 0 } glyph)
-                                    {
-                                        <img src="@($"gallery/img/move/{glyph}")" alt="" loading="lazy"
-                                             onerror="this.remove()" />
-                                    }
+                                    <span class="glyphs">
+                                        @if (move.Affinity?.Icon is { Length: > 0 } typed)
+                                        {
+                                            <img src="@($"gallery/img/affinity/{typed}")"
+                                                 alt="@move.Affinity.Name" title="@move.Affinity.Name"
+                                                 loading="lazy" onerror="this.remove()" />
+                                        }
+                                        @if (move.Icon is { Length: > 0 } glyph)
+                                        {
+                                            <img src="@($"gallery/img/move/{glyph}")" alt="" loading="lazy"
+                                                 onerror="this.remove()" />
+                                        }
+                                    </span>
                                     <span class="name">@move.Name</span>
                                     @if (move.Target is { Length: > 0 } target)
                                     {
@@ -290,6 +417,10 @@
     private TechIndex _tech = TechIndex.Empty;
     private PetIndex _pets = PetIndex.Empty;
     private PetAffinity? _affinity;
+    private PetMatchup? _matchup;
+    private PetSpecies? _species;
+    private string? _climate;
+    private IReadOnlyList<string> _stats = [];
     private NamedInventory? _inventory;
     private CompanionFacts? _creature;
     private IReadOnlyList<string> _images = [];
@@ -358,7 +489,40 @@
         _affinity = _creature is null
             ? null
             : _pets.Affinity(_creature.SpeciesId, _creature.Biome);
+
+        _matchup = _pets.Matchup(_affinity);
+        _species = _pets.Species(_creature?.SpeciesId);
+        _climate = _pets.Climate(_creature?.Biome);
+        _stats = _pets.BattleStats;
     }
+
+    /// <summary>
+    /// What a core stat reads as. The stored class letter counts only when the creature is
+    /// flagged to use it; otherwise the game generates the real one and the payload does not
+    /// hold it, which is what "Procedural" says.
+    /// </summary>
+    private static string BattleClass(CompanionFacts creature, int at)
+    {
+        if (!creature.BattleClassesApply) return "Procedural";
+
+        return at < creature.BattleClasses.Count && creature.BattleClasses[at] is { Length: > 0 } cls
+            ? cls
+            : "Procedural";
+    }
+
+    /// <summary>The game's word for where a creature gets about.</summary>
+    private static string Habit(string moveArea) => moveArea switch
+    {
+        "Ground" => "Walks",
+        "Water" => "Swims",
+        "Air" => "Flies",
+        "Space" => "Drifts",
+        _ => moveArea,
+    };
+
+    /// <summary>Splits the run-together rarity the table stores - SuperRare reads as two words.</summary>
+    private static string Spaced(string value)
+        => string.Concat(value.Select((c, i) => i > 0 && char.IsUpper(c) ? " " + c : c.ToString()));
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

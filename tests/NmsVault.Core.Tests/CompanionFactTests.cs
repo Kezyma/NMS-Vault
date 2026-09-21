@@ -62,11 +62,14 @@ public class CompanionFactTests
     [Fact]
     public void TheCardTakesWhatWasSettledAtHatchingAndLeavesTheRest()
     {
-        // Size and the three traits are the creature. Trust and the moods drift with play, so
-        // a gallery ordered by them would rank creatures by how their last owner left them.
+        // Size alone. Trust and the moods drift with play, so a gallery ordered by them would
+        // rank creatures by how their last owner left them - and the three traits are no
+        // longer numbers here either, because each is one end of an axis and a column of
+        // signed values put the gentlest creature and the fiercest at opposite ends of it.
+        // They are resolved into the game's own words at ingest instead.
         var stats = Facts().AsStats();
 
-        Assert.Equal(["Scale", "Helpfulness", "Aggression", "Independence"], stats.Select(s => s.Label));
+        Assert.Equal(["Scale"], stats.Select(s => s.Label));
         Assert.All(stats, s => Assert.StartsWith("#", s.Id, StringComparison.Ordinal));
     }
 

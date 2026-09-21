@@ -1,0 +1,35 @@
+@*
+    A creature's pet-battle affinity, drawn the way a ship's class is: the game's own glyph,
+    leading the name rather than buried in the text below it.
+
+    Falls back to the affinity's name when the glyph is missing, so a gallery published before
+    extract-pets has run still says what the creature fights as.
+*@
+
+@if (Affinity is { } affinity)
+{
+    <span class="affinity-badge" title="@Title(affinity)">
+        @if (affinity.Icon is { Length: > 0 } icon && !_missing)
+        {
+            <img src="@($"gallery/img/affinity/{icon}")" alt="@Title(affinity)"
+                 loading="lazy" @onerror="() => _missing = true" />
+        }
+        else
+        {
+            <span class="affinity-name">@affinity.Name</span>
+        }
+    </span>
+}
+
+@code {
+    /// <summary>The affinity to draw, or null for an item that has none.</summary>
+    [Parameter] public GalleryAffinity? Affinity { get; set; }
+
+    private bool _missing;
+
+    /// <summary>
+    /// The game's own subtitle for a creature - UI_PET_SUB is '%AFFINITY% Companion' - which
+    /// reads better as a tooltip than the bare affinity would.
+    /// </summary>
+    private static string Title(GalleryAffinity affinity) => $"{affinity.Name} Companion";
+}

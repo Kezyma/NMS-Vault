@@ -1,5 +1,5 @@
 {
-	"SchemaVersion": 1,
+	"SchemaVersion": 2,
 	"Affinities": [
 		{
 			"Id": "Normal",
@@ -96,6 +96,815 @@
 		"HORROR_PET": "Toxic",
 		"QUAD_PET": "Mech"
 	},
+	"Climates": {
+		"Lush": "Verdant",
+		"Toxic": "Toxic",
+		"Scorched": "Scorched",
+		"Radioactive": "Radioactive",
+		"Frozen": "Frozen",
+		"Barren": "Barren",
+		"Dead": "Airless",
+		"Weird": "Unusual",
+		"Swamp": "Swamp",
+		"Lava": "Volcanic",
+		"Waterworld": "Water-bound",
+		"GasGiant": "Gaseous"
+	},
+	"Matchups": {
+		"Lush": {
+			"Weak": [
+				"Toxic",
+				"Mech"
+			],
+			"Strong": [
+				"Barren",
+				"Weird"
+			]
+		},
+		"Cold": {
+			"Weak": [
+				"Radioactive",
+				"Fire"
+			],
+			"Strong": [
+				"Toxic",
+				"Mech"
+			]
+		},
+		"Fire": {
+			"Weak": [
+				"Barren",
+				"Radioactive"
+			],
+			"Strong": [
+				"Cold",
+				"Weird"
+			]
+		},
+		"Toxic": {
+			"Weak": [
+				"Barren",
+				"Cold"
+			],
+			"Strong": [
+				"Lush",
+				"Radioactive"
+			]
+		},
+		"Barren": {
+			"Weak": [
+				"Lush",
+				"Mech"
+			],
+			"Strong": [
+				"Toxic",
+				"Fire"
+			]
+		},
+		"Radioactive": {
+			"Weak": [
+				"Toxic",
+				"Weird"
+			],
+			"Strong": [
+				"Fire",
+				"Cold"
+			]
+		},
+		"Weird": {
+			"Weak": [
+				"Fire",
+				"Lush"
+			],
+			"Strong": [
+				"Radioactive",
+				"Mech"
+			]
+		},
+		"Mech": {
+			"Weak": [
+				"Cold",
+				"Weird"
+			],
+			"Strong": [
+				"Barren",
+				"Lush"
+			]
+		}
+	},
+	"Traits": {
+		"Default": [
+			{
+				"Positive": {
+					"Name": "Helpfulness",
+					"Classes": {
+						"S": "Dutiful",
+						"A": "Diligent",
+						"B": "Cooperative",
+						"C": "Compliant"
+					}
+				},
+				"Negative": {
+					"Name": "Playfulness",
+					"Classes": {
+						"S": "Whimsical",
+						"A": "Frolicsome",
+						"B": "Mischievous",
+						"C": "Cheeky"
+					}
+				}
+			},
+			{
+				"Positive": {
+					"Name": "Aggression",
+					"Classes": {
+						"S": "Ferocious",
+						"A": "Fierce",
+						"B": "Territorial",
+						"C": "Passionate"
+					}
+				},
+				"Negative": {
+					"Name": "Gentleness",
+					"Classes": {
+						"S": "Sweet Tempered",
+						"A": "Placid",
+						"B": "Patient",
+						"C": "Tolerant"
+					}
+				}
+			},
+			{
+				"Positive": {
+					"Name": "Independence",
+					"Classes": {
+						"S": "Adventurous",
+						"A": "Autonomous",
+						"B": "Free Spirited",
+						"C": "Aloof"
+					}
+				},
+				"Negative": {
+					"Name": "Devotion",
+					"Classes": {
+						"S": "Loyal",
+						"A": "Protective",
+						"B": "Attentive",
+						"C": "Attached"
+					}
+				}
+			}
+		],
+		"Fiend": [
+			{
+				"Positive": {
+					"Name": "Helpfulness",
+					"Classes": {
+						"S": "Industrious",
+						"A": "Methodical",
+						"B": "Purposeful",
+						"C": "Orderly"
+					}
+				},
+				"Negative": {
+					"Name": "Playfulness",
+					"Classes": {
+						"S": "Chaotic",
+						"A": "Wayward",
+						"B": "Devilish",
+						"C": "Sly"
+					}
+				}
+			},
+			{
+				"Positive": {
+					"Name": "Aggression",
+					"Classes": {
+						"S": "Vicious",
+						"A": "Brutal",
+						"B": "Savage",
+						"C": "Bloodthirsty"
+					}
+				},
+				"Negative": {
+					"Name": "Gentleness",
+					"Classes": {
+						"S": "Docile",
+						"A": "Temperate",
+						"B": "Restrained",
+						"C": "Unpredictable"
+					}
+				}
+			},
+			{
+				"Positive": {
+					"Name": "Independence",
+					"Classes": {
+						"S": "Feral",
+						"A": "Wild",
+						"B": "Rebellious",
+						"C": "Wilful"
+					}
+				},
+				"Negative": {
+					"Name": "Devotion",
+					"Classes": {
+						"S": "Attached",
+						"A": "Respectful",
+						"B": "Intrigued",
+						"C": "Interested"
+					}
+				}
+			}
+		],
+		"Bands": [
+			{
+				"Class": "S",
+				"From": 75.0
+			},
+			{
+				"Class": "A",
+				"From": 50.0
+			},
+			{
+				"Class": "B",
+				"From": 25.0
+			},
+			{
+				"Class": "C",
+				"From": 0.0
+			}
+		],
+		"Rating": "%NUM%% (%CLASS%)"
+	},
+	"BattleStats": [
+		"Health",
+		"Agility",
+		"Combat Effectiveness"
+	],
+	"Species": {
+		"FISH": {
+			"MinScale": 0.59999999999999998,
+			"MaxScale": 1.2,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"FISHFLOCK": {
+			"MinScale": 0.10000000000000001,
+			"MaxScale": 0.40000000000000002,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SWIMCOW": {
+			"MinScale": 1.2,
+			"MaxScale": 1.3999999999999999,
+			"MoveArea": "Water",
+			"Rarity": "Rare",
+			"NoBattle": true
+		},
+		"SWIMRODENT": {
+			"MinScale": 0.80000000000000004,
+			"MaxScale": 1.2,
+			"MoveArea": "Water",
+			"Rarity": "Rare",
+			"NoBattle": true
+		},
+		"JELLYFISH": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Water",
+			"Rarity": "Uncommon",
+			"NoBattle": true
+		},
+		"CRAB": {
+			"MinScale": 0.75,
+			"MaxScale": 2.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"SEASNAKE": {
+			"MinScale": 1.0,
+			"MaxScale": 2.0,
+			"MoveArea": "Water",
+			"Rarity": "Uncommon",
+			"NoBattle": true
+		},
+		"SHARK": {
+			"MinScale": 2.0,
+			"MaxScale": 3.0,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"BIRD": {
+			"MinScale": 0.80000000000000004,
+			"MaxScale": 2.0,
+			"MoveArea": "Air",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"FLYINGSNAKE": {
+			"MinScale": 3.5,
+			"MaxScale": 4.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"FLYINGLIZARD": {
+			"MinScale": 1.0,
+			"MaxScale": 4.5,
+			"MoveArea": "Air",
+			"Rarity": "Common"
+		},
+		"BUTTERFLY": {
+			"MinScale": 0.25,
+			"MaxScale": 0.40000000000000002,
+			"MoveArea": "Air",
+			"Rarity": "Uncommon",
+			"NoBattle": true
+		},
+		"SMALLBIRD": {
+			"MinScale": 0.5,
+			"MaxScale": 0.90000000000000002,
+			"MoveArea": "Air",
+			"Rarity": "Uncommon",
+			"NoBattle": true
+		},
+		"BUTTERFLOCK": {
+			"MinScale": 0.25,
+			"MaxScale": 0.40000000000000002,
+			"MoveArea": "Air",
+			"Rarity": "Uncommon",
+			"NoBattle": true
+		},
+		"LARGEBUTTERFLY": {
+			"MinScale": 2.0,
+			"MaxScale": 3.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"FLYINGBEETLE": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 7.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"ANTELOPE": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"ROBOTANTELOPE": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"TRICERATOPS": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"RODENT": {
+			"MinScale": 1.3999999999999999,
+			"MaxScale": 2.5,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"MOLE": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "SuperRare",
+			"NoBattle": true
+		},
+		"COW": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"CAT": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 4.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"PLANTCAT": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 4.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"BONECAT": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 4.0,
+			"MoveArea": "Ground",
+			"Rarity": "Rare"
+		},
+		"STRIDER": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"STRIDERGLOW": {
+			"MinScale": 4.0,
+			"MaxScale": 5.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"TREX": {
+			"MinScale": 0.59999999999999998,
+			"MaxScale": 5.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"TWOLEGANTELOPE": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 3.6000000000000001,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"SIXLEGCOW": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"SIXLEGCAT": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 4.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"GRUNT": {
+			"MinScale": 0.59999999999999998,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Rare"
+		},
+		"BLOB": {
+			"MinScale": 0.20000000000000001,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Rare"
+		},
+		"SPIDER": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"ARTHROPOD": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"WALKINGBUILDING": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Rare"
+		},
+		"FLOATSPIDER": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Rare"
+		},
+		"PROTOROLLER": {
+			"MinScale": 1.0,
+			"MaxScale": 5.0,
+			"MoveArea": "Ground",
+			"Rarity": "SuperRare"
+		},
+		"PROTOFLYER": {
+			"MinScale": 1.0,
+			"MaxScale": 3.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"PROTODIGGER": {
+			"MinScale": 1.0,
+			"MaxScale": 5.0,
+			"MoveArea": "Ground",
+			"Rarity": "SuperRare",
+			"NoBattle": true
+		},
+		"PLOUGH": {
+			"MinScale": 1.0,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "SuperRare",
+			"NoBattle": true
+		},
+		"DRILL": {
+			"MinScale": 1.0,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "SuperRare",
+			"NoBattle": true
+		},
+		"WEIRDROLL": {
+			"MinScale": 5.0,
+			"MaxScale": 5.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"WEIRDFLOAT": {
+			"MinScale": 3.0,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"WEIRDCRYSTAL": {
+			"MinScale": 3.0,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"WEIRDBUTTERFLY": {
+			"MinScale": 0.59999999999999998,
+			"MaxScale": 0.80000000000000004,
+			"MoveArea": "Air",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"FIEND": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"TraitSet": "Fiend"
+		},
+		"BUGFIEND": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"TraitSet": "Fiend"
+		},
+		"BUGQUEEN": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SCUTTLER": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SCUTTLER_PET": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"SLUG": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"MINIFIEND": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"NoBattle": true,
+			"TraitSet": "Fiend"
+		},
+		"FIENDFISHSMALL": {
+			"MinScale": 0.5,
+			"MaxScale": 1.5,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true,
+			"TraitSet": "Fiend"
+		},
+		"FLOATER": {
+			"MinScale": 0.5,
+			"MaxScale": 1.5,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"MINIDRONE": {
+			"MinScale": 0.5,
+			"MaxScale": 1.5,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"FIENDFISHBIG": {
+			"MinScale": 0.80000000000000004,
+			"MaxScale": 8.0,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true,
+			"TraitSet": "Fiend"
+		},
+		"ROCKCREATURE": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SANDWORM": {
+			"MinScale": 50.0,
+			"MaxScale": 50.0,
+			"MoveArea": "Air",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SPACE_FLOATER": {
+			"MinScale": 0.5,
+			"MaxScale": 1.5,
+			"MoveArea": "Space",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"LAND_JELLYFISH": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"JELLYBOSS": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare",
+			"NoBattle": true
+		},
+		"JELLYBOSS_BROOD": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare",
+			"NoBattle": true
+		},
+		"ROBO_PET": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"HOVER_PET": {
+			"MinScale": 0.25,
+			"MaxScale": 0.25,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"LAND_SQUID": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare",
+			"NoBattle": true
+		},
+		"PURPLE_WEIRD": {
+			"MinScale": 1.5,
+			"MaxScale": 6.0,
+			"MoveArea": "Air",
+			"Rarity": "Common"
+		},
+		"DEEPFISH": {
+			"MinScale": 0.59999999999999998,
+			"MaxScale": 1.2,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"DEEPFISHLARGE": {
+			"MinScale": 0.5,
+			"MaxScale": 0.5,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"DEEPFISHFLOCK": {
+			"MinScale": 0.10000000000000001,
+			"MaxScale": 0.20000000000000001,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"MANTA": {
+			"MinScale": 1.7,
+			"MaxScale": 3.3999999999999999,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"MANTAGLOW": {
+			"MinScale": 1.7,
+			"MaxScale": 3.3999999999999999,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SEAHORSE": {
+			"MinScale": 0.59999999999999998,
+			"MaxScale": 1.2,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SEAHORSEGLOW": {
+			"MinScale": 0.59999999999999998,
+			"MaxScale": 1.2,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"SQUID": {
+			"MinScale": 0.5,
+			"MaxScale": 4.0,
+			"MoveArea": "Water",
+			"Rarity": "Uncommon",
+			"NoBattle": true
+		},
+		"HERMITCRAB": {
+			"MinScale": 0.75,
+			"MaxScale": 2.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"PRAWN": {
+			"MinScale": 0.20000000000000001,
+			"MaxScale": 1.0,
+			"MoveArea": "Water",
+			"Rarity": "Common",
+			"NoBattle": true
+		},
+		"BONECOW": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 3.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"ROBO_RODENT": {
+			"MinScale": 1.3999999999999999,
+			"MaxScale": 2.5,
+			"MoveArea": "Ground",
+			"Rarity": "Rare"
+		},
+		"WALKER_CRAB": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"FISHBOWL_PET3": {
+			"MinScale": 2.0,
+			"MaxScale": 2.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"LANDSQUID_PET": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"SPIDERQUAD_PET": {
+			"MinScale": 1.0,
+			"MaxScale": 1.0,
+			"MoveArea": "Ground",
+			"Rarity": "Common"
+		},
+		"HORROR_PET": {
+			"MinScale": 0.5,
+			"MaxScale": 0.5,
+			"MoveArea": "Air",
+			"Rarity": "Rare"
+		},
+		"DIPLO_PET": {
+			"MinScale": 0.40000000000000002,
+			"MaxScale": 12.0,
+			"MoveArea": "Ground",
+			"Rarity": "Uncommon"
+		},
+		"QUAD_PET": {
+			"MinScale": 1.1000000000000001,
+			"MaxScale": 1.1000000000000001,
+			"MoveArea": "Ground",
+			"Rarity": "Common",
+			"NoBattle": true
+		}
+	},
 	"Moves": [
 		{
 			"Id": "ATTACK_NORM",
@@ -117,6 +926,7 @@
 		{
 			"Id": "ATTACK_AFF",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Uses Pet Affinity to deal direct damage",
 			"Names": {
@@ -134,6 +944,7 @@
 		{
 			"Id": "ATTACK_HOT",
 			"Icon": "attack.webp",
+			"Affinity": "Fire",
 			"Target": "the opposing creature",
 			"Description": "Deals direct damage of specific affinity",
 			"Names": {
@@ -151,6 +962,7 @@
 		{
 			"Id": "ATTACK_COLD",
 			"Icon": "attack.webp",
+			"Affinity": "Cold",
 			"Target": "the opposing creature",
 			"Description": "Deals direct damage of specific affinity",
 			"Names": {
@@ -168,6 +980,7 @@
 		{
 			"Id": "ATTACK_LUSH",
 			"Icon": "attack.webp",
+			"Affinity": "Lush",
 			"Target": "the opposing creature",
 			"Description": "Deals direct damage of specific affinity",
 			"Names": {
@@ -185,6 +998,7 @@
 		{
 			"Id": "ATTACK_DUST",
 			"Icon": "attack.webp",
+			"Affinity": "Barren",
 			"Target": "the opposing creature",
 			"Description": "Deals direct damage of specific affinity",
 			"Names": {
@@ -202,6 +1016,7 @@
 		{
 			"Id": "ATTACK_TOX",
 			"Icon": "attack.webp",
+			"Affinity": "Toxic",
 			"Target": "the opposing creature",
 			"Description": "Deals direct damage of specific affinity",
 			"Names": {
@@ -219,6 +1034,7 @@
 		{
 			"Id": "ATTACK_RAD",
 			"Icon": "attack.webp",
+			"Affinity": "Radioactive",
 			"Target": "the opposing creature",
 			"Description": "Deals direct damage of specific affinity",
 			"Names": {
@@ -236,6 +1052,7 @@
 		{
 			"Id": "ATTACK_WEIRD",
 			"Icon": "attack.webp",
+			"Affinity": "Weird",
 			"Target": "the opposing creature",
 			"Description": "Deals direct damage of specific affinity",
 			"Names": {
@@ -253,6 +1070,7 @@
 		{
 			"Id": "ATTACK_WILD",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Inaccurate swing",
 			"Names": {
@@ -270,6 +1088,7 @@
 		{
 			"Id": "AFF_WILD",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Inaccurate swing",
 			"Names": {
@@ -287,6 +1106,7 @@
 		{
 			"Id": "BARRAGE_AFF",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Shoot 3 affinity attack projectiles",
 			"Names": {
@@ -303,6 +1123,7 @@
 		{
 			"Id": "RAMP_AFF",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Affinity attack that gets stronger the move you use it",
 			"Names": {
@@ -318,7 +1139,8 @@
 		},
 		{
 			"Id": "AFF_SPEED_ME",
-			"Icon": "attack.webp",
+			"Icon": "speed.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Affinity attack that gets stronger the more speed you have",
 			"Names": {
@@ -334,7 +1156,8 @@
 		},
 		{
 			"Id": "AFF_SPEED_THEM",
-			"Icon": "attack.webp",
+			"Icon": "speed.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Affinity attack that gets stronger the more speed you have",
 			"Names": {
@@ -351,6 +1174,7 @@
 		{
 			"Id": "MULTI_AFF",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Multi-round affinity attack",
 			"Names": {
@@ -366,7 +1190,8 @@
 		},
 		{
 			"Id": "CHARGEUP_AFF",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "wait and then attack",
 			"Names": {
@@ -382,7 +1207,8 @@
 		},
 		{
 			"Id": "CHARGEUP_BUFF",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "wait and then attack",
 			"Names": {
@@ -399,6 +1225,7 @@
 		{
 			"Id": "DOT_AFF",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Apply an affinity dot",
 			"Names": {
@@ -414,7 +1241,8 @@
 		},
 		{
 			"Id": "DELAY_AFF",
-			"Icon": "attack.webp",
+			"Icon": "cooldown.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Uses Pet Affinity to deal after after x turns",
 			"Names": {
@@ -431,6 +1259,7 @@
 		{
 			"Id": "DOT_BOMB",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Apply a dot that explodes later",
 			"Names": {
@@ -446,7 +1275,8 @@
 		},
 		{
 			"Id": "DONT_TOUCH",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Apply a debuff that explodes if dispelled",
 			"Names": {
@@ -480,6 +1310,7 @@
 		{
 			"Id": "ATTACK_DOT_AFF",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Do an attack, apply an affinity dot",
 			"Names": {
@@ -496,7 +1327,8 @@
 		},
 		{
 			"Id": "SELF_HEAL",
-			"Icon": "attack.webp",
+			"Icon": "health.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Simple heal on self",
 			"Names": {
@@ -512,7 +1344,8 @@
 		},
 		{
 			"Id": "SELF_HOT",
-			"Icon": "attack.webp",
+			"Icon": "health.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Simple HoT on self",
 			"Names": {
@@ -528,7 +1361,8 @@
 		},
 		{
 			"Id": "DELAY_HEAL",
-			"Icon": "heal.webp",
+			"Icon": "health.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Heal self after X turns",
 			"Names": {
@@ -544,7 +1378,8 @@
 		},
 		{
 			"Id": "SELF_SHIELD",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Simple shield on self",
 			"Names": {
@@ -560,7 +1395,8 @@
 		},
 		{
 			"Id": "SELF_REFLECT",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Reflect damage shield on self",
 			"Names": {
@@ -576,7 +1412,8 @@
 		},
 		{
 			"Id": "SELF_ABSORB",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Absorb damage shield on self",
 			"Names": {
@@ -592,7 +1429,8 @@
 		},
 		{
 			"Id": "FULL_REFLECT",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Damage-limited shield that fully reflects incoming damage",
 			"Names": {
@@ -608,7 +1446,8 @@
 		},
 		{
 			"Id": "FULL_SHIELD",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Damage-limited shield that fully blocks incoming damage",
 			"Names": {
@@ -624,7 +1463,8 @@
 		},
 		{
 			"Id": "FULL_ABSORB",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Damage-limited shield that fully absorbs incoming damage",
 			"Names": {
@@ -640,7 +1480,8 @@
 		},
 		{
 			"Id": "SELF_DISPEL",
-			"Icon": "heal.webp",
+			"Icon": "health.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Remove debuffs from self",
 			"Names": {
@@ -657,6 +1498,7 @@
 		{
 			"Id": "SELF_RESET_CD",
 			"Icon": "cooldown.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Reset cooldowns",
 			"Names": {
@@ -673,6 +1515,7 @@
 		{
 			"Id": "HOSTILE_DISPEL",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Remove buffs from enemy",
 			"Names": {
@@ -689,6 +1532,7 @@
 		{
 			"Id": "HOSTILE_DISPL_N",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Remove debuffs from enemy",
 			"Names": {
@@ -704,7 +1548,8 @@
 		},
 		{
 			"Id": "DEBUFF_DAMAGE",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "reduce enemy damage",
 			"Names": {
@@ -720,7 +1565,8 @@
 		},
 		{
 			"Id": "DEBUFF_DEF",
-			"Icon": "power.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "reduce enemy damage",
 			"Names": {
@@ -736,7 +1582,8 @@
 		},
 		{
 			"Id": "DEBUFF_ACCURACY",
-			"Icon": "attack.webp",
+			"Icon": "accuracy.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "reduce enemy hit chance",
 			"Names": {
@@ -752,7 +1599,8 @@
 		},
 		{
 			"Id": "DEBUFF_DAM_ACC",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "reduce enemy accuracy + damage",
 			"Names": {
@@ -768,7 +1616,8 @@
 		},
 		{
 			"Id": "BUFF_DAMAGE",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Buff damage dealt",
 			"Names": {
@@ -784,7 +1633,8 @@
 		},
 		{
 			"Id": "BUFF_ACCURACY",
-			"Icon": "attack.webp",
+			"Icon": "accuracy.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Buff accuracy",
 			"Names": {
@@ -800,7 +1650,8 @@
 		},
 		{
 			"Id": "BUFF_CRIT",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Buff crit chance",
 			"Names": {
@@ -816,7 +1667,8 @@
 		},
 		{
 			"Id": "BUFF_SPEED",
-			"Icon": "attack.webp",
+			"Icon": "speed.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Buff agility",
 			"Names": {
@@ -832,7 +1684,8 @@
 		},
 		{
 			"Id": "BUFF_DODGE",
-			"Icon": "attack.webp",
+			"Icon": "stealth.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Buff dodge chance",
 			"Names": {
@@ -849,6 +1702,7 @@
 		{
 			"Id": "ATTACK_SELFDOT",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "big impact attack, but dot self",
 			"Names": {
@@ -865,6 +1719,7 @@
 		{
 			"Id": "ATTACK_BOTH",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "attack you and the enemy",
 			"Names": {
@@ -880,7 +1735,8 @@
 		},
 		{
 			"Id": "ENRAGE_CRIT",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "big hit but buff their crit",
 			"Names": {
@@ -896,7 +1752,8 @@
 		},
 		{
 			"Id": "ENRAGE_DAMAGE",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "big hit but buff their damage",
 			"Names": {
@@ -913,6 +1770,7 @@
 		{
 			"Id": "ENRAGE_HOT",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "big hit but leave a HoT",
 			"Names": {
@@ -928,7 +1786,8 @@
 		},
 		{
 			"Id": "BURROW",
-			"Icon": "attack.webp",
+			"Icon": "stealth.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "100% chance to dodge",
 			"Names": {
@@ -944,7 +1803,8 @@
 		},
 		{
 			"Id": "SPEED_UP",
-			"Icon": "attack.webp",
+			"Icon": "speed.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "super speed boost next round",
 			"Names": {
@@ -961,6 +1821,7 @@
 		{
 			"Id": "CHANGE_AFFINITY",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Change the enemy pet affinity",
 			"Names": {
@@ -977,6 +1838,7 @@
 		{
 			"Id": "STUN",
 			"Icon": "cooldown.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Stuns an enemy creature",
 			"Names": {
@@ -992,7 +1854,8 @@
 		},
 		{
 			"Id": "SACRIFICE_DAM",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "blow yourself up but buff your team",
 			"Names": {
@@ -1008,7 +1871,8 @@
 		},
 		{
 			"Id": "SACRIFICE_DEF",
-			"Icon": "attack.webp",
+			"Icon": "defence.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "blow yourself up but protect your team",
 			"Names": {
@@ -1024,7 +1888,8 @@
 		},
 		{
 			"Id": "REVIVE",
-			"Icon": "heal.webp",
+			"Icon": "health.webp",
+			"Affinity": "Self",
 			"Target": "your creature",
 			"Description": "Revive someone on the bench - STUB REPLACEMENT",
 			"Names": {
@@ -1041,6 +1906,7 @@
 		{
 			"Id": "BM_DOT_AFF",
 			"Icon": "attack.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "Apply an affinity dot",
 			"Names": {
@@ -1056,7 +1922,8 @@
 		},
 		{
 			"Id": "BM_DEBUFF_ACC",
-			"Icon": "attack.webp",
+			"Icon": "accuracy.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "reduce enemy hit chance",
 			"Names": {
@@ -1072,7 +1939,8 @@
 		},
 		{
 			"Id": "BM_DEBUFF_DAM",
-			"Icon": "attack.webp",
+			"Icon": "power.webp",
+			"Affinity": "Self",
 			"Target": "the opposing creature",
 			"Description": "reduce enemy damage",
 			"Names": {
